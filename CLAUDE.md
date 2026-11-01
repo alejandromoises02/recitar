@@ -24,6 +24,8 @@ Rules (GitHub branch protection is unavailable on the free private plan, so this
 
 Monorepo (decided): one repo, one folder per deployable. A single Python backend, `server/` (API with FastAPI + scraper + AI features), will be added next to `client/` (TypeScript). It is not created yet. The client only talks to the API; its TypeScript types are generated from the API's OpenAPI schema.
 
+Database (decided, not configured yet): Neon Postgres (free plan, pgvector available for semantic search). Server hosting is still undecided: Google Cloud Run (scales to zero, free quotas unverified) vs Render free (sleeps after 15 min, ~1 min cold start). Render's free Postgres was discarded (expires after 30 days).
+
 Goal: the project doubles as an AI-engineering portfolio piece. Planned AI work, in order: LLM extraction of events from messy pages + an evals suite (golden cases, accuracy, cost/latency), semantic search/recommendations with embeddings, then a tool-using chat assistant grounded in our own events.
 
 Data flow: scraper -> normalize to `Event` -> our database -> API -> client. The client never reads scraped sites directly.
