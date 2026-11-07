@@ -17,7 +17,7 @@ Rules (GitHub branch protection is unavailable on the free private plan, so this
 ## Commits
 
 - Conventional commits only (`feat:`, `fix:`, `chore:`, `docs:`, ...).
-- No `Co-Authored-By` or AI attribution lines.
+- NEVER add `Co-Authored-By`, "Generated with Claude Code", or any AI attribution anywhere (commits, PRs, issues, docs, code). No exceptions.
 - Repo-local git identity is personal; do not change the global (work) identity.
 
 ## Layout
