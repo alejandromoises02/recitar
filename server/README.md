@@ -9,6 +9,7 @@ cd server
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
+playwright install chromium   # only needed to run the Movistar Arena scraper, not the tests
 ```
 
 ## Run
