@@ -21,7 +21,8 @@ def test_counts_match_what_the_site_shows():
 
 def test_performance_with_tickets():
     manon = calendar(11)[0]
-    assert manon.artist == "Manon"
+    assert manon.title == "Manon"
+    assert manon.artist is None
     assert manon.venue == "Teatro Colón"
     assert manon.category == "theatre"
     assert manon.starts_at.isoformat() == "2026-11-08T17:00:00-03:00"
@@ -30,14 +31,19 @@ def test_performance_with_tickets():
     assert manon.ticket_links[0].url.startswith("https://entradasba.buenosaires.gob.ar/evento/")
 
 
+def test_location_fields_are_filled_like_every_other_source():
+    manon = calendar(11)[0]
+    assert (manon.city, manon.region, manon.country) == ("Buenos Aires", "AR-C", "AR")
+
+
 def test_free_performance_has_no_ticket_links():
-    free = [e for e in calendar(11) if e.artist == "Cartografía del poder"]
+    free = [e for e in calendar(11) if e.title == "Cartografía del poder"]
     assert len(free) == 1
     assert free[0].ticket_links == []
 
 
 def test_music_category_is_a_concert():
-    cats = {e.artist: e.category for e in calendar(11)}
+    cats = {e.title: e.category for e in calendar(11)}
     assert cats["Mozart y Beethoven: obras para clarinete y cuerdas"] == "concert"
 
 

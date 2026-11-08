@@ -7,8 +7,12 @@ const NOW = new Date("2026-10-26T12:00:00Z");
 const make = (id: string, startsAt: string): Event => ({
   id,
   category: "concert",
-  artist: `Artist ${id}`,
+  title: `Artist ${id}`,
+  artist: null,
   venue: "Niceto Club",
+  city: "Buenos Aires",
+  region: "AR-C",
+  country: "AR",
   startsAt: new Date(startsAt),
   ticketLinks: [],
   sourceUrl: "https://example.com",
