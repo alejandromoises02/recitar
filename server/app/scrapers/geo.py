@@ -32,7 +32,7 @@ def region_code(locality: str, region: str) -> str | None:
     locality with no region. Without a region the locality is tried as a province name.
     """
     place, area = plain(locality), plain(region)
-    if _COMUNA.match(place) or "ciudad autonoma" in area or area == "capital federal":
+    if _COMUNA.match(place) or "ciudad autonoma" in place + " " + area or area == "capital federal":
         return CITY_OF_BUENOS_AIRES
     if not area and place in {"buenos aires", "caba", "capital federal"}:
         return CITY_OF_BUENOS_AIRES

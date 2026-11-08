@@ -13,7 +13,8 @@ from zoneinfo import ZoneInfo
 import httpx
 from bs4 import BeautifulSoup
 
-from app.domain.event import Event, EventCategory, TicketLink
+from app.domain.event import Event, TicketLink
+from app.scrapers.category import provisional_category
 from app.scrapers.geo import city_name, plain, region_code
 
 SITEMAP_URL = "https://venti.live/sitemap.xml"
@@ -57,7 +58,7 @@ def parse_event(html: str, now: datetime) -> Event | None:
     region = region_code(address.get("addressLocality") or "", address.get("addressRegion") or "")
     return Event(
         id=f"venti-{slug}-{starts_at:%Y%m%dT%H%M}",
-        category=_category(data["name"], starts_at),
+        category=provisional_category(data["name"], starts_at),
         title=data["name"],
         venue=place.get("name") or "",
         city=city_name(address.get("addressLocality"), region),
@@ -68,21 +69,6 @@ def parse_event(html: str, now: datetime) -> Event | None:
         source_url=data["url"],
         updated_at=now,
     )
-
-
-# Provisional until an LLM classifies events (see the "LLM extraction" task): Venti does not
-# say what kind of event it is. All-night events start at 23:59 and end at dawn, and some
-# titles say it outright. Anything else at a venue like Niceto is assumed to be a concert.
-_NIGHT_START = (23, 59)
-_PARTY_WORDS = ("fiesta", "noche")
-
-
-def _category(title: str, starts_at: datetime) -> EventCategory:
-    if (starts_at.hour, starts_at.minute) == _NIGHT_START:
-        return "other"
-    if any(word in plain(title) for word in _PARTY_WORDS):
-        return "other"
-    return "concert"
 
 
 def filter_venue(events: list[Event], venue: str | None) -> list[Event]:
