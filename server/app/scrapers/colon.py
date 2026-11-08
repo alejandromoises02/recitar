@@ -1,69 +1,84 @@
-"""Parser for Teatro Colon production pages (server-rendered HTML, no API)."""
+"""Scraper for the Teatro Colon monthly calendar (server-rendered HTML, no API)."""
 
 import re
+import time
 from datetime import datetime
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
+import httpx
 from bs4 import BeautifulSoup
 
-from app.domain.event import Event, TicketLink
+from app.domain.event import Event, EventCategory, TicketLink
 
 BA = ZoneInfo("America/Argentina/Buenos_Aires")
 VENUE = "Teatro Colón"
 TICKET_VENDOR = "Entradas BA"
-_DATE = re.compile(r"(\d{1,2})/(\d{1,2}),\s*(\d{1,2}):(\d{2})")
-_SEASON = re.compile(r"season-temporada-(\d{4})")
-_DAY_NAMES = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+CALENDAR_URL = "https://teatrocolon.org.ar/calendario/?a={year}&mes={month}"
+USER_AGENT = "recitAR-research/0.1"
+
+_HOUR = re.compile(r"(\d{1,2})\.(\d{2})")
+_DAY = re.compile(r"\d{1,2}")
+
+# The site's own program labels. Anything not listed falls back to "other".
+_CATEGORIES: dict[str, EventCategory] = {
+    "Ópera": "theatre",
+    "Ballet": "theatre",
+    "Filarmónica de Buenos Aires": "concert",
+    "Música de Cámara": "concert",
+    "Clásica Joven": "concert",
+    "Corales": "concert",
+    "Conciertos extraordinarios": "concert",
+    "Salón Dorado": "concert",
+}
 
 
-def parse_production(html: str, source_url: str, now: datetime) -> list[Event]:
+def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Event]:
+    """Events of one calendar page. The page shows only day and hour, so the caller gives year/month."""
     soup = BeautifulSoup(html, "html.parser")
-    title = soup.find("h1").get_text(strip=True)
-    slug = source_url.rstrip("/").rsplit("/", 1)[-1]
-    season_year = _season_year(soup, now)
-
     events: list[Event] = []
-    for day in soup.select("div.day"):
-        mobile = day.select_one("span.hide-desktop p")
-        link = day.find("a", href=True)
-        match = _DATE.search(mobile.get_text(" ", strip=True)) if mobile else None
-        if not match or not link:
+    for item in soup.select("div.calendar-item"):
+        day = item.select_one(".day-number")
+        hour = item.select_one(".day-hour")
+        title = item.select_one("h1")
+        info = item.select_one(".buttons a.grey")
+        if not (day and hour and title and info):
             continue
-        weekday = mobile.select_one("span.capitalize").get_text(strip=True).lower()
-        d, m, hh, mm = (int(g) for g in match.groups())
-        starts_at = _resolve_year(season_year, m, d, hh, mm, weekday)
-        if starts_at is None:
+        day_match, hour_match = _DAY.search(day.get_text()), _HOUR.search(hour.get_text())
+        if not (day_match and hour_match):
             continue
+        starts_at = datetime(year, month, int(day_match.group()), int(hour_match[1]), int(hour_match[2]), tzinfo=BA)
+        if starts_at < now:
+            continue
+        category = item.select_one(".category")
+        buy = item.select_one(".buttons a:not(.grey)")
+        slug = urlparse(info["href"]).path.rstrip("/").rsplit("/", 1)[-1]
         events.append(
             Event(
                 id=f"colon-{slug}-{starts_at:%Y%m%dT%H%M}",
-                category="other",
-                artist=title,
+                category=_CATEGORIES.get(category.get_text(strip=True), "other") if category else "other",
+                artist=" ".join(title.get_text(" ", strip=True).split()),
                 venue=VENUE,
                 starts_at=starts_at,
-                ticket_links=[TicketLink(vendor=TICKET_VENDOR, url=link["href"])],
-                source_url=source_url,
+                ticket_links=[TicketLink(vendor=TICKET_VENDOR, url=buy["href"])] if buy else [],
+                source_url=info["href"],
                 updated_at=now,
             )
         )
     return events
 
 
-def _season_year(soup: BeautifulSoup, now: datetime) -> int:
-    for tag in soup.find_all(class_=True):
-        found = _SEASON.search(" ".join(tag["class"]))
-        if found:
-            return int(found.group(1))
-    return now.year
-
-
-def _resolve_year(season_year: int, month: int, day: int, hour: int, minute: int, weekday: str):
-    """The page omits the year: pick the one near the season whose weekday matches."""
-    for year in (season_year, season_year + 1, season_year - 1):
-        try:
-            candidate = datetime(year, month, day, hour, minute, tzinfo=BA)
-        except ValueError:
-            continue
-        if _DAY_NAMES[candidate.weekday()] == weekday:
-            return candidate
-    return None
+def scrape(months: int = 3, delay: float = 2.0) -> list[Event]:
+    """Fetch the calendar for this month and the next ones, pausing `delay` seconds between requests."""
+    now = datetime.now(tz=BA)
+    events: list[Event] = []
+    with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=20, follow_redirects=True) as client:
+        for offset in range(months):
+            index = now.month - 1 + offset
+            year, month = now.year + index // 12, index % 12 + 1
+            if offset:
+                time.sleep(delay)
+            response = client.get(CALENDAR_URL.format(year=year, month=month))
+            response.raise_for_status()
+            events.extend(parse_calendar(response.text, year, month, now))
+    return events
