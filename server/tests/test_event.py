@@ -10,7 +10,7 @@ def make_event(**overrides):
     data = dict(
         id="colon-un-sueno-navideno-2026-12-19T15:00",
         category="concert",
-        artist="Un sueño navideño",
+        title="Un sueño navideño",
         venue="Teatro Colón",
         starts_at=datetime(2026, 12, 19, 18, 0, tzinfo=timezone.utc),
         ticket_links=[TicketLink(vendor="Entradas BA", url="https://entradasba.buenosaires.gob.ar/evento/x")],
@@ -23,6 +23,18 @@ def make_event(**overrides):
 
 def test_event_accepts_valid_data():
     assert make_event().venue == "Teatro Colón"
+
+
+def test_artist_is_optional_and_empty_by_default():
+    assert make_event().artist is None
+    assert make_event(artist="Abel Pintos").artist == "Abel Pintos"
+
+
+def test_title_is_required():
+    data = make_event().model_dump()
+    del data["title"]
+    with pytest.raises(ValidationError):
+        Event(**data)
 
 
 def test_event_rejects_unknown_category():

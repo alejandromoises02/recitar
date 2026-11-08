@@ -57,8 +57,11 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
             Event(
                 id=f"colon-{slug}-{starts_at:%Y%m%dT%H%M}",
                 category=_CATEGORIES.get(category.get_text(strip=True), "other") if category else "other",
-                artist=" ".join(title.get_text(" ", strip=True).split()),
+                title=" ".join(title.get_text(" ", strip=True).split()),
                 venue=VENUE,
+                city="Buenos Aires",
+                region="AR-C",
+                country="AR",
                 starts_at=starts_at,
                 ticket_links=[TicketLink(vendor=TICKET_VENDOR, url=buy["href"])] if buy else [],
                 source_url=info["href"],
