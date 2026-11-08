@@ -9,3 +9,7 @@ node_modules/
 .venv/
 __pycache__/
 .pytest_cache/
+
+# Local tooling and machine-specific config
+.atl/
+client/.npmrc
