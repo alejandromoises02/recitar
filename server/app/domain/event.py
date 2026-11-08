@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import AwareDatetime, BaseModel
 
-EventCategory = Literal["concert", "theatre", "other"]
+EventCategory = Literal["concert", "theatre", "party", "other"]
 
 
 class TicketLink(BaseModel):

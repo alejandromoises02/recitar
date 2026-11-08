@@ -4,9 +4,9 @@ import { pickFeatured } from "./pick-featured";
 
 const NOW = new Date("2026-10-26T12:00:00Z");
 
-const make = (id: string, startsAt: string): Event => ({
+const make = (id: string, startsAt: string, category: Event["category"] = "concert"): Event => ({
   id,
-  category: "concert",
+  category,
   title: `Artist ${id}`,
   artist: null,
   venue: "Niceto Club",
@@ -20,6 +20,12 @@ const make = (id: string, startsAt: string): Event => ({
 });
 
 describe("pickFeatured", () => {
+  it("leaves out categories that are not shown yet", () => {
+    const party = make("party", "2026-10-28T21:00:00Z", "party");
+    const concert = make("concert", "2026-10-29T21:00:00Z");
+    expect(pickFeatured([party, concert], [], NOW, 5).map((e) => e.id)).toEqual(["concert"]);
+  });
+
   const a = make("a", "2026-10-30T21:00:00Z");
   const b = make("b", "2026-10-27T21:00:00Z");
   const c = make("c", "2026-11-02T21:00:00Z");

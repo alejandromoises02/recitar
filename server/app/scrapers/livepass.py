@@ -1,9 +1,7 @@
 """Scraper for Livepass: the public /t/show listing, then each event's schema.org JSON-LD."""
 
 import json
-import re
 import time
-import unicodedata
 from datetime import datetime
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
@@ -12,6 +10,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from app.domain.event import Event, TicketLink
+from app.scrapers.geo import city_name, region_code
 
 BASE_URL = "https://www.livepass.com.ar"
 LISTING_PATH = "/t/show"
@@ -21,34 +20,6 @@ BA = ZoneInfo("America/Argentina/Buenos_Aires")
 
 # Where to show events. The scraper stores every region; this is only the default filter.
 BUENOS_AIRES = frozenset({"AR-C", "AR-B"})
-
-_COMUNA = re.compile(r"^comuna\s+\d+", re.I)
-
-# ISO 3166-2:AR, keyed by accent-free lowercase province name.
-_PROVINCES = {
-    "salta": "AR-A", "buenos aires": "AR-B", "san luis": "AR-D", "entre rios": "AR-E",
-    "la rioja": "AR-F", "santiago del estero": "AR-G", "chaco": "AR-H", "san juan": "AR-J",
-    "catamarca": "AR-K", "la pampa": "AR-L", "mendoza": "AR-M", "misiones": "AR-N",
-    "formosa": "AR-P", "neuquen": "AR-Q", "rio negro": "AR-R", "santa fe": "AR-S",
-    "tucuman": "AR-T", "chubut": "AR-U", "tierra del fuego": "AR-V", "corrientes": "AR-W",
-    "cordoba": "AR-X", "jujuy": "AR-Y", "santa cruz": "AR-Z",
-}
-
-
-def _plain(text: str) -> str:
-    folded = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
-    return " ".join(folded.lower().split())
-
-
-def region_code(locality: str, region: str) -> str | None:
-    """Livepass writes the region inconsistently ("Buenos Aires" for both the city and the
-    province), so the city is recognised by its "Comuna N" locality or its explicit name."""
-    place, area = _plain(locality), _plain(region)
-    if _COMUNA.match(place) or "ciudad autonoma" in area or area == "capital federal":
-        return "AR-C"
-    if area.startswith("provincia de "):
-        area = area[len("provincia de "):]
-    return _PROVINCES.get(area)
 
 
 def event_paths_from_listing(html: str) -> list[str]:
@@ -83,14 +54,12 @@ def parse_event(html: str, now: datetime) -> Event | None:
     offers = data.get("offers") or {}
     slug = urlparse(data["url"]).path.rstrip("/").rsplit("/", 1)[-1]
     region = region_code(address.get("addressLocality") or "", address.get("addressRegion") or "")
-    # For the city, Livepass gives the comuna ("Comuna 14") instead of a city name.
-    city = "Buenos Aires" if region == "AR-C" else address.get("addressLocality")
     return Event(
         id=f"livepass-{slug}-{starts_at:%Y%m%dT%H%M}",
         category="concert",  # everything under /t/show
         title=data["name"],
         venue=place.get("name") or "",
-        city=city,
+        city=city_name(address.get("addressLocality"), region),
         region=region,
         country=address.get("addressCountry"),
         starts_at=starts_at,
