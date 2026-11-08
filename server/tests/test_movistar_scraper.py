@@ -65,3 +65,8 @@ def test_past_dates_are_dropped():
 
 def test_page_without_event_data_yields_nothing():
     assert parse_show("<html><body>nothing</body></html>", NOW) == []
+
+
+def test_movistars_own_image_is_not_used():
+    # Its terms forbid reproducing its content, so images come from the alternative plan instead.
+    assert all((e.image_url, e.image_origin) == (None, None) for e in show("multi"))
