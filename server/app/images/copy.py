@@ -70,6 +70,15 @@ def _download(client: httpx.Client, url: str) -> bytes | None:
     return response.content
 
 
+def store_remote_image(client: httpx.Client, store: LocalImageStore, source_url: str) -> str | None:
+    """Download one image, shrink it to WebP and store it. Returns our public URL, or None if it fails."""
+    if store.has(source_url):
+        return store.url_for(source_url)
+    data = _download(client, source_url)
+    webp = _to_webp(data) if data else None
+    return store.save(source_url, webp) if webp else None
+
+
 def copy_event_images(
     events: list[Event],
     client: httpx.Client,
