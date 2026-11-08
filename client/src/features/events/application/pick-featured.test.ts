@@ -16,6 +16,11 @@ const make = (id: string, startsAt: string, category: Event["category"] = "conce
   startsAt: new Date(startsAt),
   ticketLinks: [],
   sourceUrl: "https://example.com",
+  imageUrl: null,
+  imageOrigin: null,
+  imageAuthor: null,
+  imageLicense: null,
+  imageSourceUrl: null,
   updatedAt: NOW,
 });
 

@@ -102,3 +102,14 @@ def test_midnight_start_is_not_taken_for_a_concert():
 def test_party_words_in_the_title_keep_it_out_of_concerts():
     for title in ("La Chicle - Fiesta Disco en Niceto Bar", "NOCHE PANTERA en Niceto Bar", "TRASNOCHE en Niceto"):
         assert parse_event(_page(title, "2026-11-14T00:00:00.000Z"), NOW).category == "other"
+
+
+def test_image_comes_from_the_site_and_is_marked_as_source():
+    e = event("humboldt")
+    assert e.image_url == "https://images.venti.live/user-images/1780489377566-lg.jpg"
+    assert e.image_origin == "source"
+
+
+def test_event_without_an_image_has_no_origin_either():
+    e = event("niceto")
+    assert (e.image_url, e.image_origin) == (None, None)

@@ -68,3 +68,9 @@ def test_past_performances_are_dropped():
 
 def test_page_without_calendar_items_yields_nothing():
     assert parse_calendar("<html><body>nothing</body></html>", 2026, 11, NOW) == []
+
+
+def test_image_comes_from_the_site_and_is_marked_as_source():
+    manon = calendar(11)[0]
+    assert manon.image_url == "https://teatrocolon.org.ar/wp-content/uploads/2025/12/Manon_tapa-redes_web-1.png"
+    assert manon.image_origin == "source"
