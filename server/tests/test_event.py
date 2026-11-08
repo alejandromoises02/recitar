@@ -50,3 +50,26 @@ def test_event_rejects_unknown_category():
 def test_event_requires_timezone_aware_start():
     with pytest.raises(ValidationError):
         make_event(starts_at=datetime(2026, 12, 19, 15, 0))
+
+
+def test_images_are_empty_by_default():
+    e = make_event()
+    assert (e.image_url, e.image_origin, e.image_author, e.image_license, e.image_source_url) == (None,) * 5
+
+
+def test_image_origin_is_required_with_an_image():
+    # The origin is what tells a hotlinked source image from a licensed copy, so it cannot be omitted.
+    with pytest.raises(ValidationError):
+        make_event(image_url="https://x.com/a.jpg")
+
+
+def test_image_origin_needs_an_image():
+    with pytest.raises(ValidationError):
+        make_event(image_origin="source")
+
+
+def test_image_origin_accepts_only_known_values():
+    for origin in ("source", "licensed", "venue"):
+        assert make_event(image_url="https://x.com/a.jpg", image_origin=origin).image_origin == origin
+    with pytest.raises(ValidationError):
+        make_event(image_url="https://x.com/a.jpg", image_origin="stolen")

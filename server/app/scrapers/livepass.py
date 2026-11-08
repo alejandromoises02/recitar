@@ -10,6 +10,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from app.domain.event import Event, TicketLink
+from app.scrapers.images import first_image_url, source_image
 from app.scrapers.geo import city_name, region_code
 
 BASE_URL = "https://www.livepass.com.ar"
@@ -65,6 +66,7 @@ def parse_event(html: str, now: datetime) -> Event | None:
         starts_at=starts_at,
         ticket_links=[TicketLink(vendor=VENDOR, url=offers.get("url") or data["url"])],
         source_url=data["url"],
+        **source_image(first_image_url(data.get("image"))),
         updated_at=now,
     )
 

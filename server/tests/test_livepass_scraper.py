@@ -84,3 +84,9 @@ def test_start_date_without_offset_is_read_as_buenos_aires_time():
         '"startDate":"2026-12-01T20:00","location":{"name":"V","address":{"addressCountry":"AR"}}}</script>'
     )
     assert parse_event(page, NOW).starts_at.isoformat() == "2026-12-01T20:00:00-03:00"
+
+
+def test_image_comes_from_the_site_and_is_marked_as_source():
+    e = event("caba_malvinas")
+    assert e.image_url.startswith("https://livepass-com-ar.uploads.ticketplus.global/images/")
+    assert e.image_origin == "source"

@@ -2,7 +2,8 @@
 
 The site is a Blazor app: the page is built in the browser over a WebSocket, so the listing
 and each show page are rendered with Playwright. Each show page carries schema.org JSON-LD
-with one MusicEvent per date. Images and descriptions are deliberately not read.
+with one MusicEvent per date. Images and descriptions are deliberately not read: its terms
+forbid reproducing its content, so its events get images from the alternative plan instead.
 """
 
 import json

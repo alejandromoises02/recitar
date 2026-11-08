@@ -10,6 +10,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from app.domain.event import Event, EventCategory, TicketLink
+from app.scrapers.images import first_image_url, source_image
 
 BA = ZoneInfo("America/Argentina/Buenos_Aires")
 VENUE = "Teatro Colón"
@@ -52,6 +53,7 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
             continue
         category = item.select_one(".category")
         buy = item.select_one(".buttons a:not(.grey)")
+        picture = item.find("img")
         slug = urlparse(info["href"]).path.rstrip("/").rsplit("/", 1)[-1]
         events.append(
             Event(
@@ -65,6 +67,7 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
                 starts_at=starts_at,
                 ticket_links=[TicketLink(vendor=TICKET_VENDOR, url=buy["href"])] if buy else [],
                 source_url=info["href"],
+                **source_image(first_image_url(picture.get("src") if picture else None)),
                 updated_at=now,
             )
         )
