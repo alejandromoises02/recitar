@@ -1,4 +1,5 @@
 import type { Event } from "../domain/event";
+import { filterVisible } from "./visible-events";
 
 export function pickFeatured(
   events: Event[],
@@ -6,7 +7,7 @@ export function pickFeatured(
   now: Date,
   limit: number,
 ): Event[] {
-  const upcoming = events.filter((e) => e.startsAt.getTime() >= now.getTime());
+  const upcoming = filterVisible(events).filter((e) => e.startsAt.getTime() >= now.getTime());
   const byId = new Map(upcoming.map((e) => [e.id, e]));
 
   const curated: Event[] = [];

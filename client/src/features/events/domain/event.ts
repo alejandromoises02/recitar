@@ -1,4 +1,4 @@
-export type EventCategory = "concert" | "theatre" | "other";
+export type EventCategory = "concert" | "theatre" | "party" | "other";
 
 export type TicketLink = {
   vendor: string;

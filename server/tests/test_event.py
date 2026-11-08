@@ -37,6 +37,11 @@ def test_title_is_required():
         Event(**data)
 
 
+def test_event_accepts_every_planned_category():
+    for category in ("concert", "theatre", "party", "other"):
+        assert make_event(category=category).category == category
+
+
 def test_event_rejects_unknown_category():
     with pytest.raises(ValidationError):
         make_event(category="sports")
