@@ -37,6 +37,17 @@ RUN_DB_TESTS=1 python -m pytest     # also runs them, in a throw-away schema tha
 alembic upgrade head                # create/update the tables in the database of DATABASE_URL
 ```
 
+## Run the whole pipeline
+
+```bash
+python -m app.run                    # scrape every source, choose images, store the events
+python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar)
+```
+
+It applies the migrations first. A source that fails is reported and skipped; the others still
+run. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
+Arena (`playwright install chromium`). Image copies go to `server/data/images` (ignored by git).
+
 ## Layout
 
 - `app/domain/` - core types (`Event` mirrors the client's `Event`).
