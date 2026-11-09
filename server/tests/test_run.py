@@ -68,6 +68,29 @@ def test_the_same_event_from_two_sources_is_saved_once():
     assert [(e.id, e.title) for e in rec.saved] == [("x-1", "new!")]
 
 
+def many(prefix: str, count: int) -> list[Event]:
+    return [event(f"{prefix}-{n}") for n in range(count)]
+
+
+def test_a_source_that_returns_much_less_than_before_gets_a_warning_but_is_still_saved():
+    rec = Recorder()
+    report = run({"a": lambda: many("a", 4)}, rec.enrich, rec.save, known={"a": 10})
+    assert "a" in report.warnings and "4" in report.warnings["a"] and "10" in report.warnings["a"]
+    assert report.saved == 4  # upserts never delete, so a partial scrape cannot destroy anything
+
+
+def test_a_normal_variation_is_not_a_warning():
+    rec = Recorder()
+    report = run({"a": lambda: many("a", 8)}, rec.enrich, rec.save, known={"a": 10})
+    assert report.warnings == {}
+
+
+def test_a_source_with_nothing_stored_yet_has_nothing_to_compare_with():
+    rec = Recorder()
+    report = run({"a": lambda: many("a", 1), "b": lambda: many("b", 1)}, rec.enrich, rec.save, known={"b": 0})
+    assert report.warnings == {}
+
+
 def test_when_nothing_was_scraped_nothing_is_saved():
     rec = Recorder()
     report = run({"a": lambda: [], "b": broken}, rec.enrich, rec.save)

@@ -10,11 +10,12 @@ updated, not duplicated. Events that a site stops listing are not removed (yet).
 import argparse
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Callable
 
 from app.db import SERVER_DIR, make_engine, migrate
 from app.domain.event import Event
-from app.events_repository import upsert_events
+from app.events_repository import count_upcoming_by_source, upsert_events
 from app.images.copy import LocalImageStore
 from app.images.wikimedia import MissingContactError, user_agent
 from app.pipeline import enrich_images
@@ -27,12 +28,14 @@ SCRAPERS: dict[str, Callable[[], list[Event]]] = {
     "movistar": movistar.scrape,
 }
 IMAGES_DIR = SERVER_DIR / "data" / "images"
+PARTIAL_RATIO = 0.7  # fewer events than this share of what is stored raises a warning
 
 
 @dataclass
 class Report:
     counts: dict[str, int] = field(default_factory=dict)  # events scraped per source
     errors: dict[str, str] = field(default_factory=dict)  # source -> what went wrong
+    warnings: dict[str, str] = field(default_factory=dict)  # source -> suspiciously few events
     saved: int = 0
 
 
@@ -42,7 +45,10 @@ def run(
     save: Callable[[list[Event]], None],
     only: list[str] | None = None,
     log: Callable[[str], None] = lambda _: None,
+    known: dict[str, int] | None = None,
 ) -> Report:
+    """`known` is how many upcoming events of each source are already stored: a source that now
+    returns far fewer is flagged, because Movistar Arena has been seen loading only part of its listing."""
     unknown = [name for name in only or [] if name not in scrapers]
     if unknown:
         raise ValueError(f"Unknown source {', '.join(unknown)}; valid ones: {', '.join(scrapers)}")
@@ -60,6 +66,13 @@ def run(
             continue
         report.counts[name] = len(found)
         log(f"[{name}] {len(found)} events")
+        stored = (known or {}).get(name, 0)
+        if stored and len(found) < stored * PARTIAL_RATIO:
+            report.warnings[name] = (
+                f"found {len(found)} events but {stored} upcoming ones are stored; "
+                "the site may have loaded only part of its listing, run it again"
+            )
+            log(f"[{name}] WARNING: {report.warnings[name]}")
         scraped.update({event.id: event for event in found})  # same id twice: the last one wins
     if not scraped:
         return report
@@ -84,6 +97,8 @@ def main(argv: list[str] | None = None) -> int:
         print(error, file=sys.stderr)
         return 2
     migrate(engine)
+    with engine.connect() as connection:
+        known = count_upcoming_by_source(connection, datetime.now(timezone.utc))
     store = LocalImageStore(IMAGES_DIR)
 
     def save(events: list[Event]) -> None:
@@ -91,13 +106,15 @@ def main(argv: list[str] | None = None) -> int:
             upsert_events(connection, events)
 
     try:
-        report = run(SCRAPERS, lambda events: enrich_images(events, store), save, only, log=print)
+        report = run(SCRAPERS, lambda events: enrich_images(events, store), save, only, log=print, known=known)
     except ValueError as error:
         print(error, file=sys.stderr)
         return 2
     finally:
         engine.dispose()
     print(f"\nsaved {report.saved} events; scraped per source: {report.counts or 'none'}")
+    for name, problem in report.warnings.items():
+        print(f"WARNING {name}: {problem}", file=sys.stderr)
     for name, problem in report.errors.items():
         print(f"FAILED {name}: {problem}", file=sys.stderr)
     return 1 if report.errors else 0
