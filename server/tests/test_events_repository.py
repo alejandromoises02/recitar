@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import inspect
 
 from app.domain.event import Event, TicketLink
-from app.events_repository import list_events, upsert_events
+from app.events_repository import count_upcoming_by_source, list_events, upsert_events
 
 NOW = datetime(2026, 11, 8, 12, 0, tzinfo=timezone.utc)
 
@@ -49,6 +49,18 @@ def test_saving_nothing_is_fine(db_engine):
     with db_engine.begin() as conn:
         upsert_events(conn, [])
         assert list_events(conn) == []
+
+
+def test_upcoming_events_are_counted_per_source(db_engine):
+    items = [
+        event("movistar-a-20261120T2100", starts_at=NOW + timedelta(days=12)),
+        event("movistar-b-20261121T2100", starts_at=NOW + timedelta(days=13)),
+        event("venti-c-20261122T2100", starts_at=NOW + timedelta(days=14)),
+        event("venti-old-20260101T2100", starts_at=NOW - timedelta(days=30)),  # already happened
+    ]
+    with db_engine.begin() as conn:
+        upsert_events(conn, items)
+        assert count_upcoming_by_source(conn, NOW) == {"movistar": 2, "venti": 1}
 
 
 def test_events_are_listed_by_start_date(db_engine):

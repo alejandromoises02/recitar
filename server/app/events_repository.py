@@ -1,6 +1,8 @@
 """Reading and writing events. The table is described once, here; migrations create it."""
 
-from sqlalchemy import Column, Connection, DateTime, MetaData, Table, Text, select
+from datetime import datetime
+
+from sqlalchemy import Column, Connection, DateTime, MetaData, Table, Text, func, select
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
 from app.domain.event import Event
@@ -38,6 +40,13 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
     statement = insert(events).values(rows)
     changes = {c.name: statement.excluded[c.name] for c in events.columns if not c.primary_key}
     connection.execute(statement.on_conflict_do_update(index_elements=[events.c.id], set_=changes))
+
+
+def count_upcoming_by_source(connection: Connection, now: datetime) -> dict[str, int]:
+    """Stored events that have not happened yet, per source (the first part of the id)."""
+    source = func.split_part(events.c.id, "-", 1)
+    rows = connection.execute(select(source, func.count()).where(events.c.starts_at >= now).group_by(source))
+    return {name: count for name, count in rows}
 
 
 def list_events(connection: Connection) -> list[Event]:

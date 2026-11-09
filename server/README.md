@@ -45,7 +45,8 @@ python -m app.run --only colon,venti # only some sources (colon, livepass, venti
 ```
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
-run. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
+run. If a source returns less than 70% of the upcoming events already stored for it, the run
+prints a `WARNING` (Movistar Arena has been seen loading only part of its listing): run it again. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
 Arena (`playwright install chromium`). Image copies go to `server/data/images` (ignored by git).
 
 ## Layout
