@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from functools import lru_cache
 from typing import Annotated, Callable
 
@@ -7,9 +7,10 @@ from pydantic import BaseModel
 from sqlalchemy import Engine
 
 from app.api.cursor import decode_cursor, encode_cursor
-from app.api.problems import MEDIA_TYPE, Problem
+from app.api.problems import MEDIA_TYPE, InvalidParameterError, Problem
 from app.db import make_engine
 from app.domain.event import Event
+from app.domain.local_time import day_window
 from app.events_repository import EventFilters, list_upcoming
 
 DEFAULT_LIMIT = 20
@@ -51,7 +52,7 @@ def _problem(description: str) -> dict:
     "/events",
     response_model=EventPage,
     summary="Upcoming events, a page at a time",
-    responses={400: _problem("The cursor was not issued by this API"), 422: _problem("limit or q is out of range")},
+    responses={400: _problem("The cursor was not issued by this API"), 422: _problem("limit, q, from or to is not valid")},
 )
 def list_events(
     source: Annotated[EventsSource, Depends(upcoming_events_source)],
@@ -64,12 +65,20 @@ def list_events(
             description="Search the title, artist and venue: every word must appear, ignoring case and accents",
         ),
     ] = None,
+    from_: Annotated[
+        date | None, Query(alias="from", description="First day, YYYY-MM-DD, in Buenos Aires time (included)")
+    ] = None,
+    to: Annotated[date | None, Query(description="Last day, YYYY-MM-DD, in Buenos Aires time (included)")] = None,
 ) -> EventPage:
     """Events that have not started yet, by start time (then id). Follow `next_cursor` until it is
     null: new events stored while paging never make one repeat or go missing. Send the same filters
-    with every page."""
+    with every page. Days are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday
+    show, although it is stored as Sunday 01:00 UTC."""
+    if from_ and to and to < from_:
+        raise InvalidParameterError(f"`to` ({to}) is before `from` ({from_}).")
     after = decode_cursor(cursor) if cursor else None
-    filters = EventFilters(q=q.strip() or None if q else None)
+    starts_from, starts_before = day_window(from_, to)
+    filters = EventFilters(q=q.strip() or None if q else None, starts_from=starts_from, starts_before=starts_before)
     rows = source(limit + 1, after, filters)  # one extra row tells whether there is a next page
     items = rows[:limit]
     return EventPage(items=items, next_cursor=encode_cursor(items[-1]) if len(rows) > limit else None)

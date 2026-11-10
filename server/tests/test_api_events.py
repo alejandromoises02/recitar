@@ -28,7 +28,12 @@ class FakeEvents:
 
     def __call__(self, limit, after, filters):
         self.calls.append({"limit": limit, "after": after, "filters": filters})
-        rest = [e for e in self.events if after is None or (e.starts_at, e.id) > after]
+        rest = [
+            e for e in self.events
+            if (after is None or (e.starts_at, e.id) > after)
+            and (filters.starts_from is None or e.starts_at >= filters.starts_from)
+            and (filters.starts_before is None or e.starts_at < filters.starts_before)
+        ]
         return rest[:limit]
 
 
@@ -126,7 +131,7 @@ def test_a_cursor_we_did_not_issue_is_a_bad_request(client_with, cursor):
 def test_the_endpoint_is_documented_in_the_openapi_schema():
     schema = TestClient(app).get("/openapi.json").json()
     operation = schema["paths"]["/events"]["get"]
-    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit", "q"}
+    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit", "q", "from", "to"}
     assert "EventPage" in schema["components"]["schemas"]
 
 
@@ -154,3 +159,91 @@ def test_a_search_longer_than_100_characters_is_rejected(client_with):
     assert response.json()["errors"][0]["loc"] == ["query", "q"]
     assert fake.calls == []
     assert client.get("/events", params={"q": "a" * 100}).status_code == 200
+
+
+UTC = timezone.utc
+
+
+def at(id_: str, when: datetime) -> Event:
+    return event(id_, 0).model_copy(update={"starts_at": when})
+
+
+# Saturday 2026-11-14 in Buenos Aires (UTC-3) runs from 03:00 UTC on the 14th to 03:00 UTC on the 15th.
+SATURDAY_NIGHT = at("sat-22h", datetime(2026, 11, 15, 1, 0, tzinfo=UTC))  # Saturday 22:00 in Buenos Aires
+SATURDAY_LAST_MINUTE = at("sat-23h59", datetime(2026, 11, 15, 2, 59, tzinfo=UTC))  # Saturday 23:59
+SUNDAY_MIDNIGHT = at("sun-00h00", datetime(2026, 11, 15, 3, 0, tzinfo=UTC))  # Sunday 00:00
+FRIDAY_LATE = at("fri-23h30", datetime(2026, 11, 14, 2, 30, tzinfo=UTC))  # Friday 23:30
+NIGHT = [FRIDAY_LATE, SATURDAY_NIGHT, SATURDAY_LAST_MINUTE, SUNDAY_MIDNIGHT]
+
+
+def test_a_day_is_the_buenos_aires_day_not_the_utc_one(client_with):
+    client, fake = client_with(NIGHT)
+    response = client.get("/events", params={"from": "2026-11-14", "to": "2026-11-14"})
+    assert ids(response) == ["sat-22h", "sat-23h59"]
+    filters = fake.calls[-1]["filters"]
+    assert filters.starts_from == datetime(2026, 11, 14, 3, 0, tzinfo=UTC)
+    assert filters.starts_before == datetime(2026, 11, 15, 3, 0, tzinfo=UTC)
+
+
+def test_a_show_at_midnight_belongs_to_the_day_that_starts(client_with):
+    client, _ = client_with(NIGHT)
+    assert ids(client.get("/events", params={"from": "2026-11-15", "to": "2026-11-15"})) == ["sun-00h00"]
+    assert ids(client.get("/events", params={"from": "2026-11-13", "to": "2026-11-13"})) == ["fri-23h30"]
+
+
+def test_a_range_includes_both_days(client_with):
+    client, _ = client_with(NIGHT)
+    response = client.get("/events", params={"from": "2026-11-13", "to": "2026-11-14"})
+    assert ids(response) == ["fri-23h30", "sat-22h", "sat-23h59"]
+
+
+def test_only_from_means_from_that_day_on(client_with):
+    client, fake = client_with(NIGHT)
+    assert ids(client.get("/events", params={"from": "2026-11-14"})) == ["sat-22h", "sat-23h59", "sun-00h00"]
+    assert fake.calls[-1]["filters"].starts_before is None
+
+
+def test_only_to_means_until_the_end_of_that_day(client_with):
+    client, fake = client_with(NIGHT)
+    assert ids(client.get("/events", params={"to": "2026-11-13"})) == ["fri-23h30"]
+    assert fake.calls[-1]["filters"].starts_from is None
+
+
+def test_dates_combine_with_the_search_and_page_with_the_cursor(client_with):
+    client, _ = client_with(NIGHT)
+    params = {"from": "2026-11-14", "to": "2026-11-14", "limit": 1}
+    first = client.get("/events", params=params)
+    second = client.get("/events", params={**params, "cursor": first.json()["next_cursor"]})
+    assert ids(first) + ids(second) == ["sat-22h", "sat-23h59"]
+    assert second.json()["next_cursor"] is None
+
+
+def test_without_dates_there_is_no_date_filter(client_with):
+    client, fake = client_with(NIGHT)
+    client.get("/events")
+    assert (fake.calls[-1]["filters"].starts_from, fake.calls[-1]["filters"].starts_before) == (None, None)
+
+
+def test_to_before_from_is_rejected(client_with):
+    client, fake = client_with(NIGHT)
+    response = client.get("/events", params={"from": "2026-11-15", "to": "2026-11-14"})
+    assert response.status_code == 422
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.json()["detail"] == "`to` (2026-11-14) is before `from` (2026-11-15)."
+    assert fake.calls == []
+
+
+@pytest.mark.parametrize("params", [{"from": "2026-13-01"}, {"to": "14/11/2026"}, {"from": "mañana"}])
+def test_a_date_that_is_not_yyyy_mm_dd_is_rejected(client_with, params):
+    client, fake = client_with(NIGHT)
+    response = client.get("/events", params=params)
+    assert response.status_code == 422
+    assert response.json()["errors"][0]["loc"] == ["query", next(iter(params))]
+    assert fake.calls == []
+
+
+def test_start_times_come_in_buenos_aires_time_so_the_day_and_hour_read_as_is(client_with):
+    client, _ = client_with([SATURDAY_NIGHT])
+    item = client.get("/events").json()["items"][0]
+    assert item["starts_at"] == "2026-11-14T22:00:00-03:00"  # stored as 2026-11-15 01:00 UTC
+    assert datetime.fromisoformat(item["starts_at"]) == SATURDAY_NIGHT.starts_at  # same instant

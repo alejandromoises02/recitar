@@ -73,3 +73,18 @@ def test_image_origin_accepts_only_known_values():
         assert make_event(image_url="https://x.com/a.jpg", image_origin=origin).image_origin == origin
     with pytest.raises(ValidationError):
         make_event(image_url="https://x.com/a.jpg", image_origin="stolen")
+
+
+def test_start_time_is_written_in_buenos_aires_time_and_reads_back_as_the_same_instant():
+    from datetime import datetime, timezone
+
+    from app.domain.event import Event, TicketLink
+
+    utc = datetime(2026, 11, 15, 1, 0, tzinfo=timezone.utc)
+    e = Event(
+        id="x", category="concert", title="T", venue="V", starts_at=utc,
+        ticket_links=[TicketLink(vendor="X", url="https://x.com")], source_url="https://x.com", updated_at=utc,
+    )
+    dumped = e.model_dump(mode="json")
+    assert dumped["starts_at"] == "2026-11-14T22:00:00-03:00"
+    assert Event.model_validate(dumped) == e

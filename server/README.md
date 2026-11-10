@@ -58,21 +58,29 @@ Interactive docs at `/docs`, schema at `/openapi.json`.
 time and then id:
 
 ```json
-{"items": [{"id": "venti-...", "title": "...", "starts_at": "2026-11-13T21:00:00Z", "...": "..."}], "next_cursor": "eyJzdGFydHNf..."}
+{"items": [{"id": "venti-...", "title": "...", "starts_at": "2026-11-13T21:00:00-03:00", "...": "..."}], "next_cursor": "eyJzdGFydHNf..."}
 ```
 
+- `starts_at` comes with the Buenos Aires offset (`-03:00`), so the day and hour read as they are
+  shown in Buenos Aires. It is stored in UTC; both are the same instant.
 - `limit`: 1 to 100, default 20.
 - `q`: search the title, the artist and the venue, up to 100 characters. Every word must appear, in any
   order, ignoring case and accents (`maria becerra` finds `María Becerra`). `%` and `_` are plain
   characters. Uses the `unaccent` extension (migration 0002); with a few hundred events no index is
   needed. Send the same `q` with every page.
+- `from`, `to`: days as `YYYY-MM-DD`, both included, in **Buenos Aires** time. A show on Saturday
+  at 22:00 there is stored as Sunday 01:00 UTC and still counts as Saturday. Either one can be
+  left out (`from` alone: from that day on; `to` alone: until the end of that day). For one day
+  send the same date in both. Only upcoming events are listed, so a `from` in the past changes
+  nothing. Send the same dates with every page.
 - `cursor`: the `next_cursor` of the previous page, as is (it is opaque). Leave it out for the
   first page. `next_cursor` is `null` on the last page. Paging is by key, not offset, so events
   stored while a user scrolls never make one repeat or go missing.
 
 Errors are RFC 7807 problem details (`application/problem+json`): `{"type", "title", "status",
 "detail"}`, plus `errors` (one per bad parameter) on 422. A cursor this API did not issue is a
-400; an out-of-range `limit` or a too-long `q` is a 422.
+400; an out-of-range `limit`, a too-long `q`, a date that is not `YYYY-MM-DD` or a `to` before `from`
+is a 422.
 
 Versioning: only additive changes (new fields, new optional parameters) go into these paths.
 A breaking change gets a new `/v2/...` path while the old one keeps working.

@@ -12,6 +12,10 @@ from app.api.cursor import InvalidCursorError
 MEDIA_TYPE = "application/problem+json"
 
 
+class InvalidParameterError(ValueError):
+    """Parameters that are each valid but do not make sense together; the message is the detail."""
+
+
 class Problem(BaseModel):
     type: str = "about:blank"
     title: str
@@ -31,6 +35,10 @@ def install_problem_handlers(app: FastAPI) -> None:
             title="Invalid cursor", status=400,
             detail="Use the next_cursor of a previous page as is, or leave cursor out to get the first page.",
         ))
+
+    @app.exception_handler(InvalidParameterError)
+    def invalid_parameter(request: Request, error: InvalidParameterError) -> JSONResponse:
+        return problem_response(Problem(title="Invalid request", status=422, detail=str(error)))
 
     @app.exception_handler(RequestValidationError)
     def invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:

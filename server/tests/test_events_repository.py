@@ -152,3 +152,18 @@ def test_search_results_page_with_the_cursor_too(db_engine):
         first = list_upcoming(conn, NOW, limit=2, after=None, filters=EventFilters(q="mila"))
         rest = list_upcoming(conn, NOW, limit=2, after=(first[-1].starts_at, first[-1].id), filters=EventFilters(q="mila"))
     assert [e.id for e in first + rest] == ["venti-m0-20261120T2100", "venti-m1-20261120T2100", "venti-m2-20261120T2100"]
+
+
+def test_the_time_window_includes_its_start_and_excludes_its_end(db_engine):
+    start, end = NOW + timedelta(days=1), NOW + timedelta(days=2)
+    stored = [
+        event("venti-before-20261109T1159", starts_at=start - timedelta(minutes=1)),
+        event("venti-start-20261109T1200", starts_at=start),
+        event("venti-last-20261110T1159", starts_at=end - timedelta(minutes=1)),
+        event("venti-end-20261110T1200", starts_at=end),
+    ]
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    with db_engine.connect() as conn:
+        found = list_upcoming(conn, NOW, limit=50, after=None, filters=EventFilters(starts_from=start, starts_before=end))
+    assert [e.id for e in found] == ["venti-start-20261109T1200", "venti-last-20261110T1159"]
