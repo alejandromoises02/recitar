@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import inspect
 
 from app.domain.event import Event, TicketLink
-from app.events_repository import count_upcoming_by_source, list_events, upsert_events
+from app.events_repository import count_upcoming_by_source, list_events, list_upcoming, upsert_events
 
 NOW = datetime(2026, 11, 8, 12, 0, tzinfo=timezone.utc)
 
@@ -69,3 +69,17 @@ def test_events_are_listed_by_start_date(db_engine):
     with db_engine.begin() as conn:
         upsert_events(conn, [late, soon])
         assert [e.id for e in list_events(conn)] == [soon.id, late.id]
+
+
+def test_upcoming_events_are_paged_by_start_date_then_id_from_now_on(db_engine):
+    past = event("venti-old-20261101T2100", starts_at=NOW - timedelta(days=1))
+    a = event("venti-a-20261120T2100", starts_at=NOW + timedelta(days=2))
+    b = event("venti-b-20261120T2100", starts_at=NOW + timedelta(days=2))
+    later = event("venti-c-20261125T2100", starts_at=NOW + timedelta(days=3))
+    with db_engine.begin() as conn:
+        upsert_events(conn, [later, b, past, a])
+    with db_engine.connect() as conn:
+        first = list_upcoming(conn, NOW, limit=2, after=None)
+        rest = list_upcoming(conn, NOW, limit=2, after=(first[-1].starts_at, first[-1].id))
+    assert [e.id for e in first] == [a.id, b.id]
+    assert [e.id for e in rest] == [later.id]

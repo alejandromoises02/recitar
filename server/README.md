@@ -49,7 +49,33 @@ run. If a source returns less than 70% of the upcoming events already stored for
 prints a `WARNING` (Movistar Arena has been seen loading only part of its listing): run it again. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
 Arena (`playwright install chromium`). Image copies go to `server/data/images` (ignored by git).
 
+## API
+
+Run it with `uvicorn app.main:app --reload`; it reads the database through `DATABASE_URL_POOLED`.
+Interactive docs at `/docs`, schema at `/openapi.json`.
+
+`GET /events?limit=20&cursor=...` returns upcoming events (not started yet), ordered by start
+time and then id:
+
+```json
+{"items": [{"id": "venti-...", "title": "...", "starts_at": "2026-11-13T21:00:00Z", "...": "..."}], "next_cursor": "eyJzdGFydHNf..."}
+```
+
+- `limit`: 1 to 100, default 20.
+- `cursor`: the `next_cursor` of the previous page, as is (it is opaque). Leave it out for the
+  first page. `next_cursor` is `null` on the last page. Paging is by key, not offset, so events
+  stored while a user scrolls never make one repeat or go missing.
+
+Errors are RFC 7807 problem details (`application/problem+json`): `{"type", "title", "status",
+"detail"}`, plus `errors` (one per bad parameter) on 422. A cursor this API did not issue is a
+400; an out-of-range `limit` is a 422.
+
+Versioning: only additive changes (new fields, new optional parameters) go into these paths.
+A breaking change gets a new `/v2/...` path while the old one keeps working.
+
 ## Layout
+
+- `app/api/` - HTTP endpoints, page cursors and the problem-details error format.
 
 - `app/domain/` - core types (`Event` mirrors the client's `Event`).
 - `tests/` - pytest.
