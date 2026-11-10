@@ -13,10 +13,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable, Mapping
 
-from app.db import SERVER_DIR, make_engine, migrate
+from app.db import make_engine, migrate
 from app.domain.event import Event
 from app.events_repository import count_upcoming_by_source, upsert_events
-from app.images.copy import LocalImageStore
+from app.images.copy import IMAGES_DIR, LocalImageStore
 from app.images.wikimedia import MissingContactError, user_agent
 from app.pipeline import enrich_images
 from app.scrapers import colon, livepass, movistar, venti
@@ -27,7 +27,6 @@ SCRAPERS: dict[str, Callable[[], list[Event]]] = {
     "venti": venti.scrape,
     "movistar": movistar.scrape,
 }
-IMAGES_DIR = SERVER_DIR / "data" / "images"
 PARTIAL_RATIO = 0.7  # fewer events than this share of what is stored raises a warning
 
 

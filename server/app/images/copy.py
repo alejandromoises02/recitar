@@ -20,6 +20,9 @@ COPY_SOURCES = ("colon", "livepass", "venti")
 MAX_DOWNLOAD_BYTES = 8 * 1024 * 1024
 MAX_WIDTH = 800
 MEDIA_PREFIX = "/media/"
+# Where copies live and where the API serves them from (`/media/...`). Files are never rewritten:
+# a name is the hash of the source URL and an image already stored is not downloaded again.
+IMAGES_DIR = Path(__file__).resolve().parents[2] / "data" / "images"
 
 
 class LocalImageStore:
