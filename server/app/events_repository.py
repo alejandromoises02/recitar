@@ -1,8 +1,9 @@
 """Reading and writing events. The table is described once, here; migrations create it."""
 
+from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import Column, Connection, DateTime, MetaData, Table, Text, func, select, tuple_
+from sqlalchemy import Column, ColumnElement, Connection, DateTime, MetaData, Table, Text, and_, func, select, tuple_
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
 from app.domain.event import Event
@@ -54,8 +55,31 @@ def list_events(connection: Connection) -> list[Event]:
     return [Event.model_validate(dict(row)) for row in rows]
 
 
+@dataclass(frozen=True)
+class EventFilters:
+    q: str | None = None  # words that must all appear in the title, artist or venue, ignoring case and accents
+
+
+def _folded(value: ColumnElement) -> ColumnElement:
+    """Lower case without accents; f_unaccent comes from migration 0002."""
+    return func.lower(func.f_unaccent(value))
+
+
+def _escape_like(word: str) -> str:
+    return word.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _search(q: str) -> ColumnElement[bool]:
+    text = _folded(func.concat_ws(" ", events.c.title, events.c.artist, events.c.venue))
+    return and_(*(text.like(func.concat("%", _folded(_escape_like(word)), "%"), escape="\\") for word in q.split()))
+
+
 def list_upcoming(
-    connection: Connection, now: datetime, limit: int, after: tuple[datetime, str] | None
+    connection: Connection,
+    now: datetime,
+    limit: int,
+    after: tuple[datetime, str] | None,
+    filters: EventFilters = EventFilters(),
 ) -> list[Event]:
     """Events from `now` on, by start time then id, `limit` at a time.
 
@@ -63,6 +87,8 @@ def list_upcoming(
     offset means no event is repeated or skipped when new ones are stored between two pages.
     """
     query = select(events).where(events.c.starts_at >= now)
+    if filters.q:
+        query = query.where(_search(filters.q))
     if after is not None:
         query = query.where(tuple_(events.c.starts_at, events.c.id) > tuple_(*after))
     query = query.order_by(events.c.starts_at, events.c.id).limit(limit)

@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from app.api.events import upcoming_events_source
 from app.domain.event import Event, TicketLink
+from app.events_repository import EventFilters
 from app.main import app
 
 NOW = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
@@ -25,8 +26,8 @@ class FakeEvents:
         self.events = sorted(events, key=lambda e: (e.starts_at, e.id))
         self.calls: list[dict] = []
 
-    def __call__(self, limit, after):
-        self.calls.append({"limit": limit, "after": after})
+    def __call__(self, limit, after, filters):
+        self.calls.append({"limit": limit, "after": after, "filters": filters})
         rest = [e for e in self.events if after is None or (e.starts_at, e.id) > after]
         return rest[:limit]
 
@@ -125,9 +126,31 @@ def test_a_cursor_we_did_not_issue_is_a_bad_request(client_with, cursor):
 def test_the_endpoint_is_documented_in_the_openapi_schema():
     schema = TestClient(app).get("/openapi.json").json()
     operation = schema["paths"]["/events"]["get"]
-    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit"}
+    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit", "q"}
     assert "EventPage" in schema["components"]["schemas"]
 
 
 def test_health_still_answers():
     assert TestClient(app).get("/health").json() == {"status": "ok"}
+
+
+def test_q_is_passed_to_the_search_trimmed(client_with):
+    client, fake = client_with([event("e0", 0)])
+    assert client.get("/events", params={"q": "  maria becerra "}).status_code == 200
+    assert fake.calls[-1]["filters"] == EventFilters(q="maria becerra")
+
+
+@pytest.mark.parametrize("params", [{}, {"q": ""}, {"q": "   "}])
+def test_without_a_search_every_upcoming_event_is_listed(client_with, params):
+    client, fake = client_with([event("e0", 0)])
+    assert ids(client.get("/events", params=params)) == ["e0"]
+    assert fake.calls[-1]["filters"] == EventFilters(q=None)
+
+
+def test_a_search_longer_than_100_characters_is_rejected(client_with):
+    client, fake = client_with([event("e0", 0)])
+    response = client.get("/events", params={"q": "a" * 101})
+    assert response.status_code == 422
+    assert response.json()["errors"][0]["loc"] == ["query", "q"]
+    assert fake.calls == []
+    assert client.get("/events", params={"q": "a" * 100}).status_code == 200

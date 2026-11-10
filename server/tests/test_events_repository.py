@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import inspect
 
 from app.domain.event import Event, TicketLink
-from app.events_repository import count_upcoming_by_source, list_events, list_upcoming, upsert_events
+from app.events_repository import EventFilters, count_upcoming_by_source, list_events, list_upcoming, upsert_events
 
 NOW = datetime(2026, 11, 8, 12, 0, tzinfo=timezone.utc)
 
@@ -83,3 +83,72 @@ def test_upcoming_events_are_paged_by_start_date_then_id_from_now_on(db_engine):
         rest = list_upcoming(conn, NOW, limit=2, after=(first[-1].starts_at, first[-1].id))
     assert [e.id for e in first] == [a.id, b.id]
     assert [e.id for e in rest] == [later.id]
+
+
+def search(db_engine, q: str, stored: list[Event]) -> list[str]:
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    with db_engine.connect() as conn:
+        return [e.id for e in list_upcoming(conn, NOW, limit=50, after=None, filters=EventFilters(q=q))]
+
+
+def test_search_ignores_case_and_accents(db_engine):
+    stored = [event("movistar-mb-20261120T2100", title="María Becerra"), event("movistar-dv-20261120T2100", title="Divididos")]
+    assert search(db_engine, "maria BECERRA", stored) == ["movistar-mb-20261120T2100"]
+
+
+def test_search_matches_accented_words_from_a_plain_query_and_the_other_way_round(db_engine):
+    stored = [event("venti-n-20261120T2100", title="Noche de ÑANDÚ"), event("venti-o-20261120T2100", title="Otra")]
+    assert search(db_engine, "nandu", stored) == ["venti-n-20261120T2100"]
+    assert search(db_engine, "ñandú", stored) == ["venti-n-20261120T2100"]
+
+
+def test_every_word_must_appear_in_any_order(db_engine):
+    stored = [
+        event("venti-a-20261120T2100", title="Mila en Humboldt"),
+        event("venti-b-20261120T2100", title="Mila en Niceto Bar"),
+    ]
+    assert search(db_engine, "humboldt mila", stored) == ["venti-a-20261120T2100"]
+
+
+def test_search_also_looks_at_the_artist(db_engine):
+    stored = [event("livepass-x-20261120T2100", title="Gira 2026 en Buenos Aires", artist="A Perfect Circle")]
+    assert search(db_engine, "perfect circle", stored) == ["livepass-x-20261120T2100"]
+
+
+def test_search_also_looks_at_the_venue(db_engine):
+    stored = [
+        event("venti-h-20261120T2100", title="Mila", venue="Humboldt | Niceto Club"),
+        event("venti-k-20261120T2100", title="Otra", venue="Teatro Colón"),
+    ]
+    assert search(db_engine, "niceto", stored) == ["venti-h-20261120T2100"]
+    assert search(db_engine, "mila niceto", stored) == ["venti-h-20261120T2100"]
+
+
+def test_like_wildcards_in_the_query_are_plain_characters(db_engine):
+    stored = [
+        event("venti-p-20261120T2100", title="2x1 al 50% off"),
+        event("venti-q-20261120T2100", title="Show_raro"),
+        event("venti-r-20261120T2100", title="Showxraro"),
+    ]
+    assert search(db_engine, "50%", stored) == ["venti-p-20261120T2100"]
+    assert search(db_engine, "%", stored) == ["venti-p-20261120T2100"]
+    assert search(db_engine, "w_r", stored) == ["venti-q-20261120T2100"]
+
+
+def test_search_without_matches_is_empty_and_past_events_never_match(db_engine):
+    stored = [event("venti-old-20261101T2100", title="Divididos", starts_at=NOW - timedelta(days=1))]
+    assert search(db_engine, "divididos", stored) == []
+    assert search(db_engine, "nadie", stored) == []
+
+
+def test_search_results_page_with_the_cursor_too(db_engine):
+    stored = [
+        event(f"venti-m{i}-20261120T2100", title=f"Mila {i}", starts_at=NOW + timedelta(days=i + 1)) for i in range(3)
+    ] + [event("venti-z-20261120T2100", title="Otro", starts_at=NOW + timedelta(days=1, hours=1))]
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    with db_engine.connect() as conn:
+        first = list_upcoming(conn, NOW, limit=2, after=None, filters=EventFilters(q="mila"))
+        rest = list_upcoming(conn, NOW, limit=2, after=(first[-1].starts_at, first[-1].id), filters=EventFilters(q="mila"))
+    assert [e.id for e in first + rest] == ["venti-m0-20261120T2100", "venti-m1-20261120T2100", "venti-m2-20261120T2100"]
