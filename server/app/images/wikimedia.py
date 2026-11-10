@@ -5,6 +5,7 @@ licence. Only licences that allow commercial reuse with credit are accepted. The
 keeps the credit, the licence and the Commons page, so the client can show them.
 """
 
+import json
 import os
 import re
 import time
@@ -70,8 +71,13 @@ def _get_json(client: httpx.Client, url: str, params: dict[str, str], delay: flo
     sleep(delay)
     try:
         response = client.get(url, params={**params, "format": "json"})
-        return response.json() if response.status_code == 200 else None
-    except (httpx.HTTPError, ValueError):
+    except httpx.HTTPError:
+        return None
+    if response.status_code != 200:
+        return None
+    try:
+        return response.json()
+    except json.JSONDecodeError:  # e.g. an HTML error page served with 200
         return None
 
 

@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from app.domain.event import Event, TicketLink
 from app.scrapers.images import first_image_url, source_image
 from app.scrapers.geo import city_name, region_code
+from app.scrapers.text import clean_text
 
 BASE_URL = "https://www.livepass.com.ar"
 LISTING_PATH = "/t/show"
@@ -58,7 +59,7 @@ def parse_event(html: str, now: datetime) -> Event | None:
     return Event(
         id=f"livepass-{slug}-{starts_at:%Y%m%dT%H%M}",
         category="concert",  # everything under /t/show
-        title=data["name"],
+        title=clean_text(data["name"]),
         venue=place.get("name") or "",
         city=city_name(address.get("addressLocality"), region),
         region=region,

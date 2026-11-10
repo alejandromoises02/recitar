@@ -70,3 +70,10 @@ def test_page_without_event_data_yields_nothing():
 def test_movistars_own_image_is_not_used():
     # Its terms forbid reproducing its content, so images come from the alternative plan instead.
     assert all((e.image_url, e.image_origin) == (None, None) for e in show("multi"))
+
+
+def test_stray_whitespace_in_the_title_is_collapsed():
+    original = (FIXTURES / "movistar_show_multi.html").read_text(encoding="utf-8")
+    html = original.replace('"Mar\\u00eda Becerra"', '" Mar\\u00eda  Becerra "')
+    assert html != original  # the fixture escapes the accent; make sure the padding really went in
+    assert parse_show(html, NOW)[0].title == "María Becerra"

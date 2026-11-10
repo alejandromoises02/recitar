@@ -90,3 +90,10 @@ def test_image_comes_from_the_site_and_is_marked_as_source():
     e = event("caba_malvinas")
     assert e.image_url.startswith("https://livepass-com-ar.uploads.ticketplus.global/images/")
     assert e.image_origin == "source"
+
+
+def test_stray_whitespace_in_the_title_is_collapsed():
+    original = (FIXTURES / "livepass_caba_malvinas.html").read_text(encoding="utf-8")
+    html = original.replace("A PERFECT CIRCLE", " A  PERFECT CIRCLE")
+    assert html != original
+    assert parse_event(html, NOW).title.startswith("A PERFECT CIRCLE")

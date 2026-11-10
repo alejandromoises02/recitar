@@ -32,3 +32,7 @@ Data flow: scraper -> normalize to `Event` -> our database -> API -> client. The
 
 - `client/`: Expo / React Native app (iOS, Android, web). Feature-first folders under `client/src/features/`.
 - `docs/`: project docs.
+
+## Backend skills
+
+All backend work (`server/`) follows the skills in `.claude/skills/` (see its `README.md` for sources and the project decisions that override them). Before writing or reviewing backend code, load the ones that apply: `fastapi-expert` and `api-designer` for the API, `testing-python-libraries` for tests, `verifying-external-behavior` for scrapers, `rendering-untrusted-content` for any scraped text that reaches a client. Run `/try-except` and `/tighten-types` on touched modules before closing a backend feature.

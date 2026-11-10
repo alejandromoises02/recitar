@@ -113,3 +113,10 @@ def test_image_comes_from_the_site_and_is_marked_as_source():
 def test_event_without_an_image_has_no_origin_either():
     e = event("niceto")
     assert (e.image_url, e.image_origin) == (None, None)
+
+
+def test_stray_whitespace_in_the_title_is_collapsed():
+    original = (FIXTURES / "venti_humboldt.html").read_text(encoding="utf-8")
+    html = original.replace("Mila en Humboldt", " Mila  en  Humboldt")
+    assert html != original
+    assert parse_event(html, NOW).title.startswith("Mila en Humboldt")

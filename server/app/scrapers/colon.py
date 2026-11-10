@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 
 from app.domain.event import Event, EventCategory, TicketLink
 from app.scrapers.images import first_image_url, source_image
+from app.scrapers.text import clean_text
 
 BA = ZoneInfo("America/Argentina/Buenos_Aires")
 VENUE = "Teatro Colón"
@@ -59,7 +60,7 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
             Event(
                 id=f"colon-{slug}-{starts_at:%Y%m%dT%H%M}",
                 category=_CATEGORIES.get(category.get_text(strip=True), "other") if category else "other",
-                title=" ".join(title.get_text(" ", strip=True).split()),
+                title=clean_text(title.get_text(" ", strip=True)),
                 venue=VENUE,
                 city="Buenos Aires",
                 region="AR-C",

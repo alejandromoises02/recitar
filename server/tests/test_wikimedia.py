@@ -180,3 +180,8 @@ def test_every_date_of_one_show_is_looked_up_once(tmp_path):
     result, _ = enrich(events, api(requests=requests), tmp_path)
     assert [e.image_origin for e in result] == ["licensed", "licensed"]
     assert sum(r.url.params.get("action") == "wbsearchentities" for r in requests) == 1
+
+
+def test_a_reply_that_is_not_json_means_no_photo_not_a_crash():
+    client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, content=b"<html>busy</html>")))
+    assert lookup("Divididos", client) is None
