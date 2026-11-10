@@ -11,7 +11,7 @@ import argparse
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Callable
+from typing import Callable, Mapping
 
 from app.db import SERVER_DIR, make_engine, migrate
 from app.domain.event import Event
@@ -29,6 +29,16 @@ SCRAPERS: dict[str, Callable[[], list[Event]]] = {
 }
 IMAGES_DIR = SERVER_DIR / "data" / "images"
 PARTIAL_RATIO = 0.7  # fewer events than this share of what is stored raises a warning
+
+
+class UnknownSourceError(ValueError):
+    pass
+
+
+def check_sources(only: list[str] | None, scrapers: Mapping[str, object]) -> None:
+    unknown = [name for name in only or [] if name not in scrapers]
+    if unknown:
+        raise UnknownSourceError(f"Unknown source {', '.join(unknown)}; valid ones: {', '.join(scrapers)}")
 
 
 @dataclass
@@ -49,9 +59,7 @@ def run(
 ) -> Report:
     """`known` is how many upcoming events of each source are already stored: a source that now
     returns far fewer is flagged, because Movistar Arena has been seen loading only part of its listing."""
-    unknown = [name for name in only or [] if name not in scrapers]
-    if unknown:
-        raise ValueError(f"Unknown source {', '.join(unknown)}; valid ones: {', '.join(scrapers)}")
+    check_sources(only, scrapers)
     report = Report()
     scraped: dict[str, Event] = {}
     for name, scrape in scrapers.items():
@@ -90,6 +98,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     only = [name.strip() for name in args.only.split(",") if name.strip()] if args.only else None
 
+    try:
+        check_sources(only, SCRAPERS)  # before opening the database
+    except UnknownSourceError as error:
+        print(error, file=sys.stderr)
+        return 2
     engine = make_engine()  # also loads server/.env
     try:
         user_agent()  # fail now, not after minutes of scraping, if the Wikimedia contact is missing
@@ -107,9 +120,6 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         report = run(SCRAPERS, lambda events: enrich_images(events, store), save, only, log=print, known=known)
-    except ValueError as error:
-        print(error, file=sys.stderr)
-        return 2
     finally:
         engine.dispose()
     print(f"\nsaved {report.saved} events; scraped per source: {report.counts or 'none'}")

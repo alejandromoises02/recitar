@@ -17,6 +17,7 @@ from app.domain.event import Event, TicketLink
 from app.scrapers.category import provisional_category
 from app.scrapers.images import first_image_url, source_image
 from app.scrapers.geo import city_name, plain, region_code
+from app.scrapers.text import clean_text
 
 SITEMAP_URL = "https://venti.live/sitemap.xml"
 USER_AGENT = "recitAR-research/0.1"
@@ -59,8 +60,8 @@ def parse_event(html: str, now: datetime) -> Event | None:
     region = region_code(address.get("addressLocality") or "", address.get("addressRegion") or "")
     return Event(
         id=f"venti-{slug}-{starts_at:%Y%m%dT%H%M}",
-        category=provisional_category(data["name"], starts_at),
-        title=data["name"],
+        category=provisional_category(clean_text(data["name"]), starts_at),
+        title=clean_text(data["name"]),
         venue=place.get("name") or "",
         city=city_name(address.get("addressLocality"), region),
         region=region,

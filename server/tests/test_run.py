@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from app.domain.event import Event, TicketLink
-from app.run import run
+from app.run import main, run
 
 NOW = datetime(2026, 11, 8, tzinfo=timezone.utc)
 
@@ -96,3 +96,13 @@ def test_when_nothing_was_scraped_nothing_is_saved():
     report = run({"a": lambda: [], "b": broken}, rec.enrich, rec.save)
     assert rec.enriched is None and rec.saved is None
     assert report.saved == 0 and "b" in report.errors
+
+
+def test_an_unknown_source_on_the_command_line_fails_before_touching_the_database(monkeypatch, capsys):
+    def no_database():
+        raise AssertionError("the database must not be opened")
+
+    monkeypatch.setattr("app.run.make_engine", no_database)
+    assert main(["--only", "nope"]) == 2
+    assert "nope" in capsys.readouterr().err
+

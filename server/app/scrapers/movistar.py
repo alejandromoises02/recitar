@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 from app.domain.event import Event, TicketLink
 from app.scrapers.category import provisional_category
 from app.scrapers.geo import city_name, region_code
+from app.scrapers.text import clean_text
 
 BASE_URL = "https://www.movistararena.com.ar"
 LISTING_PATH = "/shows"
@@ -67,8 +68,8 @@ def parse_show(html: str, now: datetime) -> list[Event]:
         show_id = urlparse(item["url"]).path.rstrip("/").rsplit("/", 1)[-1]
         event = Event(
             id=f"movistar-{show_id}-{starts_at:%Y%m%dT%H%M}",
-            category=provisional_category(item["name"], starts_at),
-            title=item["name"],
+            category=provisional_category(clean_text(item["name"]), starts_at),
+            title=clean_text(item["name"]),
             venue=place.get("name") or "",
             city=city_name(address.get("addressLocality"), region),
             region=region,
