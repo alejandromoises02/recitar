@@ -50,3 +50,20 @@ class Event(BaseModel):
         if (self.image_url is None) != (self.image_origin is None):
             raise ValueError("image_url and image_origin must be given together")
         return self
+
+
+def show_key(event_id: str) -> str:
+    """Event ids are `<source>-<show>-<YYYYMMDDTHHMM>`; without the date they name the show, so
+    every date of one show shares it."""
+    return event_id.rsplit("-", 1)[0]
+
+
+class ShowDate(BaseModel):
+    """Another date of the same show: enough to link to it."""
+
+    id: str
+    starts_at: AwareDatetime
+
+    @field_serializer("starts_at")
+    def _in_buenos_aires_time(self, value: datetime) -> datetime:
+        return value.astimezone(BUENOS_AIRES)

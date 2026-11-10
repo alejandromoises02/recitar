@@ -77,6 +77,11 @@ time and then id:
   first page. `next_cursor` is `null` on the last page. Paging is by key, not offset, so events
   stored while a user scrolls never make one repeat or go missing.
 
+`GET /events/{id}` returns one event with every field (ticket links, image with its credit and
+licence, source), even if it already happened, plus `other_dates`: the upcoming dates of the same
+show (`[{"id", "starts_at"}]`, without the event itself). An unknown id is a 404. Event ids are
+`<source>-<show>-<YYYYMMDDTHHMM>`; the part before the date names the show.
+
 Errors are RFC 7807 problem details (`application/problem+json`): `{"type", "title", "status",
 "detail"}`, plus `errors` (one per bad parameter) on 422. A cursor this API did not issue is a
 400; an out-of-range `limit`, a too-long `q`, a date that is not `YYYY-MM-DD` or a `to` before `from`

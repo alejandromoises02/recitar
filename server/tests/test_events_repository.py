@@ -3,7 +3,15 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import inspect
 
 from app.domain.event import Event, TicketLink
-from app.events_repository import EventFilters, count_upcoming_by_source, list_events, list_upcoming, upsert_events
+from app.events_repository import (
+    EventFilters,
+    count_upcoming_by_source,
+    get_event,
+    list_events,
+    list_show_dates,
+    list_upcoming,
+    upsert_events,
+)
 
 NOW = datetime(2026, 11, 8, 12, 0, tzinfo=timezone.utc)
 
@@ -167,3 +175,28 @@ def test_the_time_window_includes_its_start_and_excludes_its_end(db_engine):
     with db_engine.connect() as conn:
         found = list_upcoming(conn, NOW, limit=50, after=None, filters=EventFilters(starts_from=start, starts_before=end))
     assert [e.id for e in found] == ["venti-start-20261109T1200", "venti-last-20261110T1159"]
+
+
+def test_one_event_is_read_by_id_and_a_missing_one_is_none(db_engine):
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event()])
+    with db_engine.connect() as conn:
+        assert get_event(conn, event().id) == event()
+        assert get_event(conn, "movistar-nope-20261120T2100") is None
+
+
+def test_the_upcoming_dates_of_a_show_are_its_own_and_not_those_of_a_show_with_a_longer_name(db_engine):
+    day = timedelta(days=1)
+    stored = [
+        event("colon-el-cascanueces-20261101T2000", starts_at=NOW - day),  # already happened
+        event("colon-el-cascanueces-20261120T2000", starts_at=NOW + 3 * day),
+        event("colon-el-cascanueces-20261118T2000", starts_at=NOW + 2 * day),
+        event("colon-el-cascanueces-2-20261119T2000", starts_at=NOW + 2 * day),  # another show
+        event("colon-otra-20261118T2000", starts_at=NOW + 2 * day),
+    ]
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    with db_engine.connect() as conn:
+        dates = list_show_dates(conn, "colon-el-cascanueces", NOW)
+    assert [d.id for d in dates] == ["colon-el-cascanueces-20261118T2000", "colon-el-cascanueces-20261120T2000"]
+    assert dates[0].starts_at == NOW + 2 * day
