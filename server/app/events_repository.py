@@ -58,6 +58,8 @@ def list_events(connection: Connection) -> list[Event]:
 @dataclass(frozen=True)
 class EventFilters:
     q: str | None = None  # words that must all appear in the title, artist or venue, ignoring case and accents
+    starts_from: datetime | None = None  # included
+    starts_before: datetime | None = None  # excluded
 
 
 def _folded(value: ColumnElement) -> ColumnElement:
@@ -89,6 +91,10 @@ def list_upcoming(
     query = select(events).where(events.c.starts_at >= now)
     if filters.q:
         query = query.where(_search(filters.q))
+    if filters.starts_from is not None:
+        query = query.where(events.c.starts_at >= filters.starts_from)
+    if filters.starts_before is not None:
+        query = query.where(events.c.starts_at < filters.starts_before)
     if after is not None:
         query = query.where(tuple_(events.c.starts_at, events.c.id) > tuple_(*after))
     query = query.order_by(events.c.starts_at, events.c.id).limit(limit)

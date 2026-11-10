@@ -1,6 +1,9 @@
+from datetime import datetime
 from typing import Literal
 
-from pydantic import AwareDatetime, BaseModel, model_validator
+from pydantic import AwareDatetime, BaseModel, field_serializer, model_validator
+
+from app.domain.local_time import BUENOS_AIRES
 
 EventCategory = Literal["concert", "theatre", "party", "other"]
 
@@ -35,6 +38,12 @@ class Event(BaseModel):
     image_license: str | None = None  # e.g. "CC BY-SA 4.0"
     image_source_url: str | None = None  # page where the image and its licence are published
     updated_at: AwareDatetime
+
+    @field_serializer("starts_at")
+    def _in_buenos_aires_time(self, value: datetime) -> datetime:
+        """Written with the Buenos Aires offset (e.g. 22:00-03:00, not 01:00Z next day), so a client
+        reads the local day and hour as they come. Same instant either way."""
+        return value.astimezone(BUENOS_AIRES)
 
     @model_validator(mode="after")
     def _origin_goes_with_the_image(self) -> "Event":
