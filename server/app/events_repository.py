@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Column, Connection, DateTime, MetaData, Table, Text, func, select
+from sqlalchemy import Column, Connection, DateTime, MetaData, Table, Text, func, select, tuple_
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
 from app.domain.event import Event
@@ -52,3 +52,18 @@ def count_upcoming_by_source(connection: Connection, now: datetime) -> dict[str,
 def list_events(connection: Connection) -> list[Event]:
     rows = connection.execute(select(events).order_by(events.c.starts_at, events.c.id)).mappings()
     return [Event.model_validate(dict(row)) for row in rows]
+
+
+def list_upcoming(
+    connection: Connection, now: datetime, limit: int, after: tuple[datetime, str] | None
+) -> list[Event]:
+    """Events from `now` on, by start time then id, `limit` at a time.
+
+    `after` is the (starts_at, id) of the last event already seen. Paging by that key instead of by
+    offset means no event is repeated or skipped when new ones are stored between two pages.
+    """
+    query = select(events).where(events.c.starts_at >= now)
+    if after is not None:
+        query = query.where(tuple_(events.c.starts_at, events.c.id) > tuple_(*after))
+    query = query.order_by(events.c.starts_at, events.c.id).limit(limit)
+    return [Event.model_validate(dict(row)) for row in connection.execute(query).mappings()]
