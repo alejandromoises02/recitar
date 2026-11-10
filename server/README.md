@@ -82,6 +82,15 @@ licence, source), even if it already happened, plus `other_dates`: the upcoming 
 show (`[{"id", "starts_at"}]`, without the event itself). An unknown id is a 404. Event ids are
 `<source>-<show>-<YYYYMMDDTHHMM>`; the part before the date names the show.
 
+`GET /media/<name>.webp` serves the image copies (`image_url` of events) from `server/data/images`,
+with `Cache-Control: public, max-age=604800`. A copy never changes under its name. The folder is
+local disk, so this works for development; a host without a persistent disk needs object storage
+instead (see the hosting decision).
+
+CORS: browsers may call the API from the origins in `CORS_ORIGINS` (comma-separated, e.g.
+`https://recitar.example,https://www.recitar.example`). Unset, only Expo web in development
+(`http://localhost:8081`, `http://127.0.0.1:8081`) is allowed. Only `GET`, no credentials.
+
 Errors are RFC 7807 problem details (`application/problem+json`): `{"type", "title", "status",
 "detail"}`, plus `errors` (one per bad parameter) on 422. A cursor this API did not issue is a
 400; an out-of-range `limit`, a too-long `q`, a date that is not `YYYY-MM-DD` or a `to` before `from`
