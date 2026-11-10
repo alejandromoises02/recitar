@@ -16,6 +16,12 @@ class InvalidParameterError(ValueError):
     """Parameters that are each valid but do not make sense together; the message is the detail."""
 
 
+class NotFoundError(LookupError):
+    def __init__(self, title: str, detail: str):
+        super().__init__(detail)
+        self.title, self.detail = title, detail
+
+
 class Problem(BaseModel):
     type: str = "about:blank"
     title: str
@@ -39,6 +45,10 @@ def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(InvalidParameterError)
     def invalid_parameter(request: Request, error: InvalidParameterError) -> JSONResponse:
         return problem_response(Problem(title="Invalid request", status=422, detail=str(error)))
+
+    @app.exception_handler(NotFoundError)
+    def not_found(request: Request, error: NotFoundError) -> JSONResponse:
+        return problem_response(Problem(title=error.title, status=404, detail=error.detail))
 
     @app.exception_handler(RequestValidationError)
     def invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:

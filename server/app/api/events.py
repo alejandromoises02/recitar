@@ -7,11 +7,11 @@ from pydantic import BaseModel
 from sqlalchemy import Engine
 
 from app.api.cursor import decode_cursor, encode_cursor
-from app.api.problems import MEDIA_TYPE, InvalidParameterError, Problem
+from app.api.problems import MEDIA_TYPE, InvalidParameterError, NotFoundError, Problem
 from app.db import make_engine
-from app.domain.event import Event
+from app.domain.event import Event, ShowDate, show_key
 from app.domain.local_time import day_window
-from app.events_repository import EventFilters, list_upcoming
+from app.events_repository import EventFilters, get_event, list_show_dates, list_upcoming
 
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
@@ -21,7 +21,14 @@ MAX_QUERY_LENGTH = 100
 # (how many, after which (starts_at, id), which ones) -> upcoming events in order
 EventsSource = Callable[[int, tuple[datetime, str] | None, EventFilters], list[Event]]
 
+# event id -> (the event, upcoming dates of its show) or None when there is no such event
+DetailSource = Callable[[str], tuple[Event, list[ShowDate]] | None]
+
 router = APIRouter(tags=["events"])
+
+
+class EventDetail(Event):
+    other_dates: list[ShowDate]  # upcoming dates of the same show, without this one
 
 
 class EventPage(BaseModel):
@@ -40,6 +47,17 @@ def upcoming_events_source() -> EventsSource:
     def read(limit: int, after: tuple[datetime, str] | None, filters: EventFilters) -> list[Event]:
         with _engine().connect() as connection:
             return list_upcoming(connection, datetime.now(timezone.utc), limit, after, filters)
+
+    return read
+
+
+def event_detail_source() -> DetailSource:
+    def read(event_id: str) -> tuple[Event, list[ShowDate]] | None:
+        with _engine().connect() as connection:
+            found = get_event(connection, event_id)
+            if found is None:
+                return None
+            return found, list_show_dates(connection, show_key(event_id), datetime.now(timezone.utc))
 
     return read
 
@@ -82,3 +100,19 @@ def list_events(
     rows = source(limit + 1, after, filters)  # one extra row tells whether there is a next page
     items = rows[:limit]
     return EventPage(items=items, next_cursor=encode_cursor(items[-1]) if len(rows) > limit else None)
+
+
+@router.get(
+    "/events/{event_id}",
+    response_model=EventDetail,
+    summary="One event, with the other upcoming dates of the same show",
+    responses={404: _problem("There is no event with this id")},
+)
+def get_event_detail(event_id: str, source: Annotated[DetailSource, Depends(event_detail_source)]) -> EventDetail:
+    """Every field of the event, including a past one, plus `other_dates`: the upcoming dates of the
+    same show, so the client can offer them without searching."""
+    found = source(event_id)
+    if found is None:
+        raise NotFoundError("Event not found", f"There is no event with id {event_id}.")
+    event, dates = found
+    return EventDetail(**event.model_dump(), other_dates=[d for d in dates if d.id != event.id])

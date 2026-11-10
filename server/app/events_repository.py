@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import Column, ColumnElement, Connection, DateTime, MetaData, Table, Text, and_, func, select, tuple_
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
-from app.domain.event import Event
+from app.domain.event import Event, ShowDate
 
 metadata = MetaData()
 
@@ -99,3 +99,23 @@ def list_upcoming(
         query = query.where(tuple_(events.c.starts_at, events.c.id) > tuple_(*after))
     query = query.order_by(events.c.starts_at, events.c.id).limit(limit)
     return [Event.model_validate(dict(row)) for row in connection.execute(query).mappings()]
+
+
+def get_event(connection: Connection, event_id: str) -> Event | None:
+    row = connection.execute(select(events).where(events.c.id == event_id)).mappings().one_or_none()
+    return None if row is None else Event.model_validate(dict(row))
+
+
+_DATE_SUFFIX = r"-\d{8}T\d{4}$"
+
+
+def list_show_dates(connection: Connection, show: str, now: datetime) -> list[ShowDate]:
+    """Upcoming dates of one show (see `show_key`). The key is compared whole, so
+    `colon-el-cascanueces` never picks up `colon-el-cascanueces-2`."""
+    key = func.regexp_replace(events.c.id, _DATE_SUFFIX, "")
+    query = (
+        select(events.c.id, events.c.starts_at)
+        .where(key == show, events.c.starts_at >= now)
+        .order_by(events.c.starts_at, events.c.id)
+    )
+    return [ShowDate(id=row.id, starts_at=row.starts_at) for row in connection.execute(query)]
