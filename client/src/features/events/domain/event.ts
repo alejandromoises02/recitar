@@ -35,3 +35,14 @@ export type Event = {
   imageSourceUrl: string | null;
   updatedAt: Date;
 };
+
+/** Another date of the same show: enough to link to it. */
+export type ShowDate = {
+  id: string;
+  startsAt: Date;
+};
+
+/** One event with the other upcoming dates of its show (without itself). */
+export type EventDetail = Event & {
+  otherDates: ShowDate[];
+};
