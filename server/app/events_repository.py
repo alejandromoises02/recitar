@@ -4,9 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy import Column, ColumnElement, Connection, DateTime, MetaData, Table, Text, and_, func, select, tuple_
+from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
-from app.domain.event import Event, ShowDate
+from app.domain.event import Event, EventCategory, ShowDate
 
 metadata = MetaData()
 
@@ -60,6 +61,8 @@ class EventFilters:
     q: str | None = None  # words that must all appear in the title, artist or venue, ignoring case and accents
     starts_from: datetime | None = None  # included
     starts_before: datetime | None = None  # excluded
+    venue: str | None = None  # exact name, as GET /venues lists it
+    category: EventCategory | None = None
 
 
 def _folded(value: ColumnElement) -> ColumnElement:
@@ -95,6 +98,10 @@ def list_upcoming(
         query = query.where(events.c.starts_at >= filters.starts_from)
     if filters.starts_before is not None:
         query = query.where(events.c.starts_at < filters.starts_before)
+    if filters.venue is not None:
+        query = query.where(events.c.venue == filters.venue)
+    if filters.category is not None:
+        query = query.where(events.c.category == filters.category)
     if after is not None:
         query = query.where(tuple_(events.c.starts_at, events.c.id) > tuple_(*after))
     query = query.order_by(events.c.starts_at, events.c.id).limit(limit)
@@ -119,3 +126,19 @@ def list_show_dates(connection: Connection, show: str, now: datetime) -> list[Sh
         .order_by(events.c.starts_at, events.c.id)
     )
     return [ShowDate(id=row.id, starts_at=row.starts_at) for row in connection.execute(query)]
+
+
+class VenueCount(BaseModel):
+    name: str  # what to send as `venue=` to GET /events
+    upcoming_events: int
+
+
+def list_upcoming_venues(connection: Connection, now: datetime) -> list[VenueCount]:
+    """Venues with at least one event from `now` on, by name, with how many they have."""
+    query = (
+        select(events.c.venue, func.count())
+        .where(events.c.starts_at >= now)
+        .group_by(events.c.venue)
+        .order_by(events.c.venue)
+    )
+    return [VenueCount(name=name, upcoming_events=count) for name, count in connection.execute(query)]

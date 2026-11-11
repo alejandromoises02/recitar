@@ -80,6 +80,14 @@ time and then id:
 - `cursor`: the `next_cursor` of the previous page, as is (it is opaque). Leave it out for the
   first page. `next_cursor` is `null` on the last page. Paging is by key, not offset, so events
   stored while a user scrolls never make one repeat or go missing.
+- `venue`: only that venue, compared exactly (send a `name` from `GET /venues` as is), up to 100
+  characters. Venue names are normalized when stored (see `app/scrapers/venues.py`).
+- `category`: only that kind of event: `concert`, `theatre`, `party` or `other`; anything else is a 422.
+- All filters combine (an event must match every one sent). Send the same ones with every page.
+
+`GET /venues` returns the venues that have upcoming events, by name, with how many each has:
+`{"items": [{"name": "Niceto Club", "upcoming_events": 12}]}`. It is not paged (a few dozen venues);
+`items` leaves room to add paging later without breaking clients.
 
 `GET /events/{id}` returns one event with every field (ticket links, image with its credit and
 licence, source), even if it already happened, plus `other_dates`: the upcoming dates of the same

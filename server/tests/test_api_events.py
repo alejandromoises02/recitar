@@ -33,6 +33,8 @@ class FakeEvents:
             if (after is None or (e.starts_at, e.id) > after)
             and (filters.starts_from is None or e.starts_at >= filters.starts_from)
             and (filters.starts_before is None or e.starts_at < filters.starts_before)
+            and (filters.venue is None or e.venue == filters.venue)
+            and (filters.category is None or e.category == filters.category)
         ]
         return rest[:limit]
 
@@ -131,7 +133,7 @@ def test_a_cursor_we_did_not_issue_is_a_bad_request(client_with, cursor):
 def test_the_endpoint_is_documented_in_the_openapi_schema():
     schema = TestClient(app).get("/openapi.json").json()
     operation = schema["paths"]["/events"]["get"]
-    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit", "q", "from", "to"}
+    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit", "q", "from", "to", "venue", "category"}
     assert "EventPage" in schema["components"]["schemas"]
 
 
@@ -247,3 +249,62 @@ def test_start_times_come_in_buenos_aires_time_so_the_day_and_hour_read_as_is(cl
     item = client.get("/events").json()["items"][0]
     assert item["starts_at"] == "2026-11-14T22:00:00-03:00"  # stored as 2026-11-15 01:00 UTC
     assert datetime.fromisoformat(item["starts_at"]) == SATURDAY_NIGHT.starts_at  # same instant
+
+
+def placed(id_: str, venue: str, hours: int = 0, **extra) -> Event:
+    return event(id_, hours).model_copy(update={"venue": venue, **extra})
+
+
+def test_venue_and_category_are_passed_to_the_filters(client_with):
+    client, fake = client_with([event("e0", 0)])
+    assert client.get("/events", params={"venue": " Niceto Club ", "category": "concert"}).status_code == 200
+    assert fake.calls[-1]["filters"] == EventFilters(venue="Niceto Club", category="concert")
+
+
+@pytest.mark.parametrize("params", [{}, {"venue": ""}, {"venue": "   "}])
+def test_without_a_venue_or_category_there_is_no_such_filter(client_with, params):
+    client, fake = client_with([event("e0", 0)])
+    client.get("/events", params=params)
+    assert (fake.calls[-1]["filters"].venue, fake.calls[-1]["filters"].category) == (None, None)
+
+
+def test_the_venue_combines_with_the_search_the_dates_and_the_cursor(client_with):
+    stored = [
+        placed("sat-niceto-a", "Niceto Club").model_copy(update={"starts_at": SATURDAY_NIGHT.starts_at}),
+        placed("sat-niceto-b", "Niceto Club").model_copy(update={"starts_at": SATURDAY_LAST_MINUTE.starts_at}),
+        placed("sat-colon", "Teatro Colón").model_copy(update={"starts_at": SATURDAY_NIGHT.starts_at}),
+        placed("sun-niceto", "Niceto Club").model_copy(update={"starts_at": SUNDAY_MIDNIGHT.starts_at}),
+    ]
+    client, fake = client_with(stored)
+    params = {"venue": "Niceto Club", "q": "show", "from": "2026-11-14", "to": "2026-11-14", "limit": 1}
+    first = client.get("/events", params=params)
+    second = client.get("/events", params={**params, "cursor": first.json()["next_cursor"]})
+    assert ids(first) + ids(second) == ["sat-niceto-a", "sat-niceto-b"]
+    assert second.json()["next_cursor"] is None
+    filters = fake.calls[-1]["filters"]
+    assert (filters.q, filters.venue, filters.category) == ("show", "Niceto Club", None)
+    assert (filters.starts_from, filters.starts_before) == (
+        datetime(2026, 11, 14, 3, 0, tzinfo=UTC), datetime(2026, 11, 15, 3, 0, tzinfo=UTC),
+    )
+
+
+def test_the_category_filters_the_page(client_with):
+    client, _ = client_with([event("e0", 0), placed("e1", "Teatro Colón", 1, category="theatre")])
+    assert ids(client.get("/events", params={"category": "theatre"})) == ["e1"]
+
+
+def test_an_unknown_category_is_rejected(client_with):
+    client, fake = client_with([event("e0", 0)])
+    response = client.get("/events", params={"category": "opera"})
+    assert response.status_code == 422
+    assert response.json()["errors"][0]["loc"] == ["query", "category"]
+    assert fake.calls == []
+
+
+def test_a_venue_longer_than_100_characters_is_rejected(client_with):
+    client, fake = client_with([event("e0", 0)])
+    response = client.get("/events", params={"venue": "a" * 101})
+    assert response.status_code == 422
+    assert response.json()["errors"][0]["loc"] == ["query", "venue"]
+    assert fake.calls == []
+    assert client.get("/events", params={"venue": "a" * 100}).status_code == 200
