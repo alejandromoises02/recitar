@@ -106,3 +106,10 @@ def test_an_unknown_source_on_the_command_line_fails_before_touching_the_databas
     assert main(["--only", "nope"]) == 2
     assert "nope" in capsys.readouterr().err
 
+
+
+def test_venue_names_are_normalized_before_saving():
+    recorder = Recorder()
+    niceto_bar = event("venti-a").model_copy(update={"venue": "Niceto Bar"})
+    run({"venti": lambda: [niceto_bar, event("venti-b")]}, recorder.enrich, recorder.save)
+    assert [e.venue for e in recorder.saved] == ["Niceto Club", "V"]
