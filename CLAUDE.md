@@ -36,3 +36,7 @@ Data flow: scraper -> normalize to `Event` -> our database -> API -> client. The
 ## Backend skills
 
 All backend work (`server/`) follows the skills in `.claude/skills/` (see its `README.md` for sources and the project decisions that override them). Before writing or reviewing backend code, load the ones that apply: `fastapi-expert` and `api-designer` for the API, `testing-python-libraries` for tests, `verifying-external-behavior` for scrapers, `rendering-untrusted-content` for any scraped text that reaches a client. Run `/try-except` and `/tighten-types` on touched modules before closing a backend feature.
+
+## Frontend skills
+
+UI work in `client/` follows the Impeccable plugin (how it looks), `vercel-react-native-skills` (how it is built: lists, animation, performance), and the `make-interfaces-feel-better`, `transitions-dev` and `transitions-polish` skills. Their examples are web CSS; apply the principles with React Native equivalents. The transitions.dev recipes are web CSS and the client is React Native: translate them to Reanimated 4 and keep motion tokens in a shared TypeScript module, never CSS variables. See `.claude/skills/README.md` for the full rules.
