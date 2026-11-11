@@ -49,6 +49,10 @@ run. If a source returns less than 70% of the upcoming events already stored for
 prints a `WARNING` (Movistar Arena has been seen loading only part of its listing): run it again. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
 Arena (`playwright install chromium`). Image copies go to `server/data/images` (ignored by git).
 
+Venue names are normalized before saving, so one place has one name whatever the source calls
+it (for example Venti's "Niceto Bar" and "Humboldt | Niceto Club" are stored as "Niceto Club").
+The mapping lives in `app/scrapers/venues.py`; add new variants there.
+
 ## API
 
 Run it with `uvicorn app.main:app --reload`; it reads the database through `DATABASE_URL_POOLED`.

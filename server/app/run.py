@@ -20,6 +20,7 @@ from app.images.copy import IMAGES_DIR, LocalImageStore
 from app.images.wikimedia import MissingContactError, user_agent
 from app.pipeline import enrich_images
 from app.scrapers import colon, livepass, movistar, venti
+from app.scrapers.venues import canonical_venue
 
 SCRAPERS: dict[str, Callable[[], list[Event]]] = {
     "colon": colon.scrape,
@@ -80,6 +81,7 @@ def run(
                 "the site may have loaded only part of its listing, run it again"
             )
             log(f"[{name}] WARNING: {report.warnings[name]}")
+        found = [event.model_copy(update={"venue": canonical_venue(event.venue)}) for event in found]
         scraped.update({event.id: event for event in found})  # same id twice: the last one wins
     if not scraped:
         return report
