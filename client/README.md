@@ -25,6 +25,24 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## API types
+
+The app only talks to the recitAR API (`server/`), and its types for what the API sends are
+generated from the API's OpenAPI schema, never written by hand:
+
+- `src/api/openapi.json`: the schema, exported by the server (`python -m app.openapi_export` in
+  `server/`).
+- `src/api/schema.ts`: TypeScript types generated from it with `npm run gen:api`. Do not edit it.
+- `src/features/events/infrastructure/event-from-api.ts`: maps the API's event (snake_case, times as
+  text) to the app's `Event` (camelCase, `Date`). It names every field, so when the API renames or
+  removes one, `npm run typecheck` fails there.
+
+After changing the API: export the schema in `server/`, run `npm run gen:api` here, then
+`npm run typecheck`. Tests fail on both sides while either file is out of date.
+
+`openapi-typescript` declares TypeScript 5 as a peer; `overrides` in `package.json` lets it use
+this project's TypeScript 6, which it works with.
+
 ## Get a fresh project
 
 When you're ready, run:
