@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import AwareDatetime, BaseModel, field_serializer, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, field_serializer, model_validator
 
 from app.domain.local_time import BUENOS_AIRES
 
@@ -19,7 +19,11 @@ class TicketLink(BaseModel):
 
 
 class Event(BaseModel):
-    """Public facts about one show. Mirrors client/src/features/events/domain/event.ts."""
+    """Public facts about one show. The client's types are generated from the API schema
+    (client/src/api/schema.ts) and mapped to its own Event in client/src/features/events/."""
+
+    # Fields with a default are always sent (as null), so the schema lists them as required.
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
 
     id: str
     category: EventCategory

@@ -111,9 +111,15 @@ is a 422.
 Versioning: only additive changes (new fields, new optional parameters) go into these paths.
 A breaking change gets a new `/v2/...` path while the old one keeps working.
 
+The client's TypeScript types are generated from this API's OpenAPI schema. After changing an
+endpoint or a response model, run `python -m app.openapi_export` (writes
+`client/src/api/openapi.json`), then `npm run gen:api` in `client/`. `tests/test_openapi_contract.py`
+fails while the client's copy is out of date. Fields with a default (`artist`, `city`, `image_*`...)
+are always sent, as `null`, so the schema lists them as required.
+
 ## Layout
 
 - `app/api/` - HTTP endpoints, page cursors and the problem-details error format.
 
-- `app/domain/` - core types (`Event` mirrors the client's `Event`).
+- `app/domain/` - core types. The client's types are generated from the API schema (see below).
 - `tests/` - pytest.
