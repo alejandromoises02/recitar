@@ -43,6 +43,25 @@ After changing the API: export the schema in `server/`, run `npm run gen:api` he
 `openapi-typescript` declares TypeScript 5 as a peer; `overrides` in `package.json` lets it use
 this project's TypeScript 6, which it works with.
 
+### Fetching data
+
+Data comes from the API through TanStack Query (cache, retries, paging):
+
+- Set the API address in `client/.env.local` (not committed), then fully reload the app:
+  `EXPO_PUBLIC_API_URL=http://localhost:8000`. On a phone use the computer's LAN address
+  (e.g. `http://192.168.0.10:8000`); on the Android emulator, `http://10.0.2.2:8000`. Without it,
+  every request fails with an `ApiConfigError` that says so. Expo inlines `EXPO_PUBLIC_*` at build
+  time, so read it only as `process.env.EXPO_PUBLIC_API_URL`, and never put secrets in it.
+- `src/features/events/infrastructure/events-api.ts`: the HTTP client. API errors become an
+  `ApiError` with the problem's `status`, `title` and `detail`; `getEvent` gives `null` for an
+  unknown id.
+- `src/features/events/infrastructure/events-queries.ts`: `useEvents(filters)` (infinite list that
+  follows `next_cursor`), `useEvent(id)` and `useVenues()`. Each set of filters has its own cache entry.
+- `src/api/query-client.ts`: data stays fresh for 5 minutes; network failures, 408, 429 and 5xx are
+  retried twice, other errors are not (asking again gives the same answer).
+- `src/api/app-focus.ts`: on iOS and Android, queries refresh when the app returns to the
+  foreground (the browser does this by itself on web).
+
 ## Get a fresh project
 
 When you're ready, run:
