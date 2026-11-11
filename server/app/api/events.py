@@ -9,7 +9,7 @@ from sqlalchemy import Engine
 from app.api.cursor import decode_cursor, encode_cursor
 from app.api.problems import MEDIA_TYPE, InvalidParameterError, NotFoundError, Problem
 from app.db import make_engine
-from app.domain.event import Event, ShowDate, show_key
+from app.domain.event import Event, EventCategory, ShowDate, show_key
 from app.domain.local_time import day_window
 from app.events_repository import EventFilters, get_event, list_show_dates, list_upcoming
 
@@ -37,7 +37,7 @@ class EventPage(BaseModel):
 
 
 @lru_cache
-def _engine() -> Engine:
+def engine() -> Engine:
     return make_engine(pooled=True)
 
 
@@ -45,7 +45,7 @@ def upcoming_events_source() -> EventsSource:
     """Reads the database only when called, so a rejected request never opens a connection."""
 
     def read(limit: int, after: tuple[datetime, str] | None, filters: EventFilters) -> list[Event]:
-        with _engine().connect() as connection:
+        with engine().connect() as connection:
             return list_upcoming(connection, datetime.now(timezone.utc), limit, after, filters)
 
     return read
@@ -53,13 +53,17 @@ def upcoming_events_source() -> EventsSource:
 
 def event_detail_source() -> DetailSource:
     def read(event_id: str) -> tuple[Event, list[ShowDate]] | None:
-        with _engine().connect() as connection:
+        with engine().connect() as connection:
             found = get_event(connection, event_id)
             if found is None:
                 return None
             return found, list_show_dates(connection, show_key(event_id), datetime.now(timezone.utc))
 
     return read
+
+
+def _blank_is_none(value: str | None) -> str | None:
+    return value.strip() or None if value else None
 
 
 def _problem(description: str) -> dict:
@@ -70,7 +74,7 @@ def _problem(description: str) -> dict:
     "/events",
     response_model=EventPage,
     summary="Upcoming events, a page at a time",
-    responses={400: _problem("The cursor was not issued by this API"), 422: _problem("limit, q, from or to is not valid")},
+    responses={400: _problem("The cursor was not issued by this API"), 422: _problem("limit, q, from, to, venue or category is not valid")},
 )
 def list_events(
     source: Annotated[EventsSource, Depends(upcoming_events_source)],
@@ -87,6 +91,10 @@ def list_events(
         date | None, Query(alias="from", description="First day, YYYY-MM-DD, in Buenos Aires time (included)")
     ] = None,
     to: Annotated[date | None, Query(description="Last day, YYYY-MM-DD, in Buenos Aires time (included)")] = None,
+    venue: Annotated[
+        str | None, Query(max_length=MAX_QUERY_LENGTH, description="Only this venue: a `name` from GET /venues, exactly")
+    ] = None,
+    category: Annotated[EventCategory | None, Query(description="Only this kind of event")] = None,
 ) -> EventPage:
     """Events that have not started yet, by start time (then id). Follow `next_cursor` until it is
     null: new events stored while paging never make one repeat or go missing. Send the same filters
@@ -96,7 +104,10 @@ def list_events(
         raise InvalidParameterError(f"`to` ({to}) is before `from` ({from_}).")
     after = decode_cursor(cursor) if cursor else None
     starts_from, starts_before = day_window(from_, to)
-    filters = EventFilters(q=q.strip() or None if q else None, starts_from=starts_from, starts_before=starts_before)
+    filters = EventFilters(
+        q=_blank_is_none(q), starts_from=starts_from, starts_before=starts_before,
+        venue=_blank_is_none(venue), category=category,
+    )
     rows = source(limit + 1, after, filters)  # one extra row tells whether there is a next page
     items = rows[:limit]
     return EventPage(items=items, next_cursor=encode_cursor(items[-1]) if len(rows) > limit else None)

@@ -9,7 +9,9 @@ from app.events_repository import (
     get_event,
     list_events,
     list_show_dates,
+    VenueCount,
     list_upcoming,
+    list_upcoming_venues,
     upsert_events,
 )
 
@@ -200,3 +202,57 @@ def test_the_upcoming_dates_of_a_show_are_its_own_and_not_those_of_a_show_with_a
         dates = list_show_dates(conn, "colon-el-cascanueces", NOW)
     assert [d.id for d in dates] == ["colon-el-cascanueces-20261118T2000", "colon-el-cascanueces-20261120T2000"]
     assert dates[0].starts_at == NOW + 2 * day
+
+
+def listed(engine, stored: list[Event], filters: EventFilters) -> list[str]:
+    with engine.begin() as conn:
+        upsert_events(conn, stored)
+    with engine.connect() as conn:
+        return [e.id for e in list_upcoming(conn, NOW, limit=50, after=None, filters=filters)]
+
+
+def test_the_venue_filter_takes_that_exact_venue_only(db_engine):
+    stored = [
+        event("venti-a-20261120T2100", venue="Niceto Club"),
+        event("venti-b-20261120T2100", venue="Niceto Club Bar"),
+        event("colon-c-20261120T2100", venue="Teatro Colón"),
+    ]
+    assert listed(db_engine, stored, EventFilters(venue="Niceto Club")) == ["venti-a-20261120T2100"]
+
+
+def test_the_venue_filter_combines_with_the_search_and_the_time_window(db_engine):
+    start = NOW + timedelta(days=1)
+    stored = [
+        event("venti-in-20261109T1300", title="Mila", venue="Niceto Club", starts_at=start + timedelta(hours=1)),
+        event("venti-late-20261111T1300", title="Mila", venue="Niceto Club", starts_at=start + timedelta(days=2)),
+        event("venti-other-20261109T1300", title="Otra", venue="Niceto Club", starts_at=start + timedelta(hours=1)),
+        event("colon-mila-20261109T1300", title="Mila", venue="Teatro Colón", starts_at=start + timedelta(hours=1)),
+    ]
+    filters = EventFilters(q="mila", venue="Niceto Club", starts_from=start, starts_before=start + timedelta(days=1))
+    assert listed(db_engine, stored, filters) == ["venti-in-20261109T1300"]
+
+
+def test_the_category_filter_takes_that_category_only(db_engine):
+    stored = [event("venti-a-20261120T2100"), event("colon-b-20261120T2100", category="theatre")]
+    assert listed(db_engine, stored, EventFilters(category="theatre")) == ["colon-b-20261120T2100"]
+
+
+def test_venues_are_listed_by_name_with_their_upcoming_events_only(db_engine):
+    day = timedelta(days=1)
+    stored = [
+        event("venti-a-20261120T2100", venue="Niceto Club"),
+        event("venti-b-20261121T2100", venue="Niceto Club", starts_at=NOW + 2 * day),
+        event("venti-old-20261101T2100", venue="Niceto Club", starts_at=NOW - day),
+        event("colon-c-20261120T2100", venue="Teatro Colón"),
+        event("venti-gone-20261101T2100", venue="Club Atlético Fernández Fierro", starts_at=NOW - day),
+        event("movistar-d-20261120T2100", venue="Movistar Arena"),
+    ]
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    with db_engine.connect() as conn:
+        venues = list_upcoming_venues(conn, NOW)
+    assert venues == [
+        VenueCount(name="Movistar Arena", upcoming_events=1),
+        VenueCount(name="Niceto Club", upcoming_events=2),
+        VenueCount(name="Teatro Colón", upcoming_events=1),
+    ]
