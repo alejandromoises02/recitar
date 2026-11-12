@@ -1,6 +1,6 @@
 # Surface brief: Home
 
-Status: confirmed 2026-11-11 (impeccable shape). Content and behavior only; the visual design is made by the user in Figma.
+Status: confirmed 2026-11-11 (impeccable shape); visual design chosen 2026-11-12 from code mocks (see "Chosen design").
 
 ## Job and audience
 
@@ -46,8 +46,20 @@ Status: confirmed 2026-11-11 (impeccable shape). Content and behavior only; the 
 
 Genre filter (data lacks it), favorites, "notify me when X is announced" alerts (strong fit with Just announced; later).
 
-## Open for Figma
+## Chosen design (2026-11-12)
 
-- Just announced: horizontal carousel or short list.
-- Visual weight of Featured vs Just announced.
+Reference mock: `.impeccable/mocks/home/home.html` (local only, gitignored; `home-mobile.html` previews 390 and 820 px). Discarded directions are in `.impeccable/mocks/old-designs/`. This replaces the 2026-11-11 idea of a photo carousel for Just announced.
+
+- **Hero, desktop 40 / 60.** Left: headline "Lo nuevo en la cartelera de Buenos Aires" ("Buenos Aires" in the logo face), then **Just announced** as a split-flap marquee board: date, show name, and under the name the venue plus "+N fechas" when the show has more dates. Right: **Featured** as a fan of record sleeves (centre straight, sides tilted); the record slides out of the centre sleeve and spins. Under the fan, a spotlight card for the centre show (Destacado tag, DD/MM/YYYY date, venue, ticket CTA, ticket domain, "recitAR no vende entradas" line), plus previous / pause / next.
+- **Carousel behaviour.** Autoplay every 5 s; pauses on hover or focus; stops for good once the visitor touches, drags or uses the arrows; visible pause button; screen readers hear manual changes only.
+- **Next up ("Próximos").** Horizontal strip of the 8 soonest shows with "en N días"; arrows on desktop, swipe on phones.
+- **Agenda.** Date and venue chips on the left, month-grouped marquee rows on the right (date, show, venue, time).
+- **Phones and tablets.** Order: headline, Featured carousel and card, Just announced marquee, Próximos, agenda. The kicker reads "Cartelera actualizada hace 3 h" there.
+- **Missing image.** Typographic fallback (name or initials on a warm gradient), never an empty box.
+- **Type and colour.** Logo face Alfa Slab One with stepped red/blue shadow; Unbounded for titles, Onest for text, Barlow Condensed for the marquee. Background #0E0D0C, accent #F2C230. Tokens are recorded in DESIGN.md (des03).
+
+## Still open
+
+- Featured is empty when nobody has picked shows: decide what fills the right half then (for example, just-announced shows that have an image).
 - How many days counts as "just announced" (proposed 14, tune with real data).
+- Backend for Featured (hand-picked flag) and title cleanup (artist extraction) are separate tickets.
