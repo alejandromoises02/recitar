@@ -20,6 +20,7 @@ const complete: ApiEvent = {
   image_license: "CC BY 4.0",
   image_source_url: "https://commons.wikimedia.org/wiki/File:X.jpg",
   updated_at: "2026-11-09T12:00:00Z",
+  first_seen_at: "2026-11-02T12:00:00Z",
 };
 
 describe("eventFromApi", () => {
@@ -42,6 +43,7 @@ describe("eventFromApi", () => {
       imageLicense: "CC BY 4.0",
       imageSourceUrl: "https://commons.wikimedia.org/wiki/File:X.jpg",
       updatedAt: new Date("2026-11-09T12:00:00Z"),
+      firstSeenAt: new Date("2026-11-02T12:00:00Z"),
     });
   });
 

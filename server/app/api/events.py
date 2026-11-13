@@ -10,16 +10,16 @@ from app.api.cursor import decode_cursor, encode_cursor
 from app.api.problems import MEDIA_TYPE, InvalidParameterError, NotFoundError, Problem
 from app.db import make_engine
 from app.domain.event import Event, EventCategory, ShowDate, show_key
-from app.domain.local_time import day_window
-from app.events_repository import EventFilters, get_event, list_show_dates, list_upcoming
+from app.domain.local_time import day_window, start_of_day
+from app.events_repository import EventFilters, EventSort, Position, get_event, list_show_dates, list_upcoming
 
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 100
 
 MAX_QUERY_LENGTH = 100
 
-# (how many, after which (starts_at, id), which ones) -> upcoming events in order
-EventsSource = Callable[[int, tuple[datetime, str] | None, EventFilters], list[Event]]
+# (how many, after which position, which ones, in which order) -> upcoming events in that order
+EventsSource = Callable[[int, Position | None, EventFilters, EventSort], list[Event]]
 
 # event id -> (the event, upcoming dates of its show) or None when there is no such event
 DetailSource = Callable[[str], tuple[Event, list[ShowDate]] | None]
@@ -44,9 +44,9 @@ def engine() -> Engine:
 def upcoming_events_source() -> EventsSource:
     """Reads the database only when called, so a rejected request never opens a connection."""
 
-    def read(limit: int, after: tuple[datetime, str] | None, filters: EventFilters) -> list[Event]:
+    def read(limit: int, after: Position | None, filters: EventFilters, sort: EventSort) -> list[Event]:
         with engine().connect() as connection:
-            return list_upcoming(connection, datetime.now(timezone.utc), limit, after, filters)
+            return list_upcoming(connection, datetime.now(timezone.utc), limit, after, filters, sort)
 
     return read
 
@@ -74,7 +74,7 @@ def _problem(description: str) -> dict:
     "/events",
     response_model=EventPage,
     summary="Upcoming events, a page at a time",
-    responses={400: _problem("The cursor was not issued by this API"), 422: _problem("limit, q, from, to, venue or category is not valid")},
+    responses={400: _problem("The cursor was not issued by this API"), 422: _problem("limit, q, from, to, venue, category, sort or announced_from is not valid")},
 )
 def list_events(
     source: Annotated[EventsSource, Depends(upcoming_events_source)],
@@ -95,22 +95,33 @@ def list_events(
         str | None, Query(max_length=MAX_QUERY_LENGTH, description="Only this venue: a `name` from GET /venues, exactly")
     ] = None,
     category: Annotated[EventCategory | None, Query(description="Only this kind of event")] = None,
+    sort: Annotated[
+        EventSort,
+        Query(description="`starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first"),
+    ] = "starts_at",
+    announced_from: Annotated[
+        date | None,
+        Query(description="Only events first seen on or after this day, YYYY-MM-DD, in Buenos Aires time"),
+    ] = None,
 ) -> EventPage:
-    """Events that have not started yet, by start time (then id). Follow `next_cursor` until it is
+    """Events that have not started yet, by start time (then id), or by announcement with `sort=announced`. Follow `next_cursor` until it is
     null: new events stored while paging never make one repeat or go missing. Send the same filters
-    with every page. Days are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday
+    with every page, including `sort`: a cursor only works with the order that issued it. For "just
+    announced", ask `sort=announced` with `announced_from` set to the first day of the window. Days
+    are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday
     show, although it is stored as Sunday 01:00 UTC."""
     if from_ and to and to < from_:
         raise InvalidParameterError(f"`to` ({to}) is before `from` ({from_}).")
-    after = decode_cursor(cursor) if cursor else None
+    after = decode_cursor(cursor, sort) if cursor else None
     starts_from, starts_before = day_window(from_, to)
     filters = EventFilters(
         q=_blank_is_none(q), starts_from=starts_from, starts_before=starts_before,
         venue=_blank_is_none(venue), category=category,
+        announced_from=start_of_day(announced_from) if announced_from else None,
     )
-    rows = source(limit + 1, after, filters)  # one extra row tells whether there is a next page
+    rows = source(limit + 1, after, filters, sort)  # one extra row tells whether there is a next page
     items = rows[:limit]
-    return EventPage(items=items, next_cursor=encode_cursor(items[-1]) if len(rows) > limit else None)
+    return EventPage(items=items, next_cursor=encode_cursor(items[-1], sort) if len(rows) > limit else None)
 
 
 @router.get(

@@ -13,9 +13,11 @@ export interface paths {
         };
         /**
          * Upcoming events, a page at a time
-         * @description Events that have not started yet, by start time (then id). Follow `next_cursor` until it is
+         * @description Events that have not started yet, by start time (then id), or by announcement with `sort=announced`. Follow `next_cursor` until it is
          *     null: new events stored while paging never make one repeat or go missing. Send the same filters
-         *     with every page. Days are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday
+         *     with every page, including `sort`: a cursor only works with the order that issued it. For "just
+         *     announced", ask `sort=announced` with `announced_from` set to the first day of the window. Days
+         *     are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday
          *     show, although it is stored as Sunday 01:00 UTC.
          */
         get: operations["list_events_events_get"];
@@ -139,6 +141,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /**
+             * First Seen At
+             * Format: date-time
+             */
+            first_seen_at: string;
         };
         /** EventDetail */
         EventDetail: {
@@ -185,6 +192,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /**
+             * First Seen At
+             * Format: date-time
+             */
+            first_seen_at: string;
             /** Other Dates */
             other_dates: components["schemas"]["ShowDate"][];
         };
@@ -271,6 +283,10 @@ export interface operations {
                 venue?: string | null;
                 /** @description Only this kind of event */
                 category?: ("concert" | "theatre" | "party" | "other") | null;
+                /** @description `starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first */
+                sort?: "starts_at" | "announced";
+                /** @description Only events first seen on or after this day, YYYY-MM-DD, in Buenos Aires time */
+                announced_from?: string | null;
             };
             header?: never;
             path?: never;
@@ -312,7 +328,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description limit, q, from, to, venue or category is not valid */
+            /** @description limit, q, from, to, venue, category, sort or announced_from is not valid */
             422: {
                 headers: {
                     [name: string]: unknown;

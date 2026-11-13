@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 
 from sqlalchemy import Column, ColumnElement, Connection, DateTime, MetaData, Table, Text, and_, func, select, tuple_
 from pydantic import BaseModel
@@ -31,7 +32,15 @@ events = Table(
     Column("image_license", Text),
     Column("image_source_url", Text),
     Column("updated_at", DateTime(timezone=True), nullable=False),
+    Column("first_seen_at", DateTime(timezone=True), nullable=False),
 )
+
+# How a list of events is ordered: by start time (soonest first) or by announcement (first_seen_at,
+# newest first). Ties go by id, ascending for starts_at and descending for announced.
+EventSort = Literal["starts_at", "announced"]
+
+# The last event already seen in that order: (starts_at or first_seen_at, id).
+Position = tuple[datetime, str]
 
 
 def upsert_events(connection: Connection, items: list[Event]) -> None:
@@ -40,7 +49,12 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
         return
     rows = [item.model_dump(mode="json") for item in items]
     statement = insert(events).values(rows)
-    changes = {c.name: statement.excluded[c.name] for c in events.columns if not c.primary_key}
+    # first_seen_at is kept from the first time the event was stored, so it is never updated.
+    changes = {
+        c.name: statement.excluded[c.name]
+        for c in events.columns
+        if not c.primary_key and c.name != "first_seen_at"
+    }
     connection.execute(statement.on_conflict_do_update(index_elements=[events.c.id], set_=changes))
 
 
@@ -63,6 +77,7 @@ class EventFilters:
     starts_before: datetime | None = None  # excluded
     venue: str | None = None  # exact name, as GET /venues lists it
     category: EventCategory | None = None
+    announced_from: datetime | None = None  # first seen at or after this instant
 
 
 def _folded(value: ColumnElement) -> ColumnElement:
@@ -83,13 +98,15 @@ def list_upcoming(
     connection: Connection,
     now: datetime,
     limit: int,
-    after: tuple[datetime, str] | None,
+    after: Position | None,
     filters: EventFilters = EventFilters(),
+    sort: EventSort = "starts_at",
 ) -> list[Event]:
-    """Events from `now` on, by start time then id, `limit` at a time.
+    """Events from `now` on, in `sort` order, `limit` at a time.
 
-    `after` is the (starts_at, id) of the last event already seen. Paging by that key instead of by
-    offset means no event is repeated or skipped when new ones are stored between two pages.
+    `after` is the position of the last event already seen, in the same order. Paging by that key
+    instead of by offset means no event is repeated or skipped when new ones are stored between two
+    pages.
     """
     query = select(events).where(events.c.starts_at >= now)
     if filters.q:
@@ -102,9 +119,17 @@ def list_upcoming(
         query = query.where(events.c.venue == filters.venue)
     if filters.category is not None:
         query = query.where(events.c.category == filters.category)
-    if after is not None:
-        query = query.where(tuple_(events.c.starts_at, events.c.id) > tuple_(*after))
-    query = query.order_by(events.c.starts_at, events.c.id).limit(limit)
+    if filters.announced_from is not None:
+        query = query.where(events.c.first_seen_at >= filters.announced_from)
+    if sort == "announced":
+        if after is not None:
+            query = query.where(tuple_(events.c.first_seen_at, events.c.id) < tuple_(*after))
+        query = query.order_by(events.c.first_seen_at.desc(), events.c.id.desc())
+    else:
+        if after is not None:
+            query = query.where(tuple_(events.c.starts_at, events.c.id) > tuple_(*after))
+        query = query.order_by(events.c.starts_at, events.c.id)
+    query = query.limit(limit)
     return [Event.model_validate(dict(row)) for row in connection.execute(query).mappings()]
 
 

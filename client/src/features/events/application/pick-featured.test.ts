@@ -22,6 +22,7 @@ const make = (id: string, startsAt: string, category: Event["category"] = "conce
   imageLicense: null,
   imageSourceUrl: null,
   updatedAt: NOW,
+  firstSeenAt: NOW,
 });
 
 describe("pickFeatured", () => {

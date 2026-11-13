@@ -88,3 +88,17 @@ def test_start_time_is_written_in_buenos_aires_time_and_reads_back_as_the_same_i
     dumped = e.model_dump(mode="json")
     assert dumped["starts_at"] == "2026-11-14T22:00:00-03:00"
     assert Event.model_validate(dumped) == e
+
+
+def test_first_seen_defaults_to_the_time_the_scraper_read_it():
+    assert make_event().first_seen_at == datetime(2026, 11, 8, tzinfo=timezone.utc)
+
+
+def test_an_explicit_first_seen_is_kept():
+    earlier = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    assert make_event(first_seen_at=earlier).first_seen_at == earlier
+
+
+def test_first_seen_must_carry_a_time_zone():
+    with pytest.raises(ValidationError):
+        make_event(first_seen_at=datetime(2026, 10, 1))

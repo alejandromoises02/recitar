@@ -20,7 +20,14 @@ if RUN_DB_TESTS:
 
 
 @pytest.fixture
-def db_engine():
+def db_engine(unmigrated_db_engine):
+    migrate(unmigrated_db_engine)
+    return unmigrated_db_engine
+
+
+@pytest.fixture
+def unmigrated_db_engine():
+    """An empty throw-away schema, for tests that run the migrations themselves."""
     url = os.environ.get("DATABASE_URL")
     if not RUN_DB_TESTS or not url:
         pytest.skip("set RUN_DB_TESTS=1 (and DATABASE_URL in server/.env) to run the database tests")
@@ -31,7 +38,6 @@ def db_engine():
     # The pooled URL does not accept startup options, so tests always use the direct one.
     engine = create_engine(to_sqlalchemy_url(url), connect_args={"options": f"-csearch_path={schema}"})
     try:
-        migrate(engine)
         yield engine
     finally:
         engine.dispose()

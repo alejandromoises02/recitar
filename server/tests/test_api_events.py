@@ -11,11 +11,11 @@ from app.main import app
 NOW = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
 
 
-def event(id_: str, hours: int) -> Event:
+def event(id_: str, hours: int, seen_days_ago: int = 0) -> Event:
     return Event(
         id=id_, category="concert", title=f"Show {id_}", venue="Niceto Club", starts_at=NOW + timedelta(hours=hours),
         ticket_links=[TicketLink(vendor="Venti", url=f"https://venti.live/{id_}")],
-        source_url=f"https://venti.live/{id_}", updated_at=NOW,
+        source_url=f"https://venti.live/{id_}", updated_at=NOW, first_seen_at=NOW - timedelta(days=seen_days_ago),
     )
 
 
@@ -23,14 +23,21 @@ class FakeEvents:
     """Stands in for the database. The real keyset query is covered in test_events_repository.py."""
 
     def __init__(self, events: list[Event]):
-        self.events = sorted(events, key=lambda e: (e.starts_at, e.id))
+        self.events = events
         self.calls: list[dict] = []
 
-    def __call__(self, limit, after, filters):
-        self.calls.append({"limit": limit, "after": after, "filters": filters})
+    def __call__(self, limit, after, filters, sort="starts_at"):
+        self.calls.append({"limit": limit, "after": after, "filters": filters, "sort": sort})
+        if sort == "announced":  # newest first; ties by id, also descending
+            ordered = sorted(self.events, key=lambda e: (e.first_seen_at, e.id), reverse=True)
+            follows = lambda e: after is None or (e.first_seen_at, e.id) < after  # noqa: E731
+        else:
+            ordered = sorted(self.events, key=lambda e: (e.starts_at, e.id))
+            follows = lambda e: after is None or (e.starts_at, e.id) > after  # noqa: E731
         rest = [
-            e for e in self.events
-            if (after is None or (e.starts_at, e.id) > after)
+            e for e in ordered
+            if follows(e)
+            and (filters.announced_from is None or e.first_seen_at >= filters.announced_from)
             and (filters.starts_from is None or e.starts_at >= filters.starts_from)
             and (filters.starts_before is None or e.starts_at < filters.starts_before)
             and (filters.venue is None or e.venue == filters.venue)
@@ -133,7 +140,7 @@ def test_a_cursor_we_did_not_issue_is_a_bad_request(client_with, cursor):
 def test_the_endpoint_is_documented_in_the_openapi_schema():
     schema = TestClient(app).get("/openapi.json").json()
     operation = schema["paths"]["/events"]["get"]
-    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit", "q", "from", "to", "venue", "category"}
+    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit", "q", "from", "to", "venue", "category", "sort", "announced_from"}
     assert "EventPage" in schema["components"]["schemas"]
 
 
@@ -308,3 +315,71 @@ def test_a_venue_longer_than_100_characters_is_rejected(client_with):
     assert response.json()["errors"][0]["loc"] == ["query", "venue"]
     assert fake.calls == []
     assert client.get("/events", params={"venue": "a" * 100}).status_code == 200
+
+
+def test_every_event_says_when_it_was_first_seen(client_with):
+    client, _ = client_with([event("e0", 1, seen_days_ago=2)])
+    (item,) = client.get("/events").json()["items"]
+    assert datetime.fromisoformat(item["first_seen_at"]) == NOW - timedelta(days=2)
+
+
+def test_by_default_events_are_listed_by_date(client_with):
+    client, fake = client_with([event("late", 5, seen_days_ago=0), event("soon", 1, seen_days_ago=9)])
+    assert ids(client.get("/events")) == ["soon", "late"]
+    assert fake.calls[-1]["sort"] == "starts_at"
+
+
+def test_sort_announced_lists_the_newest_announcement_first(client_with):
+    client, fake = client_with([event("old", 1, seen_days_ago=9), event("new", 5, seen_days_ago=1), event("mid", 3, seen_days_ago=4)])
+    assert ids(client.get("/events", params={"sort": "announced"})) == ["new", "mid", "old"]
+    assert fake.calls[-1]["sort"] == "announced"
+
+
+def test_sort_announced_pages_with_the_cursor_without_repeating_or_skipping(client_with):
+    client, _ = client_with([event(f"e{i}", i, seen_days_ago=i % 2) for i in range(5)])
+    seen, cursor = [], None
+    while True:
+        params = {"sort": "announced", "limit": 2, **({"cursor": cursor} if cursor else {})}
+        response = client.get("/events", params=params)
+        seen += ids(response)
+        cursor = response.json()["next_cursor"]
+        if cursor is None:
+            break
+    assert seen == ["e4", "e2", "e0", "e3", "e1"]
+
+
+@pytest.mark.parametrize("first_sort,second_sort", [("starts_at", "announced"), ("announced", "starts_at")])
+def test_a_cursor_only_works_with_the_sort_that_issued_it(client_with, first_sort, second_sort):
+    client, _ = client_with([event(f"e{i}", i) for i in range(3)])
+    cursor = client.get("/events", params={"sort": first_sort, "limit": 1}).json()["next_cursor"]
+    response = client.get("/events", params={"sort": second_sort, "cursor": cursor})
+    assert response.status_code == 400
+    assert response.json()["title"] == "Invalid cursor"
+
+
+def test_an_unknown_sort_is_rejected(client_with):
+    client, _ = client_with([])
+    assert client.get("/events", params={"sort": "title"}).status_code == 422
+
+
+def test_announced_from_is_the_start_of_that_buenos_aires_day(client_with):
+    client, fake = client_with([])
+    client.get("/events", params={"announced_from": "2026-11-09"})
+    assert fake.calls[-1]["filters"].announced_from == datetime(2026, 11, 9, 3, 0, tzinfo=timezone.utc)
+
+
+def test_without_announced_from_there_is_no_such_filter(client_with):
+    client, fake = client_with([])
+    client.get("/events")
+    assert fake.calls[-1]["filters"].announced_from is None
+
+
+def test_announced_from_combines_with_the_announced_sort(client_with):
+    client, _ = client_with([event("fresh", 1, seen_days_ago=0), event("stale", 2, seen_days_ago=30)])
+    response = client.get("/events", params={"sort": "announced", "announced_from": "2026-10-26"})
+    assert ids(response) == ["fresh"]
+
+
+def test_announced_from_that_is_not_a_date_is_rejected(client_with):
+    client, _ = client_with([])
+    assert client.get("/events", params={"announced_from": "hace 14 dias"}).status_code == 422

@@ -34,6 +34,8 @@ export type Event = {
   /** Page where the image and its licence are published. */
   imageSourceUrl: string | null;
   updatedAt: Date;
+  /** When a scraper first read it: when we learned the show was announced. */
+  firstSeenAt: Date;
 };
 
 /** Another date of the same show: enough to link to it. */

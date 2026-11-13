@@ -20,6 +20,7 @@ const make = (id: string, category: EventCategory): Event => ({
   imageLicense: null,
   imageSourceUrl: null,
   updatedAt: new Date("2026-11-08T00:00:00Z"),
+  firstSeenAt: new Date("2026-11-08T00:00:00Z"),
 });
 
 describe("filterVisible", () => {

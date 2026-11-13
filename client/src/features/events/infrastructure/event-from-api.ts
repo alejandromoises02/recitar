@@ -30,6 +30,7 @@ export function eventFromApi(api: ApiEvent): Event {
     imageLicense: api.image_license,
     imageSourceUrl: api.image_source_url,
     updatedAt: new Date(api.updated_at),
+    firstSeenAt: new Date(api.first_seen_at),
   };
 }
 

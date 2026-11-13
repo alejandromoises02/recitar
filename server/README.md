@@ -83,6 +83,12 @@ time and then id:
 - `venue`: only that venue, compared exactly (send a `name` from `GET /venues` as is), up to 100
   characters. Venue names are normalized when stored (see `app/scrapers/venues.py`).
 - `category`: only that kind of event: `concert`, `theatre`, `party` or `other`; anything else is a 422.
+- `sort`: `starts_at` (default, soonest first) or `announced` (newest `first_seen_at` first, ties by
+  id descending). Every event carries `first_seen_at`: the first time a scraper read it, stored
+  once and never overwritten (events stored before migration 0003 got the migration time). A
+  cursor only works with the `sort` that issued it; with the other one it is a 400.
+- `announced_from`: a day as `YYYY-MM-DD` in Buenos Aires time; only events first seen on or after
+  it. "Just announced" is `sort=announced&announced_from=<14 days ago>`.
 - All filters combine (an event must match every one sent). Send the same ones with every page.
 
 `GET /venues` returns the venues that have upcoming events, by name, with how many each has:

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, field_serializer, model_validator
 
@@ -41,7 +41,17 @@ class Event(BaseModel):
     image_author: str | None = None  # credit, required by most free licences
     image_license: str | None = None  # e.g. "CC BY-SA 4.0"
     image_source_url: str | None = None  # page where the image and its licence are published
-    updated_at: AwareDatetime
+    updated_at: AwareDatetime  # last time a scraper read it
+    # First time a scraper read it: when we learned the show was announced. Stored once and never
+    # overwritten (see upsert_events). A freshly scraped event leaves it out and takes updated_at.
+    first_seen_at: AwareDatetime
+
+    @model_validator(mode="before")
+    @classmethod
+    def _first_seen_defaults_to_now_seen(cls, data: Any) -> Any:
+        if isinstance(data, dict) and data.get("first_seen_at") is None and "updated_at" in data:
+            return {**data, "first_seen_at": data["updated_at"]}
+        return data
 
     @field_serializer("starts_at")
     def _in_buenos_aires_time(self, value: datetime) -> datetime:

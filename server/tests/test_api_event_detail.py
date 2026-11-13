@@ -103,5 +103,5 @@ def test_the_detail_endpoint_is_documented():
 def test_the_list_still_answers_at_events(client_with):
     from app.api.events import upcoming_events_source
 
-    app.dependency_overrides[upcoming_events_source] = lambda: (lambda limit, after, filters: [])
+    app.dependency_overrides[upcoming_events_source] = lambda: (lambda limit, after, filters, sort: [])
     assert TestClient(app).get("/events").json() == {"items": [], "next_cursor": None}

@@ -256,3 +256,85 @@ def test_venues_are_listed_by_name_with_their_upcoming_events_only(db_engine):
         VenueCount(name="Niceto Club", upcoming_events=2),
         VenueCount(name="Teatro Colón", upcoming_events=1),
     ]
+
+
+def test_the_migration_adds_first_seen_at(db_engine):
+    columns = {c["name"]: c for c in inspect(db_engine).get_columns("events")}
+    assert columns["first_seen_at"]["nullable"] is False
+
+
+def test_a_new_event_is_first_seen_when_it_is_first_stored(db_engine):
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event()])
+        (stored,) = list_events(conn)
+    assert stored.first_seen_at == NOW
+
+
+def test_storing_an_event_again_never_moves_its_first_seen(db_engine):
+    later = NOW + timedelta(days=3)
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event()])
+        upsert_events(conn, [event(title="Divididos (nueva fecha)", updated_at=later)])
+        (stored,) = list_events(conn)
+    assert (stored.title, stored.updated_at, stored.first_seen_at) == ("Divididos (nueva fecha)", later, NOW)
+
+
+def announced(db_engine, stored: list[Event], **filters) -> list[str]:
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    with db_engine.connect() as conn:
+        found = list_upcoming(conn, NOW, limit=50, after=None, filters=EventFilters(**filters), sort="announced")
+    return [e.id for e in found]
+
+
+def test_by_announcement_the_newest_comes_first_and_past_shows_are_left_out(db_engine):
+    stored = [
+        event("venti-old-20261120T2100", first_seen_at=NOW - timedelta(days=9)),
+        event("venti-new-20261125T2100", first_seen_at=NOW - timedelta(days=1)),
+        event("venti-mid-20261122T2100", first_seen_at=NOW - timedelta(days=4)),
+        event("venti-gone-20261101T2100", starts_at=NOW - timedelta(days=1), first_seen_at=NOW),
+    ]
+    assert announced(db_engine, stored) == [
+        "venti-new-20261125T2100", "venti-mid-20261122T2100", "venti-old-20261120T2100",
+    ]
+
+
+def test_by_announcement_ties_go_by_id_descending_and_paging_neither_repeats_nor_skips(db_engine):
+    seen = NOW - timedelta(days=2)
+    stored = [event(f"venti-{name}-20261120T2100", first_seen_at=seen) for name in "abc"]
+    stored.append(event("venti-z-20261120T2100", first_seen_at=NOW - timedelta(days=5)))
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    pages, after = [], None
+    with db_engine.connect() as conn:
+        while True:
+            page = list_upcoming(conn, NOW, limit=2, after=after, sort="announced")
+            pages.append([e.id for e in page])
+            if len(page) < 2:
+                break
+            after = (page[-1].first_seen_at, page[-1].id)
+    assert pages == [
+        ["venti-c-20261120T2100", "venti-b-20261120T2100"],
+        ["venti-a-20261120T2100", "venti-z-20261120T2100"],
+        [],
+    ]
+
+
+def test_announced_from_keeps_shows_first_seen_at_or_after_that_instant(db_engine):
+    cut = NOW - timedelta(days=3)
+    stored = [
+        event("venti-in-20261120T2100", first_seen_at=cut),
+        event("venti-out-20261120T2100", first_seen_at=cut - timedelta(seconds=1)),
+    ]
+    assert announced(db_engine, stored, announced_from=cut) == ["venti-in-20261120T2100"]
+
+
+def test_announced_from_also_filters_the_date_order(db_engine):
+    stored = [
+        event("venti-in-20261120T2100", first_seen_at=NOW),
+        event("venti-out-20261121T2100", first_seen_at=NOW - timedelta(days=30)),
+    ]
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+        found = list_upcoming(conn, NOW, limit=50, after=None, filters=EventFilters(announced_from=NOW - timedelta(days=14)))
+    assert [e.id for e in found] == ["venti-in-20261120T2100"]

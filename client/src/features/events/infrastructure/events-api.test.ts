@@ -22,6 +22,7 @@ const apiEvent = (id: string): ApiEvent => ({
   image_license: null,
   image_source_url: null,
   updated_at: "2026-11-09T12:00:00Z",
+  first_seen_at: "2026-11-02T12:00:00Z",
 });
 
 /** Answers every request with `response` and remembers the URLs asked for. */
