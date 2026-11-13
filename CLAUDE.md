@@ -37,6 +37,15 @@ Data flow: scraper -> normalize to `Event` -> our database -> API -> client. The
 
 All backend work (`server/`) follows the skills in `.claude/skills/` (see its `README.md` for sources and the project decisions that override them). Before writing or reviewing backend code, load the ones that apply: `fastapi-expert` and `api-designer` for the API, `testing-python-libraries` for tests, `verifying-external-behavior` for scrapers, `rendering-untrusted-content` for any scraped text that reaches a client. Run `/try-except` and `/tighten-types` on touched modules before closing a backend feature.
 
+## Code conventions
+
+- Comments: few, in English, only when the code cannot say it (a non-obvious why, a platform quirk). Never quote Spanish UI copy in a comment; UI copy lives in the `strings.ts` tables.
+- Client components stay short and clean:
+  - Styles go in a sibling `<Component>.styles.ts` (`StyleSheet.create` there), never inside the component file.
+  - Constants go in a sibling `<Component>.constants.ts` when only that component uses them, or in a shared constants module (feature-level `*.constants.ts`, or `client/src/design/tokens.ts` for design values) when several do.
+  - Reuse styles: shared style pieces live in a shared `*.styles.ts` and are spread into each component's styles instead of being copied.
+  - One component per file; a component with sub-parts gets its own folder.
+
 ## Frontend skills
 
 UI work in `client/` follows the Impeccable plugin (how it looks), `vercel-react-native-skills` (how it is built: lists, animation, performance), and the `make-interfaces-feel-better`, `transitions-dev` and `transitions-polish` skills. Their examples are web CSS; apply the principles with React Native equivalents. The transitions.dev recipes are web CSS and the client is React Native: translate them to Reanimated 4 and keep motion tokens in a shared TypeScript module, never CSS variables. See `.claude/skills/README.md` for the full rules.
