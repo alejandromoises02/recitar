@@ -1,13 +1,12 @@
 /** Labels for the home's show cards. All dates are Buenos Aires calendar days. */
 
-const BUENOS_AIRES = "America/Argentina/Buenos_Aires";
-const DAY = new Intl.DateTimeFormat("en-CA", { timeZone: BUENOS_AIRES, year: "numeric", month: "2-digit", day: "2-digit" });
-const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+import { MONTHS, WEEKDAYS_SHORT, calendarDay } from "./calendar";
 
-function dayNumber(date: Date): number {
-  const [year, month, day] = DAY.format(date).split("-").map(Number);
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const dayNumber = (date: Date) => {
+  const { year, month, day } = calendarDay(date);
   return Date.UTC(year, month - 1, day) / 86_400_000;
-}
+};
 
 export function daysUntilLabel(startsAt: Date, now: Date): string {
   const days = dayNumber(startsAt) - dayNumber(now);
@@ -19,29 +18,21 @@ export function daysUntilLabel(startsAt: Date, now: Date): string {
 
 /** Day and short month name. */
 export function shortDate(startsAt: Date): string {
-  const [, month, day] = DAY.format(startsAt).split("-").map(Number);
-  return `${day} ${MONTHS[month - 1]}`;
-}
-
-const WEEKDAYS = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
-const pad2 = (n: number) => String(n).padStart(2, "0");
-
-function calendarDay(date: Date) {
-  const [year, month, day] = DAY.format(date).split("-").map(Number);
-  return { year, month, day, weekday: WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()] };
+  const { month, day } = calendarDay(startsAt);
+  return `${day} ${MONTHS[month - 1].slice(0, 3)}`;
 }
 
 /** Weekday and DD/MM, plus a two-digit year when not this year: shows get announced a year ahead. */
 export function boardDate(startsAt: Date, now: Date): string {
   const { year, month, day, weekday } = calendarDay(startsAt);
   const yearSuffix = year === calendarDay(now).year ? "" : `/${pad2(year % 100)}`;
-  return `${weekday} ${pad2(day)}/${pad2(month)}${yearSuffix}`;
+  return `${WEEKDAYS_SHORT[weekday]} ${pad2(day)}/${pad2(month)}${yearSuffix}`;
 }
 
 /** Weekday and DD/MM/YYYY. */
 export function longDate(startsAt: Date): string {
   const { year, month, day, weekday } = calendarDay(startsAt);
-  return `${weekday} ${pad2(day)}/${pad2(month)}/${year}`;
+  return `${WEEKDAYS_SHORT[weekday]} ${pad2(day)}/${pad2(month)}/${year}`;
 }
 
 /** How many dates follow the first one; empty for a single date. */

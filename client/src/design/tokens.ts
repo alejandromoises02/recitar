@@ -110,6 +110,9 @@ export const motion = {
   },
 } as const;
 
+/** Dims the page behind a dialog. */
+export const scrim = "rgba(0, 0, 0, 0.6)";
+
 /** The vinyl record drawn in the featured fan (mock values, not part of the DESIGN.md palette). */
 export const recordColors = {
   vinyl: "#121214",

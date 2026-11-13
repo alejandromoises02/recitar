@@ -1,0 +1,89 @@
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import type { GroupBy, StripDay, When } from "../../application/explore";
+import { Chip } from "../controls/Chip";
+import { Segmented } from "../controls/Segmented";
+import { homeStrings } from "../strings";
+import { CalendarModal } from "./CalendarModal";
+import { ChipRow } from "./ChipRow";
+import { DayStrip } from "./DayStrip";
+import { styles } from "./ExploreFilters.styles";
+import { SearchField } from "./SearchField";
+import type { ExploreFilters as Filters } from "./use-explore-filters";
+
+type Props = {
+  now: Date;
+  filters: Filters;
+  venues: string[];
+  days: StripDay[];
+  daysWithShows: Set<string>;
+  active: boolean;
+  onText: (text: string) => void;
+  onVenue: (venue: string | null) => void;
+  onWhen: (when: When) => void;
+  onDay: (iso: string) => void;
+  onGroup: (group: GroupBy) => void;
+  onClear: () => void;
+};
+
+const WHEN_ORDER: Exclude<When, "day">[] = ["all", "today", "weekend", "week", "month"];
+const GROUP_ORDER: GroupBy[] = ["day", "week", "month"];
+
+export function ExploreFilters(props: Props) {
+  const { explore } = homeStrings;
+  const { filters } = props;
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  return (
+    <View style={styles.panel} accessibilityRole="search">
+      <SearchField value={filters.text} onChange={props.onText} />
+      <ChipRow label={explore.venues}>
+        <Chip label={explore.allVenues} selected={filters.venue === null} onPress={() => props.onVenue(null)} />
+        {props.venues.map((venue) => (
+          <Chip key={venue} label={venue} selected={filters.venue === venue} onPress={() => props.onVenue(venue)} />
+        ))}
+      </ChipRow>
+      <View style={styles.row}>
+        <Text style={styles.label}>{explore.when}</Text>
+        <ChipRow label={explore.when}>
+          {WHEN_ORDER.map((when) => (
+            <Chip key={when} label={explore.whenOptions[when]} selected={filters.when === when} onPress={() => props.onWhen(when)} />
+          ))}
+        </ChipRow>
+      </View>
+      <DayStrip
+        now={props.now}
+        days={props.days}
+        withShows={props.daysWithShows}
+        selected={filters.day}
+        onSelect={props.onDay}
+        onMore={() => setCalendarOpen(true)}
+      />
+      <CalendarModal
+        visible={calendarOpen}
+        today={props.days[0].iso}
+        selected={filters.day}
+        onPick={(iso) => {
+          setCalendarOpen(false);
+          if (iso !== filters.day) props.onDay(iso);
+        }}
+        onClose={() => setCalendarOpen(false)}
+      />
+      <View style={[styles.row, styles.spread]}>
+        <View style={styles.row}>
+          <Text style={styles.label}>{explore.groupBy}</Text>
+          <Segmented
+            options={GROUP_ORDER.map((value) => ({ value, label: explore.groupOptions[value] }))}
+            value={filters.group}
+            onChange={props.onGroup}
+            accessibilityLabel={explore.groupBy}
+          />
+        </View>
+        {props.active ? (
+          <Pressable accessibilityRole="button" onPress={props.onClear} hitSlop={8}>
+            <Text style={styles.clear}>{explore.clear}</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
+  );
+}

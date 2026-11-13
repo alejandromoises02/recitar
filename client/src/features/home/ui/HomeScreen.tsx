@@ -1,14 +1,26 @@
-import { Platform, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { useCallback, useMemo } from "react";
+import { FlatList, Platform, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fluid } from "../../../design/fluid";
 import { spacing, typography } from "../../../design/tokens";
+import type { ExploreRow } from "../application/explore";
+import { cardRows, exploreRows } from "../application/explore";
 import { homeLayout } from "../application/home-layout";
 import { BrandLogo } from "./BrandLogo";
+import { ExploreProvider } from "./explore/explore-context";
+import { BLOCK_GAP, BLOCK_MIN_WIDTH, CARD_GAP, CARD_MIN_WIDTH } from "./explore/explore.constants";
+import { ExploreFooter } from "./explore/ExploreFooter";
+import { ExploreRowView } from "./explore/ExploreRowView";
+import { useExplore } from "./explore/use-explore";
 import { HomeSection } from "./HomeSection";
-import { PHONE_WIDTH } from "./HomeScreen.constants";
+import { END_REACHED_THRESHOLD, PHONE_WIDTH } from "./HomeScreen.constants";
 import { headlineSizing, styles } from "./HomeScreen.styles";
 import { homeStrings } from "./strings";
 
+/**
+ * The home is one virtualised list: the sections and the explore filters are its header, and the
+ * explore listing (group titles and day blocks) are its rows, so only the visible rows are drawn.
+ */
 export function HomeScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -17,18 +29,30 @@ export function HomeScreen() {
   // iOS insets the content under the status bar by itself; Android draws edge to edge.
   const paddingTop = Platform.OS === "android" ? insets.top + spacing.md : spacing.md;
 
-  return (
-    <ScrollView
-      style={styles.screen}
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingTop }]}
-    >
+  const explore = useExplore();
+  // Wide screens get cards side by side; phones get compact day blocks.
+  const cards = layout.kind === "split";
+  const listWidth = width - 2 * gutter;
+  const [minWidth, gap] = cards ? [CARD_MIN_WIDTH, CARD_GAP] : [BLOCK_MIN_WIDTH, BLOCK_GAP];
+  const columns = Math.max(1, Math.floor((listWidth + gap) / (minWidth + gap)));
+  const itemWidth = (listWidth - (columns - 1) * gap) / columns;
+  const rows = useMemo(
+    () => (cards ? cardRows(explore.groups, columns) : exploreRows(explore.groups, columns)),
+    [cards, explore.groups, columns],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: ExploreRow }) => <ExploreRowView row={item} apiBase={explore.apiBase} itemWidth={itemWidth} />,
+    [explore.apiBase, itemWidth],
+  );
+
+  const header = (
+    <View style={styles.header}>
       <BrandLogo size={fluid(typography.logo.size, width)} />
       <Text accessibilityRole="header" style={[styles.headline, headlineSizing(fluid(typography.display.size, width))]}>
         {homeStrings.headlineLead}
         <Text style={styles.city}>{homeStrings.headlineCity}</Text>
       </Text>
-
       {layout.kind === "stacked" ? (
         layout.order.map((section) => <HomeSection key={section} section={section} />)
       ) : (
@@ -46,6 +70,29 @@ export function HomeScreen() {
           ))}
         </>
       )}
-    </ScrollView>
+    </View>
+  );
+
+  return (
+    <ExploreProvider value={explore}>
+      <FlatList
+        style={styles.screen}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingTop }]}
+        data={rows}
+        keyExtractor={keyOf}
+        renderItem={renderItem}
+        ItemSeparatorComponent={cards ? CardRowGap : RowGap}
+        ListHeaderComponent={header}
+        ListFooterComponent={<ExploreFooter />}
+        onEndReached={explore.fetchMore}
+        onEndReachedThreshold={END_REACHED_THRESHOLD}
+        keyboardShouldPersistTaps="handled"
+      />
+    </ExploreProvider>
   );
 }
+
+const keyOf = (row: ExploreRow) => row.key;
+const RowGap = () => <View style={styles.rowGap} />;
+const CardRowGap = () => <View style={styles.cardRowGap} />;
