@@ -11,6 +11,7 @@ from typing import Callable
 import httpx
 
 from app.domain.event import Event
+from app.domain.titles import tidy_title
 from app.images.copy import LocalImageStore, copy_event_images
 from app.images.wikimedia import add_wikimedia_images, build_client
 
@@ -38,3 +39,13 @@ def enrich_images(
             source_client.close()
         if own_wikimedia:
             wikimedia_client.close()
+
+
+def add_artists(events: list[Event]) -> list[Event]:
+    """Fills an empty artist from the title (domain/titles.py); one the source gave is kept. Stored,
+    so search and the image lookup can use it."""
+    return [
+        event if event.artist is not None
+        else event.model_copy(update={"artist": tidy_title(event.title, event.id.split("-", 1)[0]).artist})
+        for event in events
+    ]

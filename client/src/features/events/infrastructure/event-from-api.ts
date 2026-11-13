@@ -16,6 +16,7 @@ export function eventFromApi(api: ApiEvent): Event {
     id: api.id,
     category: api.category,
     title: api.title,
+    name: api.name,
     artist: api.artist,
     venue: api.venue,
     city: api.city,

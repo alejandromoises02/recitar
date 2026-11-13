@@ -15,6 +15,8 @@ export type Event = {
   id: string;
   category: EventCategory;
   title: string;
+  /** The title made readable (cased, without the trailing place); what the UI shows. */
+  name: string;
   artist: string | null;
   venue: string;
   city: string | null;

@@ -8,6 +8,7 @@ const make = (id: string, startsAt: string, category: Event["category"] = "conce
   id,
   category,
   title: `Artist ${id}`,
+  name: `Artist ${id}`,
   artist: null,
   venue: "Niceto Club",
   city: "Buenos Aires",

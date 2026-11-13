@@ -102,3 +102,13 @@ def test_an_explicit_first_seen_is_kept():
 def test_first_seen_must_carry_a_time_zone():
     with pytest.raises(ValidationError):
         make_event(first_seen_at=datetime(2026, 10, 1))
+
+
+def test_the_name_is_the_tidy_title_for_its_source():
+    shouted = make_event(id="livepass-tan-bionica-20261120T2100", title="TAN BIONICA en Estadio Uno")
+    assert shouted.name == "Tan Bionica"
+    assert shouted.title == "TAN BIONICA en Estadio Uno"  # the source's words stay as they were
+
+
+def test_the_name_is_sent_with_the_event():
+    assert make_event().model_dump(mode="json")["name"] == "Un sueño navideño"

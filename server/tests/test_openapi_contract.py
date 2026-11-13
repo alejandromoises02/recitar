@@ -12,8 +12,9 @@ def test_every_event_field_is_required_because_the_api_always_sends_it():
     # Fields with a default (artist, city, image_*...) are still sent, as null; without this they
     # would be optional in the generated types and the client would have to handle a missing field.
     schemas = app.openapi()["components"]["schemas"]
-    assert set(schemas["Event"]["required"]) == set(Event.model_fields)
-    assert set(schemas["EventDetail"]["required"]) == set(Event.model_fields) | {"other_dates"}
+    sent = set(Event.model_fields) | set(Event.model_computed_fields)  # computed `name` is sent too
+    assert set(schemas["Event"]["required"]) == sent
+    assert set(schemas["EventDetail"]["required"]) == sent | {"other_dates"}
     assert set(schemas["Show"]["required"]) == set(Show.model_fields)
     assert set(schemas["ShowDateTickets"]["required"]) == set(ShowDateTickets.model_fields)
 

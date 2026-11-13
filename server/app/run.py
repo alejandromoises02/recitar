@@ -18,7 +18,7 @@ from app.domain.event import Event
 from app.events_repository import count_upcoming_by_source, upsert_events
 from app.images.copy import IMAGES_DIR, LocalImageStore
 from app.images.wikimedia import MissingContactError, user_agent
-from app.pipeline import enrich_images
+from app.pipeline import add_artists, enrich_images
 from app.scrapers import colon, livepass, movistar, venti
 from app.scrapers.venues import canonical_venue
 
@@ -120,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
             upsert_events(connection, events)
 
     try:
-        report = run(SCRAPERS, lambda events: enrich_images(events, store), save, only, log=print, known=known)
+        report = run(SCRAPERS, lambda events: enrich_images(add_artists(events), store), save, only, log=print, known=known)
     finally:
         engine.dispose()
     print(f"\nsaved {report.saved} events; scraped per source: {report.counts or 'none'}")

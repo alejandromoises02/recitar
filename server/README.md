@@ -65,6 +65,16 @@ time and then id:
 {"items": [{"id": "venti-...", "title": "...", "starts_at": "2026-11-13T21:00:00-03:00", "...": "..."}], "next_cursor": "eyJzdGFydHNf..."}
 ```
 
+- `title` is the source's title, verbatim. `name` is that title made readable, computed on every read
+  (never stored) by `app/domain/titles.py`: the trailing " en <place>" of Livepass and Venti and
+  "(+18 años)" are dropped, known filler ("presenta...", "vuelve a...", "en vivo") is cut, and an
+  all-caps title of several words is set in title case. Show `name` in the client.
+- `artist`: the one the source gives, else read from the title by the same module when the scraper
+  stores the event (`pipeline.add_artists`): the first act of several, the band of a tribute ("X por
+  Y"), nothing for parties and for Teatro Colón works. It stays `null` when the title does not say
+  it; the rules never guess. `tests/fixtures/titles_golden.json` holds 52 real titles with the right
+  answer; `tests/test_titles.py` prints the accuracy (98% for `name`, 85% for `artist` when written)
+  and fails below 90% / 80%. A future LLM extractor has to beat these numbers on the same list.
 - `starts_at` comes with the Buenos Aires offset (`-03:00`), so the day and hour read as they are
   shown in Buenos Aires. It is stored in UTC; both are the same instant.
 - `limit`: 1 to 100, default 20.

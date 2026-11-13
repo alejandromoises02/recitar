@@ -13,7 +13,7 @@ TOKEN = "s3cret-" + "x" * 40
 
 def show(id_: str) -> Show:
     return Show(
-        id=id_, category="concert", title=f"Show {id_}", venue="Niceto Club", source_url="https://venti.live/x",
+        id=id_, category="concert", title=f"Show {id_}", name=f"Show {id_}", venue="Niceto Club", source_url="https://venti.live/x",
         image_url=f"/media/{id_}.webp", image_origin="licensed", first_seen_at=NOW,
         dates=[ShowDateTickets(id=f"{id_}-20261120T2100", starts_at=NOW + timedelta(days=11),
                                ticket_links=[TicketLink(vendor="Venti", url="https://venti.live/x")])],

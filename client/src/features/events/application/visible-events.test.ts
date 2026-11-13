@@ -6,6 +6,7 @@ const make = (id: string, category: EventCategory): Event => ({
   id,
   category,
   title: id,
+  name: id,
   artist: null,
   venue: "Niceto Club",
   city: "Buenos Aires",

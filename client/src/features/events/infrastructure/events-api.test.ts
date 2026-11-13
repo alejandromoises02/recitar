@@ -8,6 +8,7 @@ const apiEvent = (id: string): ApiEvent => ({
   id,
   category: "concert",
   title: `Show ${id}`,
+  name: `Show ${id}`,
   artist: null,
   venue: "Niceto Club",
   city: "Buenos Aires",

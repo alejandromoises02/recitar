@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, field_serializer, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, computed_field, field_serializer, model_validator
 
 from app.domain.local_time import BUENOS_AIRES
+from app.domain.titles import tidy_title
 
 EventCategory = Literal["concert", "theatre", "party", "other"]
 
@@ -28,7 +29,7 @@ class Event(BaseModel):
     id: str
     category: EventCategory
     title: str  # as published by the source, verbatim
-    artist: str | None = None  # extracted from the title later; empty until then
+    artist: str | None = None  # from the source, else read from the title (pipeline.add_artists); may stay empty
     venue: str
     city: str | None = None
     region: str | None = None  # ISO 3166-2 subdivision, e.g. "AR-C" (Ciudad de Buenos Aires)
@@ -52,6 +53,13 @@ class Event(BaseModel):
         if isinstance(data, dict) and data.get("first_seen_at") is None and "updated_at" in data:
             return {**data, "first_seen_at": data["updated_at"]}
         return data
+
+    @computed_field
+    @property
+    def name(self) -> str:
+        """The title made readable (see domain/titles.py): what the client shows. Computed on every
+        read, not stored, so a better rule applies at once without scraping again."""
+        return tidy_title(self.title, self.id.split("-", 1)[0]).name
 
     @field_serializer("starts_at")
     def _in_buenos_aires_time(self, value: datetime) -> datetime:
@@ -97,6 +105,7 @@ class Show(BaseModel):
     id: str  # the show key: an event id without its date (see show_key)
     category: EventCategory
     title: str
+    name: str  # readable title, as Event.name
     artist: str | None = None
     venue: str
     city: str | None = None

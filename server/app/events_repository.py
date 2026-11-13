@@ -62,7 +62,7 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
     """Insert new events and update the ones already stored (same id)."""
     if not items:
         return
-    rows = [item.model_dump(mode="json") for item in items]
+    rows = [item.model_dump(mode="json", exclude=set(Event.model_computed_fields)) for item in items]
     statement = insert(events).values(rows)
     # first_seen_at is kept from the first time the event was stored, so it is never updated.
     changes = {

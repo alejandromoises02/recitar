@@ -114,3 +114,8 @@ def test_announced_from_looks_at_the_show_not_at_its_newest_date(db_engine):
     ]
     found = shows(db_engine, stored, announced_from=NOW - timedelta(days=14))
     assert [s.id for s in found] == ["venti-new"]
+
+
+def test_a_show_carries_the_readable_name_of_its_next_date(db_engine):
+    (show,) = shows(db_engine, [event("livepass-tb-20261120T2100", 12, title="TAN BIONICA en Estadio Uno")])
+    assert (show.title, show.name) == ("TAN BIONICA en Estadio Uno", "Tan Bionica")

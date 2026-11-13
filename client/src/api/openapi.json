@@ -1135,6 +1135,12 @@
             "type": "string",
             "format": "date-time",
             "title": "First Seen At"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The title made readable (see domain/titles.py): what the client shows. Computed on every\nread, not stored, so a better rule applies at once without scraping again.",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -1156,7 +1162,8 @@
           "image_license",
           "image_source_url",
           "updated_at",
-          "first_seen_at"
+          "first_seen_at",
+          "name"
         ],
         "title": "Event",
         "description": "Public facts about one show. The client's types are generated from the API schema\n(client/src/api/schema.ts) and mapped to its own Event in client/src/features/events/."
@@ -1321,6 +1328,12 @@
             },
             "type": "array",
             "title": "Other Dates"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The title made readable (see domain/titles.py): what the client shows. Computed on every\nread, not stored, so a better rule applies at once without scraping again.",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -1343,7 +1356,8 @@
           "image_source_url",
           "updated_at",
           "first_seen_at",
-          "other_dates"
+          "other_dates",
+          "name"
         ],
         "title": "EventDetail"
       },
@@ -1453,6 +1467,10 @@
           "title": {
             "type": "string",
             "title": "Title"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
           },
           "artist": {
             "anyOf": [
@@ -1584,6 +1602,7 @@
           "id",
           "category",
           "title",
+          "name",
           "artist",
           "venue",
           "city",

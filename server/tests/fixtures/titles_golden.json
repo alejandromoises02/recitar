@@ -1,0 +1,366 @@
+[
+ {
+  "source": "colon",
+  "title": "Un sueño navideño",
+  "venue": "Teatro Colón",
+  "name": "Un sueño navideño",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "Concierto entre almohadones Cartas que cantan, aventuras líricas en el altillo",
+  "venue": "Teatro Colón",
+  "name": "Concierto entre almohadones Cartas que cantan, aventuras líricas en el altillo",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "Romanticismo tardío",
+  "venue": "Teatro Colón",
+  "name": "Romanticismo tardío",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "El cascanueces",
+  "venue": "Teatro Colón",
+  "name": "El cascanueces",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "Reich/Richter",
+  "venue": "Teatro Colón",
+  "name": "Reich/Richter",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "La tempestad",
+  "venue": "Teatro Colón",
+  "name": "La tempestad",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "Resurrección",
+  "venue": "Teatro Colón",
+  "name": "Resurrección",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "Los caminos de la canción",
+  "venue": "Teatro Colón",
+  "name": "Los caminos de la canción",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "María Elena Walsh Sinfónico",
+  "venue": "Teatro Colón",
+  "name": "María Elena Walsh Sinfónico",
+  "artist": null
+ },
+ {
+  "source": "colon",
+  "title": "Cartografía del poder",
+  "venue": "Teatro Colón",
+  "name": "Cartografía del poder",
+  "artist": null
+ },
+ {
+  "source": "livepass",
+  "title": "FIESTA LEIPARTY en Club Re Quilmes",
+  "venue": "Club Re",
+  "name": "Fiesta Leiparty",
+  "artist": null
+ },
+ {
+  "source": "livepass",
+  "title": "Contreras Gramigna Gerez re en CCNU",
+  "venue": "Centro Cultural Nueva Uriarte",
+  "name": "Contreras Gramigna Gerez re",
+  "artist": null
+ },
+ {
+  "source": "livepass",
+  "title": "A PERFECT CIRCLE + PUSCIFER?en Buenos Aires",
+  "venue": "Microestadio Malvinas Argentinas",
+  "name": "A Perfect Circle + Puscifer",
+  "artist": "A Perfect Circle"
+ },
+ {
+  "source": "livepass",
+  "title": "BRUNO VARELA ORGAN TRIO en CCNU",
+  "venue": "Centro Cultural Nueva Uriarte",
+  "name": "Bruno Varela Organ Trio",
+  "artist": "Bruno Varela Organ Trio"
+ },
+ {
+  "source": "livepass",
+  "title": "LA BANDA DE CARLITOS Y EUGE QUEVEDO en el Hipodromo de La Plata",
+  "venue": "Hipodromo de La Plata",
+  "name": "La Banda de Carlitos y Euge Quevedo",
+  "artist": "La Banda de Carlitos"
+ },
+ {
+  "source": "livepass",
+  "title": "USTED SENALEMELO en Club Re Quilmes",
+  "venue": "Club Re",
+  "name": "Usted Señálemelo",
+  "artist": "Usted Señálemelo"
+ },
+ {
+  "source": "livepass",
+  "title": "LUZ GAGGI en el Teatro Opera LP",
+  "venue": "Teatro Opera La Plata",
+  "name": "Luz Gaggi",
+  "artist": "Luz Gaggi"
+ },
+ {
+  "source": "livepass",
+  "title": "Los Pablos Jazz trio en CCNU",
+  "venue": "Centro Cultural Nueva Uriarte",
+  "name": "Los Pablos Jazz trio",
+  "artist": "Los Pablos Jazz trio"
+ },
+ {
+  "source": "livepass",
+  "title": "BABASONICOS en el Hipodromo de La Plata",
+  "venue": "Hipodromo de La Plata",
+  "name": "Babasónicos",
+  "artist": "Babasónicos"
+ },
+ {
+  "source": "livepass",
+  "title": "Nora Sarmoria & Victoria Zotalis en CCNU",
+  "venue": "Centro Cultural Nueva Uriarte",
+  "name": "Nora Sarmoria & Victoria Zotalis",
+  "artist": "Nora Sarmoria"
+ },
+ {
+  "source": "livepass",
+  "title": "Elgarrista Lucero Aguero Benavides Thielen en CCNU",
+  "venue": "Centro Cultural Nueva Uriarte",
+  "name": "Elgarrista Lucero Aguero Benavides Thielen",
+  "artist": null
+ },
+ {
+  "source": "livepass",
+  "title": "LUCHO SSJ en el Teatro Opera LP",
+  "venue": "Teatro Opera La Plata",
+  "name": "Lucho SSJ",
+  "artist": "Lucho SSJ"
+ },
+ {
+  "source": "livepass",
+  "title": "EL MATO A UN POLICIA MOTORIZADO en el Hipodromo de La Plata",
+  "venue": "Hipodromo de La Plata",
+  "name": "El Mató a un Policía Motorizado",
+  "artist": "El Mató a un Policía Motorizado"
+ },
+ {
+  "source": "livepass",
+  "title": "ESLAVOS en San Miguel",
+  "venue": "XLR Club",
+  "name": "Eslavos",
+  "artist": "Eslavos"
+ },
+ {
+  "source": "movistar",
+  "title": "Luis Fonsi ",
+  "venue": "Movistar Arena",
+  "name": "Luis Fonsi",
+  "artist": "Luis Fonsi"
+ },
+ {
+  "source": "movistar",
+  "title": "Andres Calamaro",
+  "venue": "Movistar Arena",
+  "name": "Andrés Calamaro",
+  "artist": "Andrés Calamaro"
+ },
+ {
+  "source": "movistar",
+  "title": "Ludovico Einaudi",
+  "venue": "Movistar Arena",
+  "name": "Ludovico Einaudi",
+  "artist": "Ludovico Einaudi"
+ },
+ {
+  "source": "movistar",
+  "title": "RATA BLANCA",
+  "venue": "Movistar Arena",
+  "name": "Rata Blanca",
+  "artist": "Rata Blanca"
+ },
+ {
+  "source": "movistar",
+  "title": "Slayer",
+  "venue": "Movistar Arena",
+  "name": "Slayer",
+  "artist": "Slayer"
+ },
+ {
+  "source": "movistar",
+  "title": "JUNGLE",
+  "venue": "Movistar Arena",
+  "name": "Jungle",
+  "artist": "Jungle"
+ },
+ {
+  "source": "movistar",
+  "title": "LOVE THE 90S",
+  "venue": "Movistar Arena",
+  "name": "Love the 90s",
+  "artist": null
+ },
+ {
+  "source": "movistar",
+  "title": "BOM: Lali + Miranda! / Miranda! + Lali",
+  "venue": "Movistar Arena",
+  "name": "Lali + Miranda!",
+  "artist": "Lali"
+ },
+ {
+  "source": "movistar",
+  "title": "GABRIEL ROLÓN",
+  "venue": "Movistar Arena",
+  "name": "Gabriel Rolón",
+  "artist": "Gabriel Rolón"
+ },
+ {
+  "source": "movistar",
+  "title": "SERU GIRAN POR LEBÓN Y AZNAR",
+  "venue": "Movistar Arena",
+  "name": "Serú Girán por Lebón y Aznar",
+  "artist": "Serú Girán"
+ },
+ {
+  "source": "movistar",
+  "title": "Ricardo Montaner",
+  "venue": "Movistar Arena",
+  "name": "Ricardo Montaner",
+  "artist": "Ricardo Montaner"
+ },
+ {
+  "source": "movistar",
+  "title": "CHAPEAUX en vivo",
+  "venue": "Movistar Arena",
+  "name": "Chapeaux",
+  "artist": "Chapeaux"
+ },
+ {
+  "source": "venti",
+  "title": "JULI JELEN en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Juli Jelen",
+  "artist": "Juli Jelen"
+ },
+ {
+  "source": "venti",
+  "title": "FLOR IBARRA en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Flor Ibarra",
+  "artist": "Flor Ibarra"
+ },
+ {
+  "source": "venti",
+  "title": "SELF-TITLED x FOUND - OPEN AIR en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Self-Titled x Found - Open Air",
+  "artist": null
+ },
+ {
+  "source": "venti",
+  "title": "PAISANOS DE MARTE en Humboldt | Niceto Club (+18 años)",
+  "venue": "Niceto Club",
+  "name": "Paisanos de Marte",
+  "artist": "Paisanos de Marte"
+ },
+ {
+  "source": "venti",
+  "title": "IVAN SALO & Los Paracaidistas en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Iván Salo & Los Paracaidistas",
+  "artist": "Iván Salo & Los Paracaidistas"
+ },
+ {
+  "source": "venti",
+  "title": "FIESTA MERMELADA - NACIONAL en Humboldt | Niceto Club (+18 años)",
+  "venue": "Niceto Club",
+  "name": "Fiesta Mermelada - Nacional",
+  "artist": null
+ },
+ {
+  "source": "venti",
+  "title": "RE-UNIÓN NEGRA en Humboldt | Niceto Club (+18 años)",
+  "venue": "Humboldt | Niceto Club",
+  "name": "Re-Unión Negra",
+  "artist": null
+ },
+ {
+  "source": "venti",
+  "title": "Mi Amigo Invencible Regresa a Niceto Club (+18 años)",
+  "venue": "Niceto Club",
+  "name": "Mi Amigo Invencible",
+  "artist": "Mi Amigo Invencible"
+ },
+ {
+  "source": "venti",
+  "title": "CATTO EYEWEAR SS27 en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Catto Eyewear SS27",
+  "artist": null
+ },
+ {
+  "source": "venti",
+  "title": "OEISIS - Familiar vibes in the area en Niceto Club (+18 años)",
+  "venue": "Niceto Club",
+  "name": "Oeisis - Familiar vibes in the area",
+  "artist": "Oeisis"
+ },
+ {
+  "source": "venti",
+  "title": "Lola Avesani en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Lola Avesani",
+  "artist": "Lola Avesani"
+ },
+ {
+  "source": "venti",
+  "title": "Random Fiesta en Niceto Club (+18 años)",
+  "venue": "Niceto Club",
+  "name": "Random Fiesta",
+  "artist": null
+ },
+ {
+  "source": "venti",
+  "title": "CICLO DESORDEN en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Ciclo Desorden",
+  "artist": null
+ },
+ {
+  "source": "venti",
+  "title": "Julián Elordi + Martín Zta y la Flia Cohete en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "Julián Elordi + Martín Zta y la Flia Cohete",
+  "artist": "Julián Elordi"
+ },
+ {
+  "source": "venti",
+  "title": "LA DANZA DE LAS BESTIAS + PLAYA DEL KARMA en Niceto Bar",
+  "venue": "Niceto Club",
+  "name": "La Danza de las Bestias + Playa del Karma",
+  "artist": "La Danza de las Bestias"
+ },
+ {
+  "source": "venti",
+  "title": "Gallo Criollo celebra su 1er año en Humboldt | Niceto Club",
+  "venue": "Niceto Club",
+  "name": "Gallo Criollo",
+  "artist": "Gallo Criollo"
+ }
+]
