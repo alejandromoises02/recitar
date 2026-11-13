@@ -5,11 +5,18 @@ import { colors, fontFamily, spacing, typography } from "../../../design/tokens"
 import type { HomeSection } from "../application/home-layout";
 import { homeLayout } from "../application/home-layout";
 import { BrandLogo } from "./BrandLogo";
+import { NextUpStrip } from "./NextUpStrip";
 import { SectionSlot } from "./SectionSlot";
 import { homeStrings } from "./strings";
 
 /** Rough heights the real sections will take, so the frame already reads like the mock. */
 const SLOT_HEIGHT: Record<HomeSection, number> = { featured: 420, justAnnounced: 360, next: 200, explore: 480 };
+
+/** The built sections; the others are still placeholders (cli02 T3-T6). */
+function Section({ section }: { section: HomeSection }) {
+  if (section === "next") return <NextUpStrip />;
+  return <SectionSlot section={section} minHeight={SLOT_HEIGHT[section]} />;
+}
 
 export function HomeScreen() {
   const { width } = useWindowDimensions();
@@ -45,7 +52,7 @@ export function HomeScreen() {
       </Text>
 
       {layout.kind === "stacked" ? (
-        layout.order.map((section) => <SectionSlot key={section} section={section} minHeight={SLOT_HEIGHT[section]} />)
+        layout.order.map((section) => <Section key={section} section={section} />)
       ) : (
         <>
           <View style={styles.hero}>
@@ -57,7 +64,7 @@ export function HomeScreen() {
             </View>
           </View>
           {layout.below.map((section) => (
-            <SectionSlot key={section} section={section} minHeight={SLOT_HEIGHT[section]} />
+            <Section key={section} section={section} />
           ))}
         </>
       )}

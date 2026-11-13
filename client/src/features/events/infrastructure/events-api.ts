@@ -116,11 +116,16 @@ export function createEventsApi({ baseUrl, fetch }: { baseUrl: string; fetch: ty
   };
 }
 
+/** The API address the app was built with (also where /media images are served). */
+export function configuredApiBase(): string {
+  // Expo inlines EXPO_PUBLIC_* only when read exactly like this (no destructuring).
+  return apiBaseUrl(process.env.EXPO_PUBLIC_API_URL);
+}
+
 let defaultApi: EventsApi | undefined;
 
 /** The app's API client. Created on first use, so a missing URL fails the request, not the import. */
 export function eventsApi(): EventsApi {
-  // Expo inlines EXPO_PUBLIC_* only when read exactly like this (no destructuring).
-  defaultApi ??= createEventsApi({ baseUrl: apiBaseUrl(process.env.EXPO_PUBLIC_API_URL), fetch: globalThis.fetch });
+  defaultApi ??= createEventsApi({ baseUrl: configuredApiBase(), fetch: globalThis.fetch });
   return defaultApi;
 }

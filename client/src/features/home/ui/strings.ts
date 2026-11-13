@@ -10,6 +10,9 @@ export const homeStrings = {
   },
   loading: "Cargando…",
   loadFailed: "No pudimos cargar esta sección.",
+  retry: "Reintentar",
+  scrollBack: "Ver anteriores",
+  scrollMore: "Ver más próximos",
   shows: (count: number, more: boolean) => `${count}${more ? "+" : ""} ${count === 1 ? "show" : "shows"}`,
   featuredKind: { picked: "elegidos a mano", just_announced: "recién anunciados con imagen" },
 } as const;

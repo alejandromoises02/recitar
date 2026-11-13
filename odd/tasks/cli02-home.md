@@ -17,8 +17,8 @@ Branch: `dev` (one work-unit commit per section, with the user's OK). Delivery: 
 
 | ID | Section | Specs | Route | Status | Commit |
 |---|---|---|---|---|---|
-| T1 | Base: fonts, theme, home screen frame (header logo, headline, responsive columns), Show domain + `useShows` / `useFeatured` queries | S1 S3 S4 S5 | inline | built, checks green; waiting for the user's device check | |
-| T2 | Próximos strip: 8 soonest shows, "en N días", image fallback | S1 S3 | inline | todo | |
+| T1 | Base: fonts, theme, home screen frame (header logo, headline, responsive columns), Show domain + `useShows` / `useFeatured` queries | S1 S3 S4 S5 | inline | done (checked on iPhone) | 5bdfdf4 |
+| T2 | Próximos strip: 8 soonest shows, "en N días", image fallback | S1 S3 | inline | done (checked on Android emulator) | |
 | T3 | Just announced: split-flap marquee board | S1 S3 S4 | inline | todo | |
 | T4 | Featured: record-sleeve fan + spotlight card (CTA, ticket domain, trust line), autoplay with pause | S1 S3 S4 | inline | todo | |
 | T5 | Spotify sample in the record (needs a Spotify match per show: api14) | S7 | inline | blocked by api14 | |
@@ -30,3 +30,4 @@ Branch: `dev` (one work-unit commit per section, with the user's OK). Delivery: 
 - L1 (2026-11-13, user): "que es cli02?" then "dividiamos por secciones de la app para ir probando cada etapa entonces"
 - L2: split agreed as T1-T7 above; T5 waits for api14 (Spotify artist per show) and the type chips in T6 wait for api15 (show type), both already on the board. Next: T1.
 - L3 (2026-11-13): T1 built. Fonts @expo-google-fonts/* pinned (alfa-slab-one 0.4.1, unbounded 0.4.1, onest 0.4.2, barlow-condensed 0.4.1), public registry; loaded with useFonts behind the splash screen because Expo Go cannot embed fonts (vercel rule fonts-config-plugin applies once there is a dev build). Tokens fontFamily now name each loaded weight; typography has no fontWeight. Added Show/Featured domain + mappers, listShows/getFeatured, useShows/useFeatured, announcedFrom (BA day - 14), homeLayout (stacked <= 900 px, split 40/60), fluid sizes, BrandLogo with stepped shadow, SectionSlot placeholders that already show live counts. Checks: vitest 62 passed, tsc ok, lint ok, `expo export --platform android` bundles. Correction told to the user: the API does NOT run migrations on start; run `alembic upgrade head` in server/ first.
+- L4 (2026-11-13): T2 built: show-labels.ts (daysUntilLabel in BA days, shortDate, initials, imageSource for /media), ShowCard (expo-image or initials), NextUpStrip (FlatList horizontal, snap per card, 250 px cards on phones, 4.4 per view + arrows when wide, skeleton, error + retry, hidden when empty). configuredApiBase() exported for image URLs. Cards are not tappable yet: there is no show detail screen (later task). Checks: vitest 79, tsc, lint, expo export ios.
