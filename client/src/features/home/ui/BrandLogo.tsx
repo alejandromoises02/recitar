@@ -1,32 +1,30 @@
-import { StyleSheet, Text, View } from "react-native";
-import { brandShadow, colors, fontFamily } from "../../../design/tokens";
+import { Text, View } from "react-native";
+import { brandShadow } from "../../../design/tokens";
+import { BRAND_NAME } from "./BrandLogo.constants";
+import { logoText, styles } from "./BrandLogo.styles";
 
 type Props = { size: number };
 
-/** "recitAR" in the logo face with its stepped filete shadow: red, an ink gap, then blue, each a
- * copy of the word offset down and right (DESIGN.md). Only the top copy is read by screen readers. */
+// The stepped shadow is copies of the word offset down-right, farthest painted first.
+const SHADOW_LAYERS = [...brandShadow].reverse();
+
 export function BrandLogo({ size }: Props) {
-  const text = { fontFamily: fontFamily.logo, fontSize: size, lineHeight: size * 1.15 };
-  const layers = [...brandShadow].reverse(); // farthest first, so nearer layers paint over it
+  const text = logoText(size);
   return (
-    <View accessibilityRole="header" accessibilityLabel="recitAR">
-      {layers.map(({ offset, color }) => (
+    <View accessibilityRole="header" accessibilityLabel={BRAND_NAME}>
+      {SHADOW_LAYERS.map(({ offset, color }) => (
         <Text
           key={offset}
           aria-hidden
           importantForAccessibility="no-hide-descendants"
           style={[text, styles.layer, { color, transform: [{ translateX: offset * size }, { translateY: offset * size }] }]}
         >
-          recitAR
+          {BRAND_NAME}
         </Text>
       ))}
-      <Text aria-hidden style={[text, { color: colors.accent }]}>
-        recitAR
+      <Text aria-hidden style={[text, styles.face]}>
+        {BRAND_NAME}
       </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  layer: { position: "absolute", left: 0, top: 0 },
-});

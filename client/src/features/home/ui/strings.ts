@@ -1,4 +1,4 @@
-/** Home copy, Spanish (voseo). One place, so the English option (cli02 T7) is a second table. */
+/** Home UI copy. The English table comes with cli02 T7. */
 export const homeStrings = {
   headlineLead: "Lo nuevo en la cartelera de ",
   headlineCity: "Buenos Aires",

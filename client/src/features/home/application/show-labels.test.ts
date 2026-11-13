@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { daysUntilLabel, imageSource, initials, shortDate } from "./show-labels";
+import { boardDate, daysUntilLabel, imageSource, initials, moreDatesLabel, shortDate } from "./show-labels";
 
 // 15:00 UTC = 12:00 in Buenos Aires on 2026-11-13.
 const NOW = new Date("2026-11-13T15:00:00Z");
@@ -57,5 +57,37 @@ describe("imageSource", () => {
 
   it("is null without an image", () => {
     expect(imageSource(null, "http://x:8000")).toBeNull();
+  });
+});
+
+describe("boardDate", () => {
+  it("is the Buenos Aires weekday and DD/MM when the show is this year", () => {
+    expect(boardDate(at("2026-12-06T21:00:00-03:00"), NOW)).toBe("DOM 06/12");
+  });
+
+  it("adds the two-digit year when the show is in another year", () => {
+    expect(boardDate(at("2027-03-19T21:00:00-03:00"), NOW)).toBe("VIE 19/03/27");
+  });
+
+  it("uses the Buenos Aires day: 01:00 UTC on Saturday is still Friday there", () => {
+    expect(boardDate(at("2027-03-20T01:00:00Z"), NOW)).toBe("VIE 19/03/27");
+  });
+
+  it("uses the Buenos Aires year: 02:00 UTC on 1 January is still 31 December there", () => {
+    expect(boardDate(at("2027-01-01T02:00:00Z"), NOW)).toBe("JUE 31/12");
+  });
+
+  it("writes the accented weekday", () => {
+    expect(boardDate(at("2026-11-18T21:00:00-03:00"), NOW)).toBe("MIÉ 18/11");
+  });
+});
+
+describe("moreDatesLabel", () => {
+  it.each([
+    [1, ""],
+    [2, "+1 fecha"],
+    [4, "+3 fechas"],
+  ])("a show with %i dates says %j", (count, label) => {
+    expect(moreDatesLabel(count)).toBe(label);
   });
 });

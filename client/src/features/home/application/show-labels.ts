@@ -1,10 +1,9 @@
-/** Small texts and values the home's show cards show. Days are Buenos Aires days. */
+/** Labels for the home's show cards. All dates are Buenos Aires calendar days. */
 
 const BUENOS_AIRES = "America/Argentina/Buenos_Aires";
 const DAY = new Intl.DateTimeFormat("en-CA", { timeZone: BUENOS_AIRES, year: "numeric", month: "2-digit", day: "2-digit" });
 const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
-/** Days since 1970 of the Buenos Aires calendar day `date` falls on. */
 function dayNumber(date: Date): number {
   const [year, month, day] = DAY.format(date).split("-").map(Number);
   return Date.UTC(year, month - 1, day) / 86_400_000;
@@ -18,16 +17,34 @@ export function daysUntilLabel(startsAt: Date, now: Date): string {
   return `En ${days} días`;
 }
 
-/** "14 nov": day and short month in Spanish, in Buenos Aires time. */
+/** Day and short month name. */
 export function shortDate(startsAt: Date): string {
   const [, month, day] = DAY.format(startsAt).split("-").map(Number);
   return `${day} ${MONTHS[month - 1]}`;
 }
 
+const WEEKDAYS = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** Weekday and DD/MM, plus a two-digit year when not this year: shows get announced a year ahead. */
+export function boardDate(startsAt: Date, now: Date): string {
+  const [year, month, day] = DAY.format(startsAt).split("-").map(Number);
+  const thisYear = Number(DAY.format(now).slice(0, 4));
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const yearSuffix = year === thisYear ? "" : `/${pad2(year % 100)}`;
+  return `${WEEKDAYS[weekday]} ${pad2(day)}/${pad2(month)}${yearSuffix}`;
+}
+
+/** How many dates follow the first one; empty for a single date. */
+export function moreDatesLabel(dateCount: number): string {
+  const more = dateCount - 1;
+  if (more <= 0) return "";
+  return `+${more} ${more === 1 ? "fecha" : "fechas"}`;
+}
+
 const ALNUM = /[\p{L}\p{N}]/u;
 
-/** Two characters for a show without a photo: the first of its first two words, or the first two
- * of a single word. "?" when the name has no letters or digits. */
+/** Two characters for a show without a photo; "?" when the name has no letters or digits. */
 export function initials(name: string): string {
   const words = name.split(/\s+/).filter((word) => ALNUM.test(word));
   const chars =
@@ -37,7 +54,7 @@ export function initials(name: string): string {
   return chars.length ? chars.join("").toLocaleUpperCase("es") : "?";
 }
 
-/** Where to load an image from: our own copies come as "/media/..." on the API. */
+/** Our own image copies come as API-relative "/media/..." paths. */
 export function imageSource(imageUrl: string | null, apiBase: string): string | null {
   if (!imageUrl) return null;
   if (/^https?:\/\//.test(imageUrl)) return imageUrl;
