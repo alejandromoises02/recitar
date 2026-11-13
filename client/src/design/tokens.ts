@@ -40,25 +40,30 @@ export const colors = {
 } as const;
 
 /**
- * Font families. Names are the logical families from DESIGN.md; the loaded font names
- * (for example via expo-font) are wired when the fonts are installed in cli02.
+ * Font families, one per weight: on React Native each loaded weight is its own family, and adding
+ * fontWeight to a custom family can fake a bold on Android, so typography sets no fontWeight.
+ * The names are the ones the @expo-google-fonts packages export; design/fonts.ts loads exactly these.
  */
 export const fontFamily = {
-  logo: "Alfa Slab One",
-  display: "Unbounded",
-  body: "Onest",
-  board: "Barlow Condensed",
+  logo: "AlfaSlabOne_400Regular",
+  display: "Unbounded_600SemiBold",
+  displayMedium: "Unbounded_500Medium",
+  body: "Onest_400Regular",
+  bodyStrong: "Onest_600SemiBold",
+  board: "BarlowCondensed_700Bold",
 } as const;
 
-/** Type roles. Fluid sizes from DESIGN.md are given as min / max in px; pick by screen width. */
+export type FontName = (typeof fontFamily)[keyof typeof fontFamily];
+
+/** Type roles. Fluid sizes from DESIGN.md are given as min / max in px; see design/fluid.ts. */
 export const typography = {
-  logo: { fontFamily: fontFamily.logo, fontWeight: "400", size: { min: 24, max: 30 }, lineHeight: 1 },
-  display: { fontFamily: fontFamily.display, fontWeight: "600", size: { min: 30, max: 72 }, lineHeight: 1, letterSpacing: -0.035 },
-  headline: { fontFamily: fontFamily.display, fontWeight: "500", size: { min: 22, max: 36 }, lineHeight: 1.1, letterSpacing: -0.02 },
-  body: { fontFamily: fontFamily.body, fontWeight: "400", size: { min: 15, max: 15 }, lineHeight: 1.45 },
-  bodySmall: { fontFamily: fontFamily.body, fontWeight: "400", size: { min: 13, max: 13 }, lineHeight: 1.45 },
-  label: { fontFamily: fontFamily.body, fontWeight: "600", size: { min: 11, max: 11 }, lineHeight: 1.3, letterSpacing: 0.16, uppercase: true },
-  board: { fontFamily: fontFamily.board, fontWeight: "700", size: { min: 17, max: 26 }, lineHeight: 1.1, letterSpacing: 0.06, uppercase: true, tabularNums: true },
+  logo: { fontFamily: fontFamily.logo, size: { min: 24, max: 30 }, lineHeight: 1 },
+  display: { fontFamily: fontFamily.display, size: { min: 30, max: 72 }, lineHeight: 1, letterSpacing: -0.035 },
+  headline: { fontFamily: fontFamily.displayMedium, size: { min: 22, max: 36 }, lineHeight: 1.1, letterSpacing: -0.02 },
+  body: { fontFamily: fontFamily.body, size: { min: 15, max: 15 }, lineHeight: 1.45 },
+  bodySmall: { fontFamily: fontFamily.body, size: { min: 13, max: 13 }, lineHeight: 1.45 },
+  label: { fontFamily: fontFamily.bodyStrong, size: { min: 11, max: 11 }, lineHeight: 1.3, letterSpacing: 0.16, uppercase: true },
+  board: { fontFamily: fontFamily.board, size: { min: 17, max: 26 }, lineHeight: 1.1, letterSpacing: 0.06, uppercase: true, tabularNums: true },
 } as const;
 
 /** Letter spacing in DESIGN.md is in em; React Native wants points. */

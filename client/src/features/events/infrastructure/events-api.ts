@@ -1,10 +1,19 @@
 import type { components, operations } from "../../../api/schema";
 import type { Event, EventDetail } from "../domain/event";
 import type { Venue } from "../domain/venue";
-import { eventDetailFromApi, eventFromApi, venueFromApi } from "./event-from-api";
+import type { Featured, Show } from "../domain/show";
+import { eventDetailFromApi, eventFromApi, featuredFromApi, showFromApi, venueFromApi } from "./event-from-api";
 
 /** Filters and cursor of GET /events, as the API names them (see server/README.md). */
 export type EventsQuery = NonNullable<operations["list_events_events_get"]["parameters"]["query"]>;
+
+/** Filters, sort and cursor of GET /shows: the same as GET /events. */
+export type ShowsQuery = NonNullable<operations["list_shows_shows_get"]["parameters"]["query"]>;
+
+export type ShowsPage = {
+  items: Show[];
+  nextCursor: string | null;
+};
 
 export type EventsPage = {
   items: Event[];
@@ -17,6 +26,9 @@ export type EventsApi = {
   /** null when there is no event with that id. */
   getEvent(id: string): Promise<EventDetail | null>;
   listVenues(): Promise<Venue[]>;
+  /** Each show once, with all of its upcoming dates. */
+  listShows(query: ShowsQuery): Promise<ShowsPage>;
+  getFeatured(): Promise<Featured>;
 };
 
 /** The API answered with an error. `title` and `detail` come from its problem+json body. */
@@ -93,6 +105,13 @@ export function createEventsApi({ baseUrl, fetch }: { baseUrl: string; fetch: ty
     async listVenues() {
       const list = await get<components["schemas"]["VenueList"]>("/venues");
       return list.items.map(venueFromApi);
+    },
+    async listShows(query) {
+      const page = await get<components["schemas"]["ShowPage"]>("/shows", query);
+      return { items: page.items.map(showFromApi), nextCursor: page.next_cursor };
+    },
+    async getFeatured() {
+      return featuredFromApi(await get<components["schemas"]["Featured"]>("/featured"));
     },
   };
 }

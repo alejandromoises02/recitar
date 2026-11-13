@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { components } from "../../../api/schema";
+import { apiShow } from "./api-fixtures";
 import { ApiConfigError, ApiError, apiBaseUrl, createEventsApi } from "./events-api";
 
 type ApiEvent = components["schemas"]["Event"];
@@ -132,5 +133,29 @@ describe("apiBaseUrl", () => {
   it.each([undefined, "", "  "])("says how to configure it when it is missing (%j)", (value) => {
     expect(() => apiBaseUrl(value)).toThrow(ApiConfigError);
     expect(() => apiBaseUrl(value)).toThrow(/EXPO_PUBLIC_API_URL/);
+  });
+});
+
+describe("listShows", () => {
+  it("sends the filters and the sort, and maps the page", async () => {
+    const { fetch, urls } = fakeFetch(() => json({ items: [apiShow("venti-a")], next_cursor: null }));
+    const api = createEventsApi({ baseUrl: "https://api.example", fetch });
+
+    const page = await api.listShows({ sort: "announced", announced_from: "2026-10-30", limit: 8 });
+
+    const url = new URL(urls[0]);
+    expect(url.pathname).toBe("/shows");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ sort: "announced", announced_from: "2026-10-30", limit: "8" });
+    expect(page.items.map((s) => s.id)).toEqual(["venti-a"]);
+    expect(page.nextCursor).toBeNull();
+  });
+});
+
+describe("getFeatured", () => {
+  it("asks /featured and maps it", async () => {
+    const { fetch, urls } = fakeFetch(() => json({ kind: "picked", items: [apiShow("venti-b")] }));
+    const featured = await createEventsApi({ baseUrl: "https://api.example", fetch }).getFeatured();
+    expect(new URL(urls[0]).pathname).toBe("/featured");
+    expect(featured).toMatchObject({ kind: "picked", items: [{ id: "venti-b" }] });
   });
 });
