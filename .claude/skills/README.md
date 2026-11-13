@@ -19,7 +19,7 @@ All MIT-licensed.
 
 ## Project decisions that win over the skills
 
-- No authentication: the API is public and read-only, so JWT/OAuth guidance does not apply.
+- No user accounts: the API is public and read-only for everyone, so JWT/OAuth guidance does not apply. The only writes (PUT /featured) are for the one admin and use a static bearer token from `ADMIN_TOKEN` (see `server/app/api/admin_auth.py`), decided 2026-11-12.
 - Database access is synchronous SQLAlchemy 2.0 + psycopg 3. Moving to async is a separate decision, not a default.
 - Pagination is cursor-based (see `api-designer` `references/pagination.md`).
 

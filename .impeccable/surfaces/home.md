@@ -61,7 +61,7 @@ Reference mock: `.impeccable/mocks/home/home.html` (local only, gitignored; `hom
 
 ## Still open
 
-- Featured is empty when nobody has picked shows: decide what fills the right half then (for example, just-announced shows that have an image).
+- ~~Featured is empty when nobody has picked shows~~ Decided 2026-11-12: the fan shows just-announced shows that have an image (`GET /featured` returns `kind: just_announced`). The "Destacado" tag should then read as just announced.
 - How many days counts as "just announced" (proposed 14, tune with real data).
 - Backend for Featured (hand-picked flag) and title cleanup (artist extraction) are separate tickets.
 - Spotify artist match per show and the show type (música, ópera y ballet, fiesta...) do not exist in the data yet; both need backend tickets. Check Spotify's iFrame API play/pause reliability on iOS and Android web views before building.

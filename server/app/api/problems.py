@@ -22,6 +22,14 @@ class NotFoundError(LookupError):
         self.title, self.detail = title, detail
 
 
+class UnauthorizedError(PermissionError):
+    """No token, or not the admin one."""
+
+
+class AdminDisabledError(RuntimeError):
+    """ADMIN_TOKEN is not set (or too weak) on this server, so nothing can be written."""
+
+
 class Problem(BaseModel):
     type: str = "about:blank"
     title: str
@@ -49,6 +57,21 @@ def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(NotFoundError)
     def not_found(request: Request, error: NotFoundError) -> JSONResponse:
         return problem_response(Problem(title=error.title, status=404, detail=error.detail))
+
+    @app.exception_handler(UnauthorizedError)
+    def unauthorized(request: Request, error: UnauthorizedError) -> JSONResponse:
+        response = problem_response(Problem(
+            title="Unauthorized", status=401, detail="Send the admin token as `Authorization: Bearer <token>`.",
+        ))
+        response.headers["WWW-Authenticate"] = "Bearer"
+        return response
+
+    @app.exception_handler(AdminDisabledError)
+    def admin_disabled(request: Request, error: AdminDisabledError) -> JSONResponse:
+        return problem_response(Problem(
+            title="Writing is turned off", status=503,
+            detail="This server has no admin token configured (ADMIN_TOKEN, at least 32 characters).",
+        ))
 
     @app.exception_handler(RequestValidationError)
     def invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:

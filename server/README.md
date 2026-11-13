@@ -105,6 +105,22 @@ the dates: a show is listed when any upcoming date matches, and it still brings 
 `announced_from` and `sort=announced` look at the show's `first_seen_at`. With the default sort,
 shows go by their next date, then id. Paging and cursor rules are the same.
 
+`GET /featured` returns `{"kind": "picked" | "just_announced", "items": [...]}`: up to 10 shows in
+the `GET /shows` format, all with an image. `picked` are the shows chosen by hand, in their order;
+when none of them can be shown, it falls back to `just_announced`: shows first seen in the last 14
+days that have an image, newest first.
+
+`PUT /featured` (admin only) replaces the picked list: body `{"show_ids": ["venti-mila", ...]}`,
+ids from `GET /shows`, up to 20, no repeats; `[]` clears it. Every id must be a stored show, or
+nothing is written (422 naming the unknown ones). It needs `Authorization: Bearer <ADMIN_TOKEN>`:
+
+- `ADMIN_TOKEN` lives only in the server environment (`server/.env` locally), never in the repo.
+  Generate it with `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
+- No token or a wrong one: 401. No `ADMIN_TOKEN` configured, or shorter than 32 characters: 503,
+  writing is off. The token is compared in constant time and read on every request.
+- Browsers cannot send it: CORS allows only GET. Call it from Postman or curl, over HTTPS once
+  deployed.
+
 `GET /venues` returns the venues that have upcoming events, by name, with how many each has:
 `{"items": [{"name": "Niceto Club", "upcoming_events": 12}]}`. It is not paged (a few dozen venues);
 `items` leaves room to add paging later without breaking clients.

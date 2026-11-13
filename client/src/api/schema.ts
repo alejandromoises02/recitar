@@ -77,6 +77,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/featured": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The shows the home features
+         * @description Up to 10 shows, each with all its upcoming dates (as in GET /shows) and an image. The ones
+         *     picked by hand, in their order; when none of them can be shown (none picked, all past, or
+         *     without an image), the shows first seen in the last 14 days that have an image, newest first.
+         */
+        get: operations["get_featured_featured_get"];
+        /**
+         * Pick the featured shows (admin only)
+         * @description Replaces the whole list. Every id must be a stored show; nothing is written otherwise.
+         */
+        put: operations["put_featured_featured_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/venues": {
         parameters: {
             query?: never;
@@ -233,6 +259,24 @@ export interface components {
             items: components["schemas"]["Event"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** Featured */
+        Featured: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "picked" | "just_announced";
+            /** Items */
+            items: components["schemas"]["Show"][];
+        };
+        /** FeaturedIds */
+        FeaturedIds: {
+            /**
+             * Show Ids
+             * @description Show ids (as GET /shows gives them) in the order the home shows them. [] clears the list.
+             */
+            show_ids: string[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -568,6 +612,125 @@ export interface operations {
             };
             /** @description limit, q, from, to, venue, category, sort or announced_from is not valid */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
+                };
+            };
+        };
+    };
+    get_featured_featured_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Featured"];
+                };
+            };
+        };
+    };
+    put_featured_featured_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeaturedIds"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeaturedIds"];
+                };
+            };
+            /** @description No admin token, or not the right one */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
+                };
+            };
+            /** @description Unknown or repeated show ids, or more than 20 */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
+                };
+            };
+            /** @description This server has no admin token configured */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

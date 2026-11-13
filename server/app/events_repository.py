@@ -1,10 +1,12 @@
 """Reading and writing events. The table is described once, here; migrations create it."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
-from sqlalchemy import Column, ColumnElement, Connection, DateTime, MetaData, Table, Text, and_, func, select, tuple_
+from sqlalchemy import (
+    Column, ColumnElement, Connection, DateTime, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
+)
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
@@ -33,6 +35,13 @@ events = Table(
     Column("image_source_url", Text),
     Column("updated_at", DateTime(timezone=True), nullable=False),
     Column("first_seen_at", DateTime(timezone=True), nullable=False),
+)
+
+featured_shows = Table(
+    "featured_shows",
+    metadata,
+    Column("show_key", Text, primary_key=True),
+    Column("position", Integer, nullable=False),
 )
 
 # How a list of events is ordered: by start time (soonest first) or by announcement (first_seen_at,
@@ -194,15 +203,7 @@ def list_upcoming_shows(
     is also what announced_from looks at, so a new date of a show we already knew is not news.
     """
     matching = select(_show_key.label("key")).where(*_date_matches(filters, now)).distinct().subquery()
-    per_show = (
-        select(
-            _show_key.label("key"),
-            func.min(events.c.starts_at).filter(events.c.starts_at >= now).label("next_starts_at"),
-            func.min(events.c.first_seen_at).label("first_seen_at"),
-        )
-        .group_by(_show_key)
-        .subquery()
-    )
+    per_show = _per_show(now)
     query = select(per_show).join(matching, matching.c.key == per_show.c.key)
     if filters.announced_from is not None:
         query = query.where(per_show.c.first_seen_at >= filters.announced_from)
@@ -214,10 +215,27 @@ def list_upcoming_shows(
         if after is not None:
             query = query.where(tuple_(per_show.c.next_starts_at, per_show.c.key) > tuple_(*after))
         query = query.order_by(per_show.c.next_starts_at, per_show.c.key)
-    page = connection.execute(query.limit(limit)).all()
+    return _shows_for(connection, now, connection.execute(query.limit(limit)).all())
+
+
+def _per_show(now: datetime):
+    """One row per stored show: its key, next upcoming date (null when none) and first_seen_at, the
+    earliest of any of its dates, past ones included."""
+    return (
+        select(
+            _show_key.label("key"),
+            func.min(events.c.starts_at).filter(events.c.starts_at >= now).label("next_starts_at"),
+            func.min(events.c.first_seen_at).label("first_seen_at"),
+        )
+        .group_by(_show_key)
+        .subquery()
+    )
+
+
+def _shows_for(connection: Connection, now: datetime, page: list[Row]) -> list[Show]:
+    """Builds the shows of `page` (rows with key and first_seen_at, in order) with their upcoming dates."""
     if not page:
         return []
-
     dates = select(events, _show_key.label("show_key")).where(
         _show_key.in_([row.key for row in page]), events.c.starts_at >= now
     ).order_by(events.c.starts_at, events.c.id)
@@ -227,3 +245,45 @@ def list_upcoming_shows(
         upcoming[fields.pop("show_key")].append(Event.model_validate(fields))
     # A show whose rows vanished between the two queries is skipped rather than failing the page.
     return [Show.from_dates(row.key, upcoming[row.key], row.first_seen_at) for row in page if upcoming[row.key]]
+
+
+JUST_ANNOUNCED_DAYS = 14
+
+
+def known_show_keys(connection: Connection, keys: list[str]) -> set[str]:
+    """Which of `keys` name a stored show (any date, past ones included), compared whole."""
+    if not keys:
+        return set()
+    query = select(_show_key).where(_show_key.in_(keys)).distinct()
+    return set(connection.execute(query).scalars())
+
+
+def replace_featured(connection: Connection, keys: list[str]) -> None:
+    """The featured shows become exactly `keys`, in that order. Run it inside one transaction."""
+    connection.execute(delete(featured_shows))
+    if keys:
+        connection.execute(featured_shows.insert(), [{"show_key": k, "position": i} for i, k in enumerate(keys)])
+
+
+def _with_image(shows: list[Show]) -> list[Show]:
+    return [show for show in shows if show.image_url is not None]
+
+
+def list_featured_shows(connection: Connection, now: datetime, limit: int) -> list[Show]:
+    """Picked shows in their order, only those with an upcoming date and an image (of the next date)."""
+    per_show = _per_show(now)
+    query = (
+        select(per_show)
+        .join(featured_shows, featured_shows.c.show_key == per_show.c.key)
+        .where(per_show.c.next_starts_at.is_not(None))
+        .order_by(featured_shows.c.position)
+    )
+    return _with_image(_shows_for(connection, now, connection.execute(query).all()))[:limit]
+
+
+def list_just_announced_with_image(connection: Connection, now: datetime, limit: int) -> list[Show]:
+    """Shows first seen in the last JUST_ANNOUNCED_DAYS days that have an image, newest first: what
+    the home features when nothing is picked. Reads a few times `limit` because some have no image."""
+    filters = EventFilters(announced_from=now - timedelta(days=JUST_ANNOUNCED_DAYS))
+    found = list_upcoming_shows(connection, now, limit * 5, None, filters, "announced")
+    return _with_image(found)[:limit]
