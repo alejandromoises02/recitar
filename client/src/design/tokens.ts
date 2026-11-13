@@ -105,16 +105,25 @@ export const motion = {
     recordTurn: 1800, // one turn at 33 rpm, linear, only while a sample plays
     flapFlip: 500, // board row flips in, easing.smoothOut
     flapStagger: 70,
-    carouselAutoplay: 5000,
+    carouselAutoplay: 7000,
     livePulse: 2400,
   },
 } as const;
 
+/** The vinyl record drawn in the featured fan (mock values, not part of the DESIGN.md palette). */
+export const recordColors = {
+  vinyl: "#121214",
+  groove: "rgba(255, 255, 255, 0.06)",
+  rim: "#0B0B0C",
+  sheen: "rgba(255, 255, 255, 0.14)",
+  shadow: "rgba(0, 0, 0, 0.9)",
+} as const;
+
 /** Record fan geometry from DESIGN.md, as fractions of the sleeve size or per step from the centre. */
 export const fan = {
-  recordSize: 0.58,
-  recordOut: 0.62,
-  recordOutStacked: 0.5,
+  recordSize: 0.64,
+  recordOut: 0.72,
+  recordOutStacked: 0.66,
   tiltPerStep: 5.5,
   shrinkPerStep: 0.07,
   sideBrightness: 0.58,

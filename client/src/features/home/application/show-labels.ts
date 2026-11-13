@@ -26,13 +26,22 @@ export function shortDate(startsAt: Date): string {
 const WEEKDAYS = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+function calendarDay(date: Date) {
+  const [year, month, day] = DAY.format(date).split("-").map(Number);
+  return { year, month, day, weekday: WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()] };
+}
+
 /** Weekday and DD/MM, plus a two-digit year when not this year: shows get announced a year ahead. */
 export function boardDate(startsAt: Date, now: Date): string {
-  const [year, month, day] = DAY.format(startsAt).split("-").map(Number);
-  const thisYear = Number(DAY.format(now).slice(0, 4));
-  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-  const yearSuffix = year === thisYear ? "" : `/${pad2(year % 100)}`;
-  return `${WEEKDAYS[weekday]} ${pad2(day)}/${pad2(month)}${yearSuffix}`;
+  const { year, month, day, weekday } = calendarDay(startsAt);
+  const yearSuffix = year === calendarDay(now).year ? "" : `/${pad2(year % 100)}`;
+  return `${weekday} ${pad2(day)}/${pad2(month)}${yearSuffix}`;
+}
+
+/** Weekday and DD/MM/YYYY. */
+export function longDate(startsAt: Date): string {
+  const { year, month, day, weekday } = calendarDay(startsAt);
+  return `${weekday} ${pad2(day)}/${pad2(month)}/${year}`;
 }
 
 /** How many dates follow the first one; empty for a single date. */

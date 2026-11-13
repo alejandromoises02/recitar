@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useRefetchOnAppFocus } from "@/api/app-focus";
 import { createQueryClient } from "@/api/query-client";
 import { fontAssets } from "@/design/fonts";
@@ -24,9 +25,11 @@ export default function RootLayout() {
 
   if (!ready) return null;
   return (
-    <QueryClientProvider client={queryClient}>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

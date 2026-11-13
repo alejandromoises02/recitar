@@ -9,7 +9,7 @@ import { NEXT_UP_COUNT } from "../home.constants";
 import { SectionError } from "../section/SectionError";
 import { SectionHeader } from "../section/SectionHeader";
 import { homeStrings } from "../strings";
-import { ArrowButton } from "./ArrowButton";
+import { ArrowButton } from "../controls/ArrowButton";
 import { CARDS_PER_VIEW, CARD_GAP, CARD_HEIGHT, PAGE_FRACTION, PHONE_CARD_WIDTH, SKELETON_CARDS } from "./NextUpStrip.constants";
 import { styles } from "./NextUpStrip.styles";
 import { ShowCard } from "./ShowCard";

@@ -14,5 +14,15 @@ export const homeStrings = {
   scrollBack: "Ver anteriores",
   scrollMore: "Ver más próximos",
   shows: (count: number, more: boolean) => `${count}${more ? "+" : ""} ${count === 1 ? "show" : "shows"}`,
-  featuredKind: { picked: "elegidos a mano", just_announced: "recién anunciados con imagen" },
+  featured: {
+    carousel: "Carrusel de destacados",
+    tag: { picked: "Destacado", just_announced: "Recién anunciado" },
+    cta: "Ver fechas y entradas",
+    ticketsAt: "Entradas en",
+    trust: "recitAR no vende entradas: te lleva a la página oficial de cada show.",
+    pause: "Pausar",
+    play: "Reproducir",
+    previous: "Show anterior",
+    next: "Show siguiente",
+  },
 } as const;

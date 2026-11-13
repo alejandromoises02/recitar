@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardDate, daysUntilLabel, imageSource, initials, moreDatesLabel, shortDate } from "./show-labels";
+import { boardDate, daysUntilLabel, imageSource, initials, longDate, moreDatesLabel, shortDate } from "./show-labels";
 
 // 15:00 UTC = 12:00 in Buenos Aires on 2026-11-13.
 const NOW = new Date("2026-11-13T15:00:00Z");
@@ -89,5 +89,11 @@ describe("moreDatesLabel", () => {
     [4, "+3 fechas"],
   ])("a show with %i dates says %j", (count, label) => {
     expect(moreDatesLabel(count)).toBe(label);
+  });
+});
+
+describe("longDate", () => {
+  it("is the Buenos Aires weekday and DD/MM/YYYY", () => {
+    expect(longDate(at("2027-03-20T01:00:00Z"))).toBe("VIE 19/03/2027");
   });
 });

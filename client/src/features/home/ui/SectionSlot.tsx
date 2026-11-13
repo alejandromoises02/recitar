@@ -1,36 +1,27 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { announcedFrom } from "../../events/application/announced-from";
-import { useFeatured, useShows } from "../../events/infrastructure/events-queries";
+import { useShows } from "../../events/infrastructure/events-queries";
 import type { HomeSection } from "../application/home-layout";
 import { ANNOUNCED_COUNT, EXPLORE_PREVIEW_COUNT, NEXT_UP_COUNT } from "./home.constants";
 import { styles } from "./SectionSlot.styles";
 import { homeStrings } from "./strings";
 
-type Props = { section: HomeSection; minHeight: number };
+type SlotSection = Exclude<HomeSection, "featured">;
+
+type Props = { section: SlotSection; minHeight: number };
 
 /** Placeholder for a section not built yet; it already queries that section's data. */
 export function SectionSlot({ section, minHeight }: Props) {
   return (
     <View style={[styles.slot, { minHeight }]}>
       <Text style={styles.label}>{homeStrings.sections[section]}</Text>
-      {section === "featured" ? <FeaturedStatus /> : <ShowsStatus section={section} />}
+      <ShowsStatus section={section} />
     </View>
   );
 }
 
-function FeaturedStatus() {
-  const { data, isPending, isError } = useFeatured();
-  if (isPending) return <Text style={styles.status}>{homeStrings.loading}</Text>;
-  if (isError) return <Text style={[styles.status, styles.error]}>{homeStrings.loadFailed}</Text>;
-  return (
-    <Text style={styles.status}>
-      {homeStrings.shows(data.items.length, false)} · {homeStrings.featuredKind[data.kind]}
-    </Text>
-  );
-}
-
-function ShowsStatus({ section }: { section: Exclude<HomeSection, "featured"> }) {
+function ShowsStatus({ section }: { section: SlotSection }) {
   // Kept in state so the query key stays the same across renders.
   const [filters] = useState(() =>
     section === "justAnnounced"

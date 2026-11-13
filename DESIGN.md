@@ -252,9 +252,9 @@ Physical objects are nearly square: sleeves 3px, flap cells 4px. Interface surfa
 
 ### Record Fan (signature)
 - Up to about 8 featured sleeves on an arc: the centre sleeve straight and full brightness; neighbours shift sideways, drop, tilt 5.5 degrees per step, shrink 7% per step and dim to 58% brightness; beyond 2.6 steps they fade out. Edges fade with a horizontal mask.
-- The record is 58% of the sleeve width and slides out to the right (0.62 x sleeve width; 0.5 on phones), with the show image as its label and the name on a text ring.
+- The record is 64% of the sleeve width and slides out to the right (0.72 x sleeve width; 0.66 on phones, where the whole fan shifts left so the record stays on screen), with the show image as its label and the name on a text ring.
 - The record is the play button for the Spotify sample: a yellow ▶ badge sits on its label; it spins at 33 rpm (1.8s per turn) only while the sample plays. No badge when the show has no Spotify match.
-- Changing show: the record slides back in, the sleeves move, the new record slides out, and any playing sample stops. Autoplay every 5s; pauses on hover or focus; stops for good once the visitor touches, drags or uses the arrows, or while a sample plays; visible pause button above the card; screen readers hear manual changes only.
+- Changing show: the record slides back in, the sleeves move, the new record slides out, and any playing sample stops. Autoplay every 7s; pauses on hover or focus; stops for good once the visitor touches, drags or uses the arrows, or while a sample plays; visible pause button above the card; screen readers hear manual changes only.
 
 ### Spotify Player
 - The official compact Spotify embed (80px tall, 12px radius) inside the spotlight card, always visible with Spotify's own branding, controlled from the record through Spotify's iFrame API. Never hidden or restyled. Hidden entirely when the show has no Spotify match.
