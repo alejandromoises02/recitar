@@ -1,4 +1,4 @@
-"""Opaque page cursors: the position of the last event of a page, as URL-safe base64 JSON.
+"""Opaque page cursors: the position of the last item (event or show) of a page, as URL-safe base64 JSON.
 
 The position is (starts_at, id) when listing by date and (first_seen_at, id) when listing by
 announcement. Each cursor carries only the key of its own order, so a cursor issued for one order
@@ -8,10 +8,10 @@ this module reads or writes it.
 
 import base64
 import binascii
+from datetime import datetime
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, ValidationError
 
-from app.domain.event import Event
 from app.events_repository import EventSort, Position
 
 
@@ -31,9 +31,11 @@ def _key(sort: EventSort) -> str:
     return "first_seen_at" if sort == "announced" else "starts_at"
 
 
-def encode_cursor(last: Event, sort: EventSort = "starts_at") -> str:
+def encode_cursor(at: datetime, id_: str, sort: EventSort = "starts_at") -> str:
+    """`at` is the sort key of the last item: its starts_at (for a show, its next date) or its
+    first_seen_at."""
     key = _key(sort)
-    position = _Position.model_validate({key: getattr(last, key), "id": last.id})
+    position = _Position.model_validate({key: at, "id": id_})
     raw = position.model_dump_json(include={key, "id"}).encode()
     return base64.urlsafe_b64encode(raw).decode().rstrip("=")
 

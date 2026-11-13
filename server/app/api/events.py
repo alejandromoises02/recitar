@@ -1,22 +1,19 @@
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Annotated, Callable
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import Engine
 
 from app.api.cursor import decode_cursor, encode_cursor
-from app.api.problems import MEDIA_TYPE, InvalidParameterError, NotFoundError, Problem
+from app.api.listing import (
+    DEFAULT_LIMIT, Category, Cursor, FromDay, Search, EventsAnnouncedFrom, EventsLimit, Sort, ToDay, Venue, build_filters, problem,
+)
+from app.api.problems import NotFoundError
 from app.db import make_engine
-from app.domain.event import Event, EventCategory, ShowDate, show_key
-from app.domain.local_time import day_window, start_of_day
+from app.domain.event import Event, ShowDate, show_key
 from app.events_repository import EventFilters, EventSort, Position, get_event, list_show_dates, list_upcoming
-
-DEFAULT_LIMIT = 20
-MAX_LIMIT = 100
-
-MAX_QUERY_LENGTH = 100
 
 # (how many, after which position, which ones, in which order) -> upcoming events in that order
 EventsSource = Callable[[int, Position | None, EventFilters, EventSort], list[Event]]
@@ -62,73 +59,49 @@ def event_detail_source() -> DetailSource:
     return read
 
 
-def _blank_is_none(value: str | None) -> str | None:
-    return value.strip() or None if value else None
-
-
-def _problem(description: str) -> dict:
-    return {"description": description, "content": {MEDIA_TYPE: {"schema": Problem.model_json_schema()}}}
-
-
 @router.get(
     "/events",
     response_model=EventPage,
     summary="Upcoming events, a page at a time",
-    responses={400: _problem("The cursor was not issued by this API"), 422: _problem("limit, q, from, to, venue, category, sort or announced_from is not valid")},
+    responses={
+        400: problem("The cursor was not issued by this API"),
+        422: problem("limit, q, from, to, venue, category, sort or announced_from is not valid"),
+    },
 )
 def list_events(
     source: Annotated[EventsSource, Depends(upcoming_events_source)],
-    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT, description="Events per page")] = DEFAULT_LIMIT,
-    cursor: Annotated[str | None, Query(description="next_cursor of the previous page; leave out for the first")] = None,
-    q: Annotated[
-        str | None,
-        Query(
-            max_length=MAX_QUERY_LENGTH,
-            description="Search the title, artist and venue: every word must appear, ignoring case and accents",
-        ),
-    ] = None,
-    from_: Annotated[
-        date | None, Query(alias="from", description="First day, YYYY-MM-DD, in Buenos Aires time (included)")
-    ] = None,
-    to: Annotated[date | None, Query(description="Last day, YYYY-MM-DD, in Buenos Aires time (included)")] = None,
-    venue: Annotated[
-        str | None, Query(max_length=MAX_QUERY_LENGTH, description="Only this venue: a `name` from GET /venues, exactly")
-    ] = None,
-    category: Annotated[EventCategory | None, Query(description="Only this kind of event")] = None,
-    sort: Annotated[
-        EventSort,
-        Query(description="`starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first"),
-    ] = "starts_at",
-    announced_from: Annotated[
-        date | None,
-        Query(description="Only events first seen on or after this day, YYYY-MM-DD, in Buenos Aires time"),
-    ] = None,
+    limit: EventsLimit = DEFAULT_LIMIT,
+    cursor: Cursor = None,
+    q: Search = None,
+    from_: FromDay = None,
+    to: ToDay = None,
+    venue: Venue = None,
+    category: Category = None,
+    sort: Sort = "starts_at",
+    announced_from: EventsAnnouncedFrom = None,
 ) -> EventPage:
     """Events that have not started yet, by start time (then id), or by announcement with `sort=announced`. Follow `next_cursor` until it is
     null: new events stored while paging never make one repeat or go missing. Send the same filters
     with every page, including `sort`: a cursor only works with the order that issued it. For "just
     announced", ask `sort=announced` with `announced_from` set to the first day of the window. Days
-    are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday
-    show, although it is stored as Sunday 01:00 UTC."""
-    if from_ and to and to < from_:
-        raise InvalidParameterError(f"`to` ({to}) is before `from` ({from_}).")
+    are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday show, although it is stored
+    as Sunday 01:00 UTC. One item per date; GET /shows lists each show once."""
+    filters = build_filters(q, from_, to, venue, category, announced_from)
     after = decode_cursor(cursor, sort) if cursor else None
-    starts_from, starts_before = day_window(from_, to)
-    filters = EventFilters(
-        q=_blank_is_none(q), starts_from=starts_from, starts_before=starts_before,
-        venue=_blank_is_none(venue), category=category,
-        announced_from=start_of_day(announced_from) if announced_from else None,
-    )
     rows = source(limit + 1, after, filters, sort)  # one extra row tells whether there is a next page
     items = rows[:limit]
-    return EventPage(items=items, next_cursor=encode_cursor(items[-1], sort) if len(rows) > limit else None)
+    if len(rows) <= limit:
+        return EventPage(items=items, next_cursor=None)
+    last = items[-1]
+    at = last.first_seen_at if sort == "announced" else last.starts_at
+    return EventPage(items=items, next_cursor=encode_cursor(at, last.id, sort))
 
 
 @router.get(
     "/events/{event_id}",
     response_model=EventDetail,
     summary="One event, with the other upcoming dates of the same show",
-    responses={404: _problem("There is no event with this id")},
+    responses={404: problem("There is no event with this id")},
 )
 def get_event_detail(event_id: str, source: Annotated[DetailSource, Depends(event_detail_source)]) -> EventDetail:
     """Every field of the event, including a past one, plus `other_dates`: the upcoming dates of the

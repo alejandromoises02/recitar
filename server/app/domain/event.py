@@ -81,3 +81,47 @@ class ShowDate(BaseModel):
     @field_serializer("starts_at")
     def _in_buenos_aires_time(self, value: datetime) -> datetime:
         return value.astimezone(BUENOS_AIRES)
+
+
+class ShowDateTickets(ShowDate):
+    """One upcoming date of a show in a listing, with where to buy it."""
+
+    ticket_links: list[TicketLink]
+
+
+class Show(BaseModel):
+    """A show once, with all of its upcoming dates. Display fields come from its next date."""
+
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
+    id: str  # the show key: an event id without its date (see show_key)
+    category: EventCategory
+    title: str
+    artist: str | None = None
+    venue: str
+    city: str | None = None
+    region: str | None = None
+    country: str | None = None
+    source_url: str
+    image_url: str | None = None
+    image_origin: ImageOrigin | None = None
+    image_author: str | None = None
+    image_license: str | None = None
+    image_source_url: str | None = None
+    first_seen_at: AwareDatetime  # the earliest first_seen_at of any of its dates, past ones included
+    dates: list[ShowDateTickets]  # upcoming only, soonest first; never empty
+
+    @model_validator(mode="after")
+    def _has_dates_and_matching_image(self) -> "Show":
+        if not self.dates:
+            raise ValueError("a show has at least one upcoming date")
+        if (self.image_url is None) != (self.image_origin is None):
+            raise ValueError("image_url and image_origin must be given together")
+        return self
+
+    @classmethod
+    def from_dates(cls, show_id: str, upcoming: list[Event], first_seen_at: datetime) -> "Show":
+        """`upcoming`: the show's upcoming events, soonest first."""
+        display = upcoming[0].model_dump(include=set(cls.model_fields) - {"id", "first_seen_at", "dates"})
+        dates = [ShowDateTickets(id=e.id, starts_at=e.starts_at, ticket_links=e.ticket_links) for e in upcoming]
+        return cls(id=show_id, first_seen_at=first_seen_at, dates=dates, **display)

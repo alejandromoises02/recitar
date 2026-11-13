@@ -3,7 +3,7 @@ schema must say exactly what the API sends, and the copy the client is built fro
 
 import json
 
-from app.domain.event import Event
+from app.domain.event import Event, Show, ShowDateTickets
 from app.main import app
 from app.openapi_export import CLIENT_SCHEMA, schema_json
 
@@ -14,6 +14,8 @@ def test_every_event_field_is_required_because_the_api_always_sends_it():
     schemas = app.openapi()["components"]["schemas"]
     assert set(schemas["Event"]["required"]) == set(Event.model_fields)
     assert set(schemas["EventDetail"]["required"]) == set(Event.model_fields) | {"other_dates"}
+    assert set(schemas["Show"]["required"]) == set(Show.model_fields)
+    assert set(schemas["ShowDateTickets"]["required"]) == set(ShowDateTickets.model_fields)
 
 
 def test_the_exported_schema_is_the_one_the_api_serves():

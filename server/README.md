@@ -91,6 +91,20 @@ time and then id:
   it. "Just announced" is `sort=announced&announced_from=<14 days ago>`.
 - All filters combine (an event must match every one sent). Send the same ones with every page.
 
+`GET /shows` lists each show once instead of once per date. A show's `id` is an event id without
+its date suffix (`venti-mila-20261120T2100` belongs to `venti-mila`), compared whole. Each item has
+the show's fields, taken from its next date, plus:
+
+- `dates`: every upcoming date, soonest first, each with its event `id`, `starts_at` and
+  `ticket_links`. Never empty.
+- `first_seen_at`: the earliest `first_seen_at` of any of its dates, past ones included, so a new
+  date of a show we already knew does not make it "just announced".
+
+It takes the same parameters as `GET /events`. `q`, `from`, `to`, `venue` and `category` apply to
+the dates: a show is listed when any upcoming date matches, and it still brings all of them.
+`announced_from` and `sort=announced` look at the show's `first_seen_at`. With the default sort,
+shows go by their next date, then id. Paging and cursor rules are the same.
+
 `GET /venues` returns the venues that have upcoming events, by name, with how many each has:
 `{"items": [{"name": "Niceto Club", "upcoming_events": 12}]}`. It is not paged (a few dozen venues);
 `items` leaves room to add paging later without breaking clients.

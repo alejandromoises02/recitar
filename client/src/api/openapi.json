@@ -11,7 +11,7 @@
           "events"
         ],
         "summary": "Upcoming events, a page at a time",
-        "description": "Events that have not started yet, by start time (then id), or by announcement with `sort=announced`. Follow `next_cursor` until it is\nnull: new events stored while paging never make one repeat or go missing. Send the same filters\nwith every page, including `sort`: a cursor only works with the order that issued it. For \"just\nannounced\", ask `sort=announced` with `announced_from` set to the first day of the window. Days\nare Buenos Aires days: a show on Saturday at 22:00 there is a Saturday\nshow, although it is stored as Sunday 01:00 UTC.",
+        "description": "Events that have not started yet, by start time (then id), or by announcement with `sort=announced`. Follow `next_cursor` until it is\nnull: new events stored while paging never make one repeat or go missing. Send the same filters\nwith every page, including `sort`: a cursor only works with the order that issued it. For \"just\nannounced\", ask `sort=announced` with `announced_from` set to the first day of the window. Days\nare Buenos Aires days: a show on Saturday at 22:00 there is a Saturday show, although it is stored\nas Sunday 01:00 UTC. One item per date; GET /shows lists each show once.",
         "operationId": "list_events_events_get",
         "parameters": [
           {
@@ -400,6 +400,309 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/shows": {
+      "get": {
+        "tags": [
+          "shows"
+        ],
+        "summary": "Upcoming shows, each once with all of its dates, a page at a time",
+        "description": "Each show once (the dates of one show share its `id`, an event id without the date), with all\nof its upcoming dates in `dates`, soonest first, each with its own event id and ticket links.\n\nThe filters are the ones of GET /events and apply to the dates: a show is listed when any of its\nupcoming dates matches, and it still brings all of them. `announced_from` and `sort=announced`\nlook at the show's `first_seen_at`, the first time any of its dates was seen, so a new date of a\nshow we already knew does not make it news. By default shows go by their next date (then id).\nPaging works as in GET /events: follow `next_cursor`, send the same parameters with every page.",
+        "operationId": "list_shows_shows_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Shows per page",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Shows per page"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "next_cursor of the previous page; leave out for the first",
+              "title": "Cursor"
+            },
+            "description": "next_cursor of the previous page; leave out for the first"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search the title, artist and venue: every word must appear, ignoring case and accents",
+              "title": "Q"
+            },
+            "description": "Search the title, artist and venue: every word must appear, ignoring case and accents"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First day, YYYY-MM-DD, in Buenos Aires time (included)",
+              "title": "From"
+            },
+            "description": "First day, YYYY-MM-DD, in Buenos Aires time (included)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last day, YYYY-MM-DD, in Buenos Aires time (included)",
+              "title": "To"
+            },
+            "description": "Last day, YYYY-MM-DD, in Buenos Aires time (included)"
+          },
+          {
+            "name": "venue",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this venue: a `name` from GET /venues, exactly",
+              "title": "Venue"
+            },
+            "description": "Only this venue: a `name` from GET /venues, exactly"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "concert",
+                    "theatre",
+                    "party",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this kind of event",
+              "title": "Category"
+            },
+            "description": "Only this kind of event"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "starts_at",
+                "announced"
+              ],
+              "type": "string",
+              "description": "`starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first",
+              "default": "starts_at",
+              "title": "Sort"
+            },
+            "description": "`starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first"
+          },
+          {
+            "name": "announced_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only shows first seen (any of their dates, past ones included) on or after this day, YYYY-MM-DD, in Buenos Aires time",
+              "title": "Announced From"
+            },
+            "description": "Only shows first seen (any of their dates, past ones included) on or after this day, YYYY-MM-DD, in Buenos Aires time"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The cursor was not issued by this API",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "status": {
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Detail"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "limit, q, from, to, venue, category, sort or announced_from is not valid",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "status": {
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Detail"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
                 }
               }
             }
@@ -860,6 +1163,173 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "Show": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "concert",
+              "theatre",
+              "party",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "artist": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artist"
+          },
+          "venue": {
+            "type": "string",
+            "title": "Venue"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "image_origin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "source",
+                  "licensed",
+                  "venue"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Origin"
+          },
+          "image_author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Author"
+          },
+          "image_license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image License"
+          },
+          "image_source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Source Url"
+          },
+          "first_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Seen At"
+          },
+          "dates": {
+            "items": {
+              "$ref": "#/components/schemas/ShowDateTickets"
+            },
+            "type": "array",
+            "title": "Dates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "title",
+          "artist",
+          "venue",
+          "city",
+          "region",
+          "country",
+          "source_url",
+          "image_url",
+          "image_origin",
+          "image_author",
+          "image_license",
+          "image_source_url",
+          "first_seen_at",
+          "dates"
+        ],
+        "title": "Show",
+        "description": "A show once, with all of its upcoming dates. Display fields come from its next date."
+      },
       "ShowDate": {
         "properties": {
           "id": {
@@ -879,6 +1349,62 @@
         ],
         "title": "ShowDate",
         "description": "Another date of the same show: enough to link to it."
+      },
+      "ShowDateTickets": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "ticket_links": {
+            "items": {
+              "$ref": "#/components/schemas/TicketLink"
+            },
+            "type": "array",
+            "title": "Ticket Links"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "starts_at",
+          "ticket_links"
+        ],
+        "title": "ShowDateTickets",
+        "description": "One upcoming date of a show in a listing, with where to buy it."
+      },
+      "ShowPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Show"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ShowPage"
       },
       "TicketLink": {
         "properties": {

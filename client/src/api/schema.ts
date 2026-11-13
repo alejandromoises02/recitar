@@ -17,8 +17,8 @@ export interface paths {
          *     null: new events stored while paging never make one repeat or go missing. Send the same filters
          *     with every page, including `sort`: a cursor only works with the order that issued it. For "just
          *     announced", ask `sort=announced` with `announced_from` set to the first day of the window. Days
-         *     are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday
-         *     show, although it is stored as Sunday 01:00 UTC.
+         *     are Buenos Aires days: a show on Saturday at 22:00 there is a Saturday show, although it is stored
+         *     as Sunday 01:00 UTC. One item per date; GET /shows lists each show once.
          */
         get: operations["list_events_events_get"];
         put?: never;
@@ -42,6 +42,33 @@ export interface paths {
          *     same show, so the client can offer them without searching.
          */
         get: operations["get_event_detail_events__event_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/shows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Upcoming shows, each once with all of its dates, a page at a time
+         * @description Each show once (the dates of one show share its `id`, an event id without the date), with all
+         *     of its upcoming dates in `dates`, soonest first, each with its own event id and ticket links.
+         *
+         *     The filters are the ones of GET /events and apply to the dates: a show is listed when any of its
+         *     upcoming dates matches, and it still brings all of them. `announced_from` and `sort=announced`
+         *     look at the show's `first_seen_at`, the first time any of its dates was seen, so a new date of a
+         *     show we already knew does not make it news. By default shows go by their next date (then id).
+         *     Paging works as in GET /events: follow `next_cursor`, send the same parameters with every page.
+         */
+        get: operations["list_shows_shows_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -213,6 +240,50 @@ export interface components {
             detail?: components["schemas"]["ValidationError"][];
         };
         /**
+         * Show
+         * @description A show once, with all of its upcoming dates. Display fields come from its next date.
+         */
+        Show: {
+            /** Id */
+            id: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "concert" | "theatre" | "party" | "other";
+            /** Title */
+            title: string;
+            /** Artist */
+            artist: string | null;
+            /** Venue */
+            venue: string;
+            /** City */
+            city: string | null;
+            /** Region */
+            region: string | null;
+            /** Country */
+            country: string | null;
+            /** Source Url */
+            source_url: string;
+            /** Image Url */
+            image_url: string | null;
+            /** Image Origin */
+            image_origin: ("source" | "licensed" | "venue") | null;
+            /** Image Author */
+            image_author: string | null;
+            /** Image License */
+            image_license: string | null;
+            /** Image Source Url */
+            image_source_url: string | null;
+            /**
+             * First Seen At
+             * Format: date-time
+             */
+            first_seen_at: string;
+            /** Dates */
+            dates: components["schemas"]["ShowDateTickets"][];
+        };
+        /**
          * ShowDate
          * @description Another date of the same show: enough to link to it.
          */
@@ -224,6 +295,28 @@ export interface components {
              * Format: date-time
              */
             starts_at: string;
+        };
+        /**
+         * ShowDateTickets
+         * @description One upcoming date of a show in a listing, with where to buy it.
+         */
+        ShowDateTickets: {
+            /** Id */
+            id: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Ticket Links */
+            ticket_links: components["schemas"]["TicketLink"][];
+        };
+        /** ShowPage */
+        ShowPage: {
+            /** Items */
+            items: components["schemas"]["Show"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
         /** TicketLink */
         TicketLink: {
@@ -407,6 +500,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_shows_shows_get: {
+        parameters: {
+            query?: {
+                /** @description Shows per page */
+                limit?: number;
+                /** @description next_cursor of the previous page; leave out for the first */
+                cursor?: string | null;
+                /** @description Search the title, artist and venue: every word must appear, ignoring case and accents */
+                q?: string | null;
+                /** @description First day, YYYY-MM-DD, in Buenos Aires time (included) */
+                from?: string | null;
+                /** @description Last day, YYYY-MM-DD, in Buenos Aires time (included) */
+                to?: string | null;
+                /** @description Only this venue: a `name` from GET /venues, exactly */
+                venue?: string | null;
+                /** @description Only this kind of event */
+                category?: ("concert" | "theatre" | "party" | "other") | null;
+                /** @description `starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first */
+                sort?: "starts_at" | "announced";
+                /** @description Only shows first seen (any of their dates, past ones included) on or after this day, YYYY-MM-DD, in Buenos Aires time */
+                announced_from?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShowPage"];
+                };
+            };
+            /** @description The cursor was not issued by this API */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
+                };
+            };
+            /** @description limit, q, from, to, venue, category, sort or announced_from is not valid */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
                 };
             };
         };

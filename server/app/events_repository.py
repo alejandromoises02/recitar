@@ -8,7 +8,7 @@ from sqlalchemy import Column, ColumnElement, Connection, DateTime, MetaData, Ta
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
-from app.domain.event import Event, EventCategory, ShowDate
+from app.domain.event import Event, EventCategory, Show, ShowDate
 
 metadata = MetaData()
 
@@ -39,8 +39,14 @@ events = Table(
 # newest first). Ties go by id, ascending for starts_at and descending for announced.
 EventSort = Literal["starts_at", "announced"]
 
-# The last event already seen in that order: (starts_at or first_seen_at, id).
+# The last item already seen in that order: (starts_at or first_seen_at, id). For a show, starts_at
+# is its next date and id is the show key.
 Position = tuple[datetime, str]
+
+# Event ids are `<source>-<show>-<YYYYMMDDTHHMM>`: without the date suffix they name the show (the
+# same rule as domain.event.show_key, done in SQL).
+_DATE_SUFFIX = r"-\d{8}T\d{4}$"
+_show_key = func.regexp_replace(events.c.id, _DATE_SUFFIX, "")
 
 
 def upsert_events(connection: Connection, items: list[Event]) -> None:
@@ -94,6 +100,23 @@ def _search(q: str) -> ColumnElement[bool]:
     return and_(*(text.like(func.concat("%", _folded(_escape_like(word)), "%"), escape="\\") for word in q.split()))
 
 
+def _date_matches(filters: EventFilters, now: datetime) -> list[ColumnElement[bool]]:
+    """Conditions one stored date (row) must meet: upcoming, plus every filter sent except
+    announced_from, which /events checks per row and /shows per show."""
+    conditions: list[ColumnElement[bool]] = [events.c.starts_at >= now]
+    if filters.q:
+        conditions.append(_search(filters.q))
+    if filters.starts_from is not None:
+        conditions.append(events.c.starts_at >= filters.starts_from)
+    if filters.starts_before is not None:
+        conditions.append(events.c.starts_at < filters.starts_before)
+    if filters.venue is not None:
+        conditions.append(events.c.venue == filters.venue)
+    if filters.category is not None:
+        conditions.append(events.c.category == filters.category)
+    return conditions
+
+
 def list_upcoming(
     connection: Connection,
     now: datetime,
@@ -108,17 +131,7 @@ def list_upcoming(
     instead of by offset means no event is repeated or skipped when new ones are stored between two
     pages.
     """
-    query = select(events).where(events.c.starts_at >= now)
-    if filters.q:
-        query = query.where(_search(filters.q))
-    if filters.starts_from is not None:
-        query = query.where(events.c.starts_at >= filters.starts_from)
-    if filters.starts_before is not None:
-        query = query.where(events.c.starts_at < filters.starts_before)
-    if filters.venue is not None:
-        query = query.where(events.c.venue == filters.venue)
-    if filters.category is not None:
-        query = query.where(events.c.category == filters.category)
+    query = select(events).where(*_date_matches(filters, now))
     if filters.announced_from is not None:
         query = query.where(events.c.first_seen_at >= filters.announced_from)
     if sort == "announced":
@@ -138,16 +151,12 @@ def get_event(connection: Connection, event_id: str) -> Event | None:
     return None if row is None else Event.model_validate(dict(row))
 
 
-_DATE_SUFFIX = r"-\d{8}T\d{4}$"
-
-
 def list_show_dates(connection: Connection, show: str, now: datetime) -> list[ShowDate]:
     """Upcoming dates of one show (see `show_key`). The key is compared whole, so
     `colon-el-cascanueces` never picks up `colon-el-cascanueces-2`."""
-    key = func.regexp_replace(events.c.id, _DATE_SUFFIX, "")
     query = (
         select(events.c.id, events.c.starts_at)
-        .where(key == show, events.c.starts_at >= now)
+        .where(_show_key == show, events.c.starts_at >= now)
         .order_by(events.c.starts_at, events.c.id)
     )
     return [ShowDate(id=row.id, starts_at=row.starts_at) for row in connection.execute(query)]
@@ -167,3 +176,54 @@ def list_upcoming_venues(connection: Connection, now: datetime) -> list[VenueCou
         .order_by(events.c.venue)
     )
     return [VenueCount(name=name, upcoming_events=count) for name, count in connection.execute(query)]
+
+
+def list_upcoming_shows(
+    connection: Connection,
+    now: datetime,
+    limit: int,
+    after: Position | None,
+    filters: EventFilters = EventFilters(),
+    sort: EventSort = "starts_at",
+) -> list[Show]:
+    """Shows with at least one upcoming date that matches the filters, `limit` at a time, each with
+    ALL of its upcoming dates (not only the matching ones).
+
+    By starts_at a show goes by its next date, then key. By announced it goes by its first_seen_at,
+    the earliest of any of its dates (past ones included), newest first, then key descending; that
+    is also what announced_from looks at, so a new date of a show we already knew is not news.
+    """
+    matching = select(_show_key.label("key")).where(*_date_matches(filters, now)).distinct().subquery()
+    per_show = (
+        select(
+            _show_key.label("key"),
+            func.min(events.c.starts_at).filter(events.c.starts_at >= now).label("next_starts_at"),
+            func.min(events.c.first_seen_at).label("first_seen_at"),
+        )
+        .group_by(_show_key)
+        .subquery()
+    )
+    query = select(per_show).join(matching, matching.c.key == per_show.c.key)
+    if filters.announced_from is not None:
+        query = query.where(per_show.c.first_seen_at >= filters.announced_from)
+    if sort == "announced":
+        if after is not None:
+            query = query.where(tuple_(per_show.c.first_seen_at, per_show.c.key) < tuple_(*after))
+        query = query.order_by(per_show.c.first_seen_at.desc(), per_show.c.key.desc())
+    else:
+        if after is not None:
+            query = query.where(tuple_(per_show.c.next_starts_at, per_show.c.key) > tuple_(*after))
+        query = query.order_by(per_show.c.next_starts_at, per_show.c.key)
+    page = connection.execute(query.limit(limit)).all()
+    if not page:
+        return []
+
+    dates = select(events, _show_key.label("show_key")).where(
+        _show_key.in_([row.key for row in page]), events.c.starts_at >= now
+    ).order_by(events.c.starts_at, events.c.id)
+    upcoming: dict[str, list[Event]] = {row.key: [] for row in page}
+    for row in connection.execute(dates).mappings():
+        fields = dict(row)
+        upcoming[fields.pop("show_key")].append(Event.model_validate(fields))
+    # A show whose rows vanished between the two queries is skipped rather than failing the page.
+    return [Show.from_dates(row.key, upcoming[row.key], row.first_seen_at) for row in page if upcoming[row.key]]
