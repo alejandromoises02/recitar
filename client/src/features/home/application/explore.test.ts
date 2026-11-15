@@ -201,6 +201,20 @@ describe("exploreRows", () => {
     const keys = exploreRows(groups, 2).map((r) => r.key);
     expect(new Set(keys).size).toBe(keys.length);
   });
+
+  it("keeps a collapsed group's title, marked collapsed, and leaves out its day blocks", () => {
+    const rows = exploreRows(groups, 1, new Set(["2026-11"]));
+    expect(rows.map((r) => (r.kind === "group" ? `# ${r.title} ${r.expanded ? "open" : "closed"}` : r.kind === "days" ? r.blocks.map((b) => b.iso).join(",") : "?"))).toEqual([
+      "# Noviembre 2026 closed",
+      "# Diciembre 2026 open",
+      "2026-12-01",
+    ]);
+  });
+
+  it("names the group on its title row so it can be toggled, and still counts the hidden shows", () => {
+    const [title] = exploreRows(groups, 1, new Set(["2026-11"]));
+    expect(title).toMatchObject({ kind: "group", group: "2026-11", count: 3, expanded: false });
+  });
 });
 
 describe("cardRows", () => {
@@ -226,5 +240,15 @@ describe("cardRows", () => {
   it("gives every row a unique key", () => {
     const keys = cardRows(groups, 1).map((r) => r.key);
     expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("keeps a collapsed group's title and leaves out its cards", () => {
+    const rows = cardRows(groups, 2, new Set(["2026-12"]));
+    expect(rows.map((r) => (r.kind === "group" ? `# ${r.title} ${r.expanded ? "open" : "closed"}` : r.kind === "cards" ? r.items.map((i) => i.show.id).join(",") : "?"))).toEqual([
+      "# Noviembre 2026 open",
+      "a,b",
+      "c",
+      "# Diciembre 2026 closed",
+    ]);
   });
 });

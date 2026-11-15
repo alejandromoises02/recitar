@@ -1,13 +1,14 @@
 import { useCallback, useMemo } from "react";
-import { FlatList, Platform, Text, View, useWindowDimensions } from "react-native";
+import { Platform, Text, View, useWindowDimensions } from "react-native";
+import Animated, { Easing, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fluid } from "../../../design/fluid";
-import { spacing, typography } from "../../../design/tokens";
+import { motion, spacing, typography } from "../../../design/tokens";
 import { cardRows, exploreRows } from "../application/explore";
 import { homeLayout } from "../application/home-layout";
 import { BrandLogo } from "./BrandLogo";
 import { ExploreProvider } from "./explore/explore-context";
-import { BLOCK_GAP, BLOCK_MIN_WIDTH, CARD_GAP, CARD_MIN_WIDTH } from "./explore/explore.constants";
+import { BLOCK_GAP, BLOCK_MIN_WIDTH, CARD_GAP, CARD_MIN_WIDTH, ROW_SHIFT_MS } from "./explore/explore.constants";
 import { ExploreFooter } from "./explore/ExploreFooter";
 import type { ListRow } from "./explore/ExploreRowView";
 import { ExploreRowView } from "./explore/ExploreRowView";
@@ -37,13 +38,20 @@ export function HomeScreen() {
   const columns = Math.max(1, Math.floor((listWidth + gap) / (minWidth + gap)));
   const itemWidth = (listWidth - (columns - 1) * gap) / columns;
   const rows = useMemo<ListRow[]>(
-    () => [FILTERS_ROW, ...(cards ? cardRows(explore.groups, columns) : exploreRows(explore.groups, columns))],
-    [cards, explore.groups, columns],
+    () => [FILTERS_ROW, ...(cards ? cardRows : exploreRows)(explore.groups, columns, explore.collapsed)],
+    [cards, explore.groups, columns, explore.collapsed],
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: ListRow }) => <ExploreRowView row={item} apiBase={explore.apiBase} itemWidth={itemWidth} />,
-    [explore.apiBase, itemWidth],
+    ({ item }: { item: ListRow }) => (
+      <ExploreRowView
+        row={item}
+        apiBase={explore.apiBase}
+        itemWidth={itemWidth}
+        fadeIn={item.kind !== "filters" && item.kind !== "group" && item.group === explore.opened}
+      />
+    ),
+    [explore.apiBase, itemWidth, explore.opened],
   );
 
   const header = (
@@ -75,7 +83,7 @@ export function HomeScreen() {
 
   return (
     <ExploreProvider value={explore}>
-      <FlatList
+      <Animated.FlatList
         style={styles.screen}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingTop }]}
@@ -90,12 +98,14 @@ export function HomeScreen() {
         onEndReached={explore.fetchMore}
         onEndReachedThreshold={END_REACHED_THRESHOLD}
         keyboardShouldPersistTaps="handled"
+        itemLayoutAnimation={ROW_SHIFT}
       />
     </ExploreProvider>
   );
 }
 
 const keyOf = (row: ListRow) => row.key;
+const ROW_SHIFT = LinearTransition.duration(ROW_SHIFT_MS).easing(Easing.bezier(...motion.easing.smoothOut));
 const STICKY_FILTERS = [1];
 const FILTERS_ROW: ListRow = { kind: "filters", key: "filters" };
 const RowGap = () => <View style={styles.rowGap} />;

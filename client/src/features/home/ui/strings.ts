@@ -38,6 +38,7 @@ export const homeStrings = {
     },
     hasShows: "hay shows",
     groupBy: "Ver por",
+    groupLabel: (title: string, note: string | null, shows: string) => `${title}${note ? `, ${note}` : ""}, ${shows}`,
     groupOptions: { month: "Mes", week: "Semana", day: "Día" },
     clear: "Limpiar filtros",
     empty: "No hay shows con esos filtros.",

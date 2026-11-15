@@ -124,30 +124,43 @@ export function cardDate(date: Date) {
 export const timeLabel = clockTime;
 
 export type ExploreRow =
-  | { kind: "group"; key: string; title: string; note: string | null; count: number }
-  | { kind: "days"; key: string; blocks: DayBlock[] }
-  | { kind: "cards"; key: string; items: ShowItem[] };
+  | { kind: "group"; key: string; group: string; title: string; note: string | null; count: number; expanded: boolean }
+  | { kind: "days"; key: string; group: string; blocks: DayBlock[] }
+  | { kind: "cards"; key: string; group: string; items: ShowItem[] };
 
-/** The flat rows a virtualised list renders: each group's title, then its day blocks `columns` per row. */
-export function exploreRows(groups: ShowGroup[], columns: number): ExploreRow[] {
+const NONE_COLLAPSED: ReadonlySet<string> = new Set();
+
+function titleRow(group: ShowGroup, expanded: boolean): ExploreRow {
+  return { kind: "group", key: `group:${group.key}`, group: group.key, title: group.title, note: group.note, count: group.count, expanded };
+}
+
+/**
+ * The flat rows a virtualised list renders: each group's title, then its day blocks `columns` per row.
+ * Groups in `collapsed` keep only their title.
+ */
+export function exploreRows(groups: ShowGroup[], columns: number, collapsed = NONE_COLLAPSED): ExploreRow[] {
   return groups.flatMap((group) => {
-    const rows: ExploreRow[] = [{ kind: "group", key: `group:${group.key}`, title: group.title, note: group.note, count: group.count }];
+    const expanded = !collapsed.has(group.key);
+    const rows: ExploreRow[] = [titleRow(group, expanded)];
+    if (!expanded) return rows;
     for (let i = 0; i < group.days.length; i += columns) {
       const blocks = group.days.slice(i, i + columns);
-      rows.push({ kind: "days", key: `days:${group.key}:${blocks[0].iso}`, blocks });
+      rows.push({ kind: "days", key: `days:${group.key}:${blocks[0].iso}`, group: group.key, blocks });
     }
     return rows;
   });
 }
 
-/** Wide screens: each group's title, then all its shows as cards, `columns` per row. */
-export function cardRows(groups: ShowGroup[], columns: number): ExploreRow[] {
+/** Wide screens: each group's title, then all its shows as cards, `columns` per row. Groups in `collapsed` keep only their title. */
+export function cardRows(groups: ShowGroup[], columns: number, collapsed = NONE_COLLAPSED): ExploreRow[] {
   return groups.flatMap((group) => {
-    const rows: ExploreRow[] = [{ kind: "group", key: `group:${group.key}`, title: group.title, note: group.note, count: group.count }];
+    const expanded = !collapsed.has(group.key);
+    const rows: ExploreRow[] = [titleRow(group, expanded)];
+    if (!expanded) return rows;
     const items = group.days.flatMap((day) => day.items);
     for (let i = 0; i < items.length; i += columns) {
       const chunk = items.slice(i, i + columns);
-      rows.push({ kind: "cards", key: `cards:${group.key}:${i}`, items: chunk });
+      rows.push({ kind: "cards", key: `cards:${group.key}:${i}`, group: group.key, items: chunk });
     }
     return rows;
   });

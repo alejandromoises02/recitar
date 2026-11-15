@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { configuredApiBase } from "../../../events/infrastructure/events-api";
 import { useShows, useVenues } from "../../../events/infrastructure/events-queries";
+import type { GroupBy } from "../../application/explore";
 import { daysWithShows, groupShows, stripDays, whenRange } from "../../application/explore";
-import { EXPLORE_PAGE_SIZE, SEARCH_DEBOUNCE_MS, STRIP_QUERY_LIMIT } from "./explore.constants";
+import { EXPLORE_PAGE_SIZE, GROUP_OPEN_MS, SEARCH_DEBOUNCE_MS, STRIP_QUERY_LIMIT } from "./explore.constants";
 import { useDebouncedValue } from "./use-debounced-value";
 import { useExploreFilters } from "./use-explore-filters";
+
+const NONE: ReadonlySet<string> = new Set();
 
 /** Everything "Toda la cartelera" shows: filters, the listing pages, and the data for the filter panel. */
 export function useExplore() {
@@ -34,6 +37,30 @@ export function useExplore() {
   const marked = useMemo(() => daysWithShows(strip.data?.pages[0].items ?? []), [strip.data]);
   const venueNames = useMemo(() => venues.data?.map((venue) => venue.name) ?? [], [venues.data]);
 
+  // Collapsed groups belong to one "Ver por" choice: another choice makes other groups, all open.
+  const [collapsedBy, setCollapsedBy] = useState<{ by: GroupBy; keys: ReadonlySet<string> }>(() => ({ by: filters.group, keys: new Set() }));
+  const collapsed = collapsedBy.by === filters.group ? collapsedBy.keys : NONE;
+  // The group just unfolded: only its rows fade in, so rows the list mounts while scrolling do not.
+  const [opened, setOpened] = useState<string | null>(null);
+  const toggleGroup = useCallback(
+    (key: string) => {
+      const opening = collapsed.has(key);
+      setOpened(opening ? key : null);
+      setCollapsedBy(() => {
+        const keys = new Set(collapsed);
+        if (opening) keys.delete(key);
+        else keys.add(key);
+        return { by: filters.group, keys };
+      });
+    },
+    [collapsed, filters.group],
+  );
+  useEffect(() => {
+    if (!opened) return;
+    const timer = setTimeout(() => setOpened(null), GROUP_OPEN_MS);
+    return () => clearTimeout(timer);
+  }, [opened]);
+
   const fetchMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -52,6 +79,9 @@ export function useExplore() {
     marked,
     venueNames,
     groups,
+    collapsed,
+    opened,
+    toggleGroup,
     count: shows.length,
     visible,
     loaded: listing.data !== undefined,
