@@ -1,6 +1,5 @@
-import * as WebBrowser from "expo-web-browser";
 import type { StyleProp, ViewStyle } from "react-native";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Linking, Platform, Pressable, Text, View } from "react-native";
 import { styles } from "./TicketLink.styles";
 
 type Props = {
@@ -37,9 +36,10 @@ export function TicketLink({ url, label, detail, webHint, style }: Props) {
 /**
  * On web a real <a href> (react-native-web renders a View with href as a link): Enter, middle-click and
  * "open in new tab" work, and react-native-web would not run onPress from the keyboard for a link role.
- * On iOS / Android the in-app browser opens the ticket page.
+ * On iOS / Android the phone's default browser opens the ticket page, where the visitor is already signed
+ * in to the ticketer with saved passwords and cards (an in-app browser does not share that session).
  */
 function linkProps(url: string): object {
   if (Platform.OS === "web") return { href: url, hrefAttrs: { target: "_blank", rel: "noopener noreferrer" } };
-  return { onPress: () => WebBrowser.openBrowserAsync(url) };
+  return { onPress: () => Linking.openURL(url) };
 }
