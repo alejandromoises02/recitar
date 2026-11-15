@@ -3,13 +3,13 @@ import { FlatList, Platform, Text, View, useWindowDimensions } from "react-nativ
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fluid } from "../../../design/fluid";
 import { spacing, typography } from "../../../design/tokens";
-import type { ExploreRow } from "../application/explore";
 import { cardRows, exploreRows } from "../application/explore";
 import { homeLayout } from "../application/home-layout";
 import { BrandLogo } from "./BrandLogo";
 import { ExploreProvider } from "./explore/explore-context";
 import { BLOCK_GAP, BLOCK_MIN_WIDTH, CARD_GAP, CARD_MIN_WIDTH } from "./explore/explore.constants";
 import { ExploreFooter } from "./explore/ExploreFooter";
+import type { ListRow } from "./explore/ExploreRowView";
 import { ExploreRowView } from "./explore/ExploreRowView";
 import { useExplore } from "./explore/use-explore";
 import { HomeSection } from "./HomeSection";
@@ -18,8 +18,8 @@ import { headlineSizing, styles } from "./HomeScreen.styles";
 import { homeStrings } from "./strings";
 
 /**
- * The home is one virtualised list: the sections and the explore filters are its header, and the
- * explore listing (group titles and day blocks) are its rows, so only the visible rows are drawn.
+ * The home is one virtualised list: the sections are its header, then the explore filters and the
+ * explore listing (group titles, day blocks or cards) are its rows, so only the visible rows are drawn.
  */
 export function HomeScreen() {
   const { width } = useWindowDimensions();
@@ -36,13 +36,13 @@ export function HomeScreen() {
   const [minWidth, gap] = cards ? [CARD_MIN_WIDTH, CARD_GAP] : [BLOCK_MIN_WIDTH, BLOCK_GAP];
   const columns = Math.max(1, Math.floor((listWidth + gap) / (minWidth + gap)));
   const itemWidth = (listWidth - (columns - 1) * gap) / columns;
-  const rows = useMemo(
-    () => (cards ? cardRows(explore.groups, columns) : exploreRows(explore.groups, columns)),
+  const rows = useMemo<ListRow[]>(
+    () => [FILTERS_ROW, ...(cards ? cardRows(explore.groups, columns) : exploreRows(explore.groups, columns))],
     [cards, explore.groups, columns],
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: ExploreRow }) => <ExploreRowView row={item} apiBase={explore.apiBase} itemWidth={itemWidth} />,
+    ({ item }: { item: ListRow }) => <ExploreRowView row={item} apiBase={explore.apiBase} itemWidth={itemWidth} />,
     [explore.apiBase, itemWidth],
   );
 
@@ -84,6 +84,8 @@ export function HomeScreen() {
         renderItem={renderItem}
         ItemSeparatorComponent={cards ? CardRowGap : RowGap}
         ListHeaderComponent={header}
+        // Wide screens pin the filters while the listing scrolls (index 1: the header counts as 0).
+        stickyHeaderIndices={cards ? STICKY_FILTERS : undefined}
         ListFooterComponent={<ExploreFooter />}
         onEndReached={explore.fetchMore}
         onEndReachedThreshold={END_REACHED_THRESHOLD}
@@ -93,6 +95,8 @@ export function HomeScreen() {
   );
 }
 
-const keyOf = (row: ExploreRow) => row.key;
+const keyOf = (row: ListRow) => row.key;
+const STICKY_FILTERS = [1];
+const FILTERS_ROW: ListRow = { kind: "filters", key: "filters" };
 const RowGap = () => <View style={styles.rowGap} />;
 const CardRowGap = () => <View style={styles.cardRowGap} />;

@@ -4,11 +4,16 @@ import type { ExploreRow } from "../../application/explore";
 import { homeStrings } from "../strings";
 import { DayBlockView } from "./DayBlockView";
 import { ExploreCard } from "./ExploreCard";
+import { ExploreFiltersPanel } from "./ExploreFiltersPanel";
 import { styles } from "./ExploreRowView.styles";
 
-type Props = { row: ExploreRow; apiBase: string; itemWidth: number };
+/** A row of the home list: the explore filters, or a listing row. */
+export type ListRow = ExploreRow | { kind: "filters"; key: string };
+
+type Props = { row: ListRow; apiBase: string; itemWidth: number };
 
 export const ExploreRowView = memo(function ExploreRowView({ row, apiBase, itemWidth }: Props) {
+  if (row.kind === "filters") return <ExploreFiltersPanel />;
   if (row.kind === "group")
     return (
       <Text style={styles.title} accessibilityRole="header">
