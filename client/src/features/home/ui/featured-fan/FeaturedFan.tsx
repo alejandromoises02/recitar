@@ -33,6 +33,7 @@ import {
   SPOT_WIDTH_SHARE,
 } from "./featured.constants";
 import { FanControls } from "./FanControls";
+import { Pulse } from "../skeleton/Pulse";
 import { styles } from "./FeaturedFan.styles";
 import { Record } from "./Record";
 import { Sleeve } from "./Sleeve";
@@ -178,7 +179,7 @@ export function FeaturedFan() {
         <SectionError onRetry={() => refetch()} minHeight={card} />
       ) : isPending ? (
         <View style={[styles.fan, styles.pending, { height: card * FAN_HEIGHT_SHARE }]}>
-          <View style={[styles.sleeveSkeleton, { width: card, height: card }]} />
+          <Pulse style={[styles.sleeveSkeleton, { width: card, height: card }]} />
         </View>
       ) : (
         <>

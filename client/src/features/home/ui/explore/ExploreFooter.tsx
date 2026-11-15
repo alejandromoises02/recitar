@@ -4,6 +4,7 @@ import { useStrings } from "../strings";
 import { useExploreContext } from "./explore-context";
 import { ERROR_MIN_HEIGHT } from "./explore.constants";
 import { ExploreEmpty } from "./ExploreEmpty";
+import { Pulse } from "../skeleton/Pulse";
 import { styles } from "./ExploreFooter.styles";
 
 /** What sits under the listing rows: loading, error, no results, or the next page on its way. */
@@ -13,8 +14,8 @@ export function ExploreFooter() {
   if (explore.isPending)
     return (
       <View style={styles.skeletons}>
-        <View style={styles.skeleton} />
-        <View style={styles.skeleton} />
+        <Pulse style={styles.skeleton} />
+        <Pulse style={styles.skeleton} />
       </View>
     );
   if (explore.isError) return <SectionError onRetry={explore.retry} minHeight={ERROR_MIN_HEIGHT} />;

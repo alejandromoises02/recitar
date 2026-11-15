@@ -118,6 +118,8 @@ export const motion = {
   },
   distance: { micro: 4, small: 6, base: 8, medium: 12, large: 30 },
   scale: { large: 0.96, medium: 0.97, small: 0.98, tiny: 0.99, press: 0.97 },
+  /** Lowest opacity of a pulsing skeleton block. */
+  skeletonPulseMin: 0.5,
   signature: {
     sleeveMove: 850, // fan reshuffle, easing.swap
     recordOut: 900, // record slides out, easing.smoothOut
@@ -127,6 +129,7 @@ export const motion = {
     flapStagger: 70,
     carouselAutoplay: 7000,
     livePulse: 2400,
+    skeletonPulse: 1000, // one full fade down and back up while loading, easing.inOut, transitions.dev skeleton pulse
   },
 } as const;
 

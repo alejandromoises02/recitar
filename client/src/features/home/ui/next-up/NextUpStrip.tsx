@@ -11,6 +11,7 @@ import { SectionHeader } from "../section/SectionHeader";
 import { useStrings } from "../strings";
 import { ArrowButton } from "../controls/ArrowButton";
 import { CARDS_PER_VIEW, CARD_GAP, CARD_HEIGHT, PAGE_FRACTION, PHONE_CARD_WIDTH, SKELETON_CARDS } from "./NextUpStrip.constants";
+import { Pulse } from "../skeleton/Pulse";
 import { styles } from "./NextUpStrip.styles";
 import { ShowCard } from "./ShowCard";
 
@@ -56,7 +57,7 @@ export function NextUpStrip() {
       {isPending ? (
         <View style={styles.row}>
           {Array.from({ length: wide ? SKELETON_CARDS.wide : SKELETON_CARDS.phone }, (_, i) => (
-            <View key={i} style={[styles.skeleton, { width: cardWidth }]} />
+            <Pulse key={i} style={[styles.skeleton, { width: cardWidth }]} />
           ))}
         </View>
       ) : isError ? (
