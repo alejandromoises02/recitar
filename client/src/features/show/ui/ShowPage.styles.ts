@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 import { colors, fontFamily, spacing, typography } from "../../../design/tokens";
-import { NAME_MAX_SIZE, NAME_MIN_SIZE, TINT_HEIGHT } from "./show.constants";
+import { NAME_MAX_SIZE, NAME_MIN_SIZE, PAGE_MAX_WIDTH, TINT_HEIGHT } from "./show.constants";
 import { sectionTitle } from "./show.styles";
 
 /** The name scales with the screen and shrinks on phones so a long single word still fits. */
@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
   tintImage: { ...StyleSheet.absoluteFill, opacity: 0.22 },
   // The tint fades into the page instead of ending in a hard line.
   tintFade: { ...StyleSheet.absoluteFill, backgroundImage: `linear-gradient(to bottom, transparent 35%, ${colors.background})` },
-  content: { flexGrow: 1 },
+  content: { flexGrow: 1, width: "100%", maxWidth: PAGE_MAX_WIDTH, alignSelf: "center" },
   layout: { flexDirection: "row", alignItems: "flex-start", gap: spacing.xxl, paddingTop: spacing.md },
   // Phones: the page fills the screen even with little content, so the trust note can sit at the bottom.
   oneColumn: { flexDirection: "column", gap: spacing.lg, flexGrow: 1 },

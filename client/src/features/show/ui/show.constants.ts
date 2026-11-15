@@ -1,5 +1,7 @@
 /** At and below this width the page is one column and the ticket button is pinned at the bottom. */
 export const ONE_COLUMN_WIDTH = 900;
+/** On wide screens the page stays this wide, centred, so its columns keep their proportions; the tint still spans the window. */
+export const PAGE_MAX_WIDTH = 1440;
 /** The poster takes the photo's shape between portrait 3:4 and landscape 4:3. */
 export const POSTER_RATIO = { min: 3 / 4, max: 4 / 3, fallback: 3 / 4 } as const;
 /** On phones the poster is never taller than wide, so the dates stay near the top. */
