@@ -1,0 +1,25 @@
+/** Show page copy in Spanish (voseo): the source table, English must match its shape. */
+export const es = {
+  back: "Toda la cartelera",
+  backLabel: "Volver a toda la cartelera",
+  dates: (count: number) => (count === 1 ? "1 fecha" : `${count} fechas`),
+  categories: { concert: "Concierto", theatre: "Teatro", party: "Fiesta", other: "Show" } as Record<string, string>,
+  pickDate: "Elegí una fecha",
+  tickets: "Entradas",
+  ticketsAt: "Entradas en",
+  ticketsVendor: (vendor: string) => `Entradas en ${vendor}`,
+  opensNewTab: "Se abre en otra pestaña.",
+  trust: "recitAR no vende entradas: te lleva a la página oficial de cada show.",
+  dataFrom: "Datos de",
+  photo: "Foto",
+  share: "Compartir este show",
+  linkCopied: "Link copiado",
+  loading: "Cargando el show…",
+  loadFailed: "No pudimos cargar este show.",
+  retry: "Reintentar",
+  notFoundTitle: "No encontramos este show",
+  notFoundBody: "Puede que ya haya pasado o que el link esté mal.",
+  goToListing: "Ver toda la cartelera",
+};
+
+export type ShowStrings = typeof es;

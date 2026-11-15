@@ -8,5 +8,10 @@ const HOST = /^[a-z][a-z0-9+.-]*:\/\/(?:www\.)?([^/:?#]+)/i;
 /** Where the ticket button goes: the next date's first ticket link, else the show's source page. */
 export function ticketTarget(show: Show): TicketTarget {
   const url = show.dates[0]?.ticketLinks[0]?.url ?? show.sourceUrl;
-  return { url, domain: HOST.exec(url)?.[1] ?? url };
+  return { url, domain: domainOf(url) };
+}
+
+/** "movistararena.com.ar" from a link: the host without "www.", or the link itself when it has none. */
+export function domainOf(url: string): string {
+  return HOST.exec(url)?.[1] ?? url;
 }

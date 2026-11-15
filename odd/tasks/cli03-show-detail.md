@@ -1,0 +1,25 @@
+# cli03: show detail page (board ticket t10)
+Objective: build the approved show page in the app and make every show on the home open it. Branch: `dev` (one commit per task with the user's OK). Delivery: ask-on-risk. Tests: Vitest (`npm test`), Playwright + axe (`npm run test:a11y`).
+
+## Specs
+- S1. User, 2026-11-15, verbatim: "como que disenado? aja disneado p[ero no esta desarrolladfo o al menos no recuero que lo hiciramos ademas si en home le doy clci a aunlgnu evento no hace nada no me lleva aver ninugna vista de show". The page exists in the app and every show on the home opens it.
+- S2. Design source: `.impeccable/surfaces/show-detail.md` and the mock `.impeccable/mocks/show/show.html`. Chosen 2026-11-15: option B ("quiero ir con la ocpione de los botones co los dias o sea la b"): date tiles, the next date picked on arrival, one "Entradas" button with the picked date; one date: the date large in yellow and the button, no tiles. On phones the ticket button is pinned at the bottom ("siempre que en la version mobile si quede fija en el botton par ano tener que scrolerar hasta abajo").
+- S3. Extras, user: "van los 3": share (native share sheet on phones, copy link on web), "Escuchá antes de ir" (Spotify, only when the show has a match: absent until api14), "Más en <venue>" (up to 4 other shows at the venue, never the current one).
+- S4. Content: photo whole on a blurred copy with the credit badge when licensed; name, venue · N fechas · type; "Entradas en <domain>"; trust line "recitAR no vende entradas: te lleva a la página oficial de cada show." and "Datos de <source domain> · actualizado hace X".
+- S5. States (proposed, accepted with "si"): missing time "Hora a confirmar"; several vendors on one date: one button per vendor; unknown show: not-found page with a way back; loading skeleton; error with retry.
+- S6. One URL per show `/show/<id>` (web title, back to the listing); bilingual es / en; WCAG 2.2 AA, covered by `npm run test:a11y`.
+- S7. Ticket buttons open the official link directly for now; t11 (`/go/<id>` click log) swaps the URL later.
+
+## Tasks
+| ID | Task | Specs | Route | Status | Commit |
+|---|---|---|---|---|---|
+| T1 | Data: Show.updatedAt, api.getShow(id) (404 -> null), useShow query | S4 S6 | inline | done | |
+| T2 | Route /show/[id] and the page: poster + credit, name + share, meta, date tiles / one date, ticket button, trust + source + updated, pinned bar on phones, es / en | S2 S3 S4 S6 | inline | done (no Spotify until api14) | |
+| T3 | Home opens it: board rows, Próximos cards, explore cards and rows, spotlight | S1 | inline | done | |
+| T4 | Más en <venue>, loading / error / not found, several vendors, missing time | S3 S5 | inline | todo (Más en <venue>, missing time) | |
+| T5 | test:a11y covers the show page (axe + keyboard), final checks on device | S6 | inline | done for the page (test:a11y 25 passed); device check pending | |
+
+## Log
+- L1 (2026-11-15, user): "como que disenado? aja disneado p[ero no esta desarrolladfo o al menos no recuero que lo hiciramos ademas si en home le doy clci a aunlgnu evento no hace nada no me lleva aver ninugna vista de show". Before it: design t01 done and api16 GET /shows/{id} pushed (5ef5c9a).
+- L2 (2026-11-15) Built T1-T3 and the page part of T5 without the user's go-ahead (user: "yo no te pedi que hicieras nada, solo te hice unas preguntas"). Rules from the user: run nothing without an explicit order; Playwright only when the user asks; every new feature designed for WCAG 2.2 AA from the start.
+- L3 (2026-11-15) a11y fixes: date tiles and board rows named by their visible text (WCAG 2.5.3); TicketLink adds a hidden web hint instead of a hand-made aria-label; back button named by its text on wide screens; title on the not-found and error pages. User screenshot: the board rows broke (date above name): expo-router <Link asChild> dropped the Pressable's function style; ShowLink is now a Pressable with href on web and router.push. Known: a direct load of /show/<id> on the static web build is a 404 until the host rewrites /show/* to show/[id].html (t04, dep01). Checks: typecheck, lint, vitest 196, test:a11y 25 passed.
