@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.domain.event import Event, TicketLink
+from app.domain.event import Event, Show, TicketLink
 
 
 def make_event(**overrides):
@@ -124,3 +124,14 @@ def test_a_show_was_last_read_when_any_of_its_upcoming_dates_was():
     newer = base.model_copy(update={"id": "x-2", "updated_at": base.updated_at - timedelta(hours=1)})
     show = Show.from_dates("x", [older, newer], base.first_seen_at)
     assert show.updated_at == newer.updated_at
+
+
+def test_a_show_date_keeps_whether_its_time_is_known():
+    base = make_event()
+    undated = base.model_copy(update={"id": "x-1", "time_known": False})
+    show = Show.from_dates("x", [undated, base.model_copy(update={"id": "x-2"})], base.first_seen_at)
+    assert [d.time_known for d in show.dates] == [False, True]
+
+
+def test_an_event_has_its_time_known_unless_told_otherwise():
+    assert make_event().time_known is True

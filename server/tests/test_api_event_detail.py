@@ -67,7 +67,7 @@ def test_an_event_comes_with_every_field_and_the_other_dates_of_its_show(client_
     assert body["source_url"] == "https://teatrocolon.org.ar/x"
     assert body["starts_at"] == "2026-11-18T20:00:00-03:00"
     # the event itself is not repeated among its other dates; times read in Buenos Aires
-    assert body["other_dates"] == [{"id": OTHER.id, "starts_at": "2026-11-20T20:00:00-03:00"}]
+    assert body["other_dates"] == [{"id": OTHER.id, "starts_at": "2026-11-20T20:00:00-03:00", "time_known": True}]
 
 
 def test_a_show_with_one_date_has_no_other_dates(client_with):

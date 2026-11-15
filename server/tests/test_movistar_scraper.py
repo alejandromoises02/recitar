@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -77,3 +78,17 @@ def test_stray_whitespace_in_the_title_is_collapsed():
     html = original.replace('"Mar\\u00eda Becerra"', '" Mar\\u00eda  Becerra "')
     assert html != original  # the fixture escapes the accent; make sure the padding really went in
     assert parse_show(html, NOW)[0].title == "María Becerra"
+
+
+def test_a_start_date_without_a_time_has_the_time_unknown():
+    html = (FIXTURES / "movistar_show_multi.html").read_text(encoding="utf-8")
+    first = re.search(r'"startDate":\s*"([^"]+)"', html)
+    day = first.group(1)[:10]
+    events = parse_show(html[: first.start(1)] + day + html[first.end(1) :], NOW)
+    undated = [e for e in events if not e.time_known]
+    assert [e.starts_at.isoformat() for e in undated] == [f"{day}T00:00:00-03:00"]
+    assert len(events) == 9
+
+
+def test_start_dates_with_a_time_have_the_time_known():
+    assert all(e.time_known for e in show("multi"))

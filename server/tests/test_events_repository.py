@@ -338,3 +338,12 @@ def test_announced_from_also_filters_the_date_order(db_engine):
         upsert_events(conn, stored)
         found = list_upcoming(conn, NOW, limit=50, after=None, filters=EventFilters(announced_from=NOW - timedelta(days=14)))
     assert [e.id for e in found] == ["venti-in-20261120T2100"]
+
+
+def test_an_unknown_time_is_stored_and_read_back(db_engine):
+    undated = event("livepass-x-20261129T0000", time_known=False)
+    with db_engine.begin() as conn:
+        upsert_events(conn, [undated, event()])
+    with db_engine.connect() as conn:
+        assert {e.id: e.time_known for e in list_events(conn)} == {undated.id: False, event().id: True}
+        assert [d.time_known for d in list_show_dates(conn, "livepass-x", NOW)] == [False]

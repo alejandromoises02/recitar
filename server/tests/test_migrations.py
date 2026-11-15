@@ -24,3 +24,21 @@ def test_events_stored_before_first_seen_existed_get_the_migration_time(unmigrat
     assert first_seen <= now
     assert (now - first_seen).total_seconds() < 300 + (datetime.now(timezone.utc) - before).total_seconds()
     assert default is None  # the app always writes it; no silent default for new rows
+
+
+def test_events_stored_before_time_known_existed_keep_their_time_as_known(unmigrated_db_engine):
+    migrate(unmigrated_db_engine, "0004")
+    with unmigrated_db_engine.begin() as conn:
+        conn.execute(text(
+            "INSERT INTO events (id, category, title, venue, starts_at, ticket_links, source_url, updated_at, first_seen_at) "
+            "VALUES ('venti-a-20261120T2100', 'concert', 'A', 'Niceto Club', now(), '[]', 'https://x', now(), now())"
+        ))
+    migrate(unmigrated_db_engine)
+    with unmigrated_db_engine.connect() as conn:
+        assert conn.execute(text("SELECT time_known FROM events")).scalar_one() is True
+        nullable, default = conn.execute(text(
+            "SELECT is_nullable, column_default FROM information_schema.columns "
+            "WHERE table_schema = current_schema() AND table_name = 'events' AND column_name = 'time_known'"
+        )).one()
+    assert nullable == "NO"
+    assert default is None  # the app always writes it; no silent default for new rows

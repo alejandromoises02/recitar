@@ -120,3 +120,13 @@ def test_stray_whitespace_in_the_title_is_collapsed():
     html = original.replace("Mila en Humboldt", " Mila  en  Humboldt")
     assert html != original
     assert parse_event(html, NOW).title.startswith("Mila en Humboldt")
+
+
+def test_a_start_date_without_a_time_has_the_time_unknown():
+    e = parse_event(_page("Show", "2026-12-01"), NOW)
+    assert e.starts_at.isoformat() == "2026-12-01T00:00:00-03:00"
+    assert e.time_known is False
+
+
+def test_a_start_date_with_a_time_has_the_time_known():
+    assert event("humboldt").time_known is True

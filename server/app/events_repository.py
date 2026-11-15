@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from sqlalchemy import (
-    Column, ColumnElement, Connection, DateTime, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
+    Boolean, Column, ColumnElement, Connection, DateTime, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
 )
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
@@ -26,6 +26,7 @@ events = Table(
     Column("region", Text),
     Column("country", Text),
     Column("starts_at", DateTime(timezone=True), nullable=False),
+    Column("time_known", Boolean, nullable=False),
     Column("ticket_links", JSONB, nullable=False),
     Column("source_url", Text, nullable=False),
     Column("image_url", Text),
@@ -164,11 +165,11 @@ def list_show_dates(connection: Connection, show: str, now: datetime) -> list[Sh
     """Upcoming dates of one show (see `show_key`). The key is compared whole, so
     `colon-el-cascanueces` never picks up `colon-el-cascanueces-2`."""
     query = (
-        select(events.c.id, events.c.starts_at)
+        select(events.c.id, events.c.starts_at, events.c.time_known)
         .where(_show_key == show, events.c.starts_at >= now)
         .order_by(events.c.starts_at, events.c.id)
     )
-    return [ShowDate(id=row.id, starts_at=row.starts_at) for row in connection.execute(query)]
+    return [ShowDate(id=row.id, starts_at=row.starts_at, time_known=row.time_known) for row in connection.execute(query)]
 
 
 class VenueCount(BaseModel):

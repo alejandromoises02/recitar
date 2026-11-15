@@ -97,3 +97,14 @@ def test_stray_whitespace_in_the_title_is_collapsed():
     html = original.replace("A PERFECT CIRCLE", " A  PERFECT CIRCLE")
     assert html != original
     assert parse_event(html, NOW).title.startswith("A PERFECT CIRCLE")
+
+
+def test_a_start_date_without_a_time_is_kept_as_that_day_with_the_time_unknown():
+    # Real page (2026-11-15): Livepass sent "startDate": "2026-11-29" with no time of day.
+    e = event("date_only")
+    assert e.starts_at.isoformat() == "2026-11-29T00:00:00-03:00"
+    assert e.time_known is False
+
+
+def test_a_start_date_with_a_time_has_the_time_known():
+    assert event("caba_malvinas").time_known is True

@@ -35,6 +35,7 @@ class Event(BaseModel):
     region: str | None = None  # ISO 3166-2 subdivision, e.g. "AR-C" (Ciudad de Buenos Aires)
     country: str | None = None  # ISO 3166-1 alpha-2, e.g. "AR"
     starts_at: AwareDatetime
+    time_known: bool = True  # False when the source gave only the day: starts_at is then that day's midnight
     ticket_links: list[TicketLink]
     source_url: str
     image_url: str | None = None
@@ -83,8 +84,11 @@ def show_key(event_id: str) -> str:
 class ShowDate(BaseModel):
     """Another date of the same show: enough to link to it."""
 
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
     id: str
     starts_at: AwareDatetime
+    time_known: bool = True
 
     @field_serializer("starts_at")
     def _in_buenos_aires_time(self, value: datetime) -> datetime:
@@ -133,6 +137,6 @@ class Show(BaseModel):
     def from_dates(cls, show_id: str, upcoming: list[Event], first_seen_at: datetime) -> "Show":
         """`upcoming`: the show's upcoming events, soonest first."""
         display = upcoming[0].model_dump(include=set(cls.model_fields) - {"id", "first_seen_at", "updated_at", "dates"})
-        dates = [ShowDateTickets(id=e.id, starts_at=e.starts_at, ticket_links=e.ticket_links) for e in upcoming]
+        dates = [ShowDateTickets(id=e.id, starts_at=e.starts_at, time_known=e.time_known, ticket_links=e.ticket_links) for e in upcoming]
         updated_at = max(e.updated_at for e in upcoming)
         return cls(id=show_id, first_seen_at=first_seen_at, updated_at=updated_at, dates=dates, **display)

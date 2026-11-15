@@ -16,6 +16,7 @@ from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 
 from app.domain.event import Event, TicketLink
+from app.scrapers.dates import time_given
 from app.scrapers.category import provisional_category
 from app.scrapers.geo import city_name, region_code
 from app.scrapers.text import clean_text
@@ -75,6 +76,7 @@ def parse_show(html: str, now: datetime) -> list[Event]:
             region=region,
             country=address.get("addressCountry"),
             starts_at=starts_at,
+            time_known=time_given(item["startDate"]),
             ticket_links=[TicketLink(vendor=VENDOR, url=(item.get("offers") or {}).get("url") or item["url"])],
             source_url=item["url"],
             updated_at=now,
