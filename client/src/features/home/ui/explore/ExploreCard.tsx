@@ -6,6 +6,7 @@ import { imageSource, initials, moreDatesLabel, spokenDate } from "../../applica
 import { FittedImage } from "../media/FittedImage";
 import { styles } from "./ExploreCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
+import { ShowLink } from "../controls/ShowLink";
 
 type Props = { show: Show; date: Date; apiBase: string; width: number };
 
@@ -17,30 +18,36 @@ export const ExploreCard = memo(function ExploreCard({ show, date, apiBase, widt
   const more = moreDatesLabel(show.dates.length, lang);
   const place = `${show.venue} · ${timeLabel(date)}`;
   return (
-    <View style={[styles.card, { width }]} accessible role="listitem" aria-label={[show.name, spokenDate(date, new Date(), lang), place, more].filter(Boolean).join(". ")}>
-      <View style={styles.media}>
-        {photo ? (
-          <FittedImage uri={photo} style={styles.image} />
-        ) : (
-          <View style={[styles.image, styles.fallback]} aria-hidden>
-            <Text style={styles.initials}>{initials(show.name)}</Text>
+    <View role="listitem" style={{ width }}>
+      <ShowLink
+        showId={show.id}
+        label={[show.name, spokenDate(date, new Date(), lang), place, more].filter(Boolean).join(". ")}
+        style={styles.card}
+      >
+        <View style={styles.media}>
+          {photo ? (
+            <FittedImage uri={photo} style={styles.image} />
+          ) : (
+            <View style={[styles.image, styles.fallback]} aria-hidden>
+              <Text style={styles.initials}>{initials(show.name)}</Text>
+            </View>
+          )}
+          <View style={styles.date}>
+            <Text style={styles.dateSmall}>{when.weekday}</Text>
+            <Text style={styles.dateDay}>{when.day}</Text>
+            <Text style={styles.dateSmall}>{when.month}</Text>
           </View>
-        )}
-        <View style={styles.date}>
-          <Text style={styles.dateSmall}>{when.weekday}</Text>
-          <Text style={styles.dateDay}>{when.day}</Text>
-          <Text style={styles.dateSmall}>{when.month}</Text>
+          {more ? <Text style={styles.more}>{more}</Text> : null}
         </View>
-        {more ? <Text style={styles.more}>{more}</Text> : null}
-      </View>
-      <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={2}>
-          {show.name}
-        </Text>
-        <Text style={styles.place} numberOfLines={1}>
-          {place}
-        </Text>
-      </View>
+        <View style={styles.body}>
+          <Text style={styles.name} numberOfLines={2}>
+            {show.name}
+          </Text>
+          <Text style={styles.place} numberOfLines={1}>
+            {place}
+          </Text>
+        </View>
+      </ShowLink>
     </View>
   );
 });

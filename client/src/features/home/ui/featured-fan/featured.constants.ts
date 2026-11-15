@@ -23,4 +23,3 @@ export const RECORD_GROOVES = [0.62, 0.8];
 
 export const SLEEVE_TITLE_SHARE = 0.085;
 export const SLEEVE_VENUE_SHARE = 0.045;
-export const CTA_ICON_SIZE = 38;

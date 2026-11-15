@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import type { Show } from "../../../events/domain/show";
-import { boardDate, imageSource, moreDatesLabel, spokenDate } from "../../application/show-labels";
+import { boardDate, imageSource, moreDatesLabel } from "../../application/show-labels";
 import type { BoardGeometry } from "./board.constants";
 import { ROW_HEIGHT_EM, SUB_TEXT_EM } from "./board.constants";
 import { boardText, styles } from "./BoardRow.styles";
@@ -11,6 +11,7 @@ import { PhotoStrip } from "./PhotoStrip";
 import { useFlipIn } from "./use-flip-in";
 import { useLang } from "../../../../i18n/lang-context";
 import { maxFontScale } from "../../../../design/tokens";
+import { ShowLink } from "../controls/ShowLink";
 
 type Props = { show: Show; index: number; now: Date; apiBase: string; geometry: BoardGeometry };
 
@@ -25,34 +26,33 @@ export const BoardRow = memo(function BoardRow({ show, index, now, apiBase, geom
   const text = boardText(flapSize);
 
   return (
-    <Animated.View
-      style={[styles.row, flip]}
-      accessible
-      role="listitem"
-      aria-label={[show.name, show.venue, spokenDate(show.dates[0].startsAt, now, lang), more].filter(Boolean).join(". ")}
-    >
-      <Flap style={[styles.dateFlap, { width: dateWidth, minHeight }]}>
-        <Text style={[text, styles.date]} maxFontSizeMultiplier={maxFontScale.fixedCell}>
-          {date}
-        </Text>
-      </Flap>
-      <Flap style={[styles.nameFlap, { minHeight, paddingRight: photo ? `${photoShare * 100}%` : undefined }]}>
-        {photo ? <PhotoStrip uri={photo} share={photoShare} /> : null}
-        <View style={photo ? styles.nameBesidePhoto : undefined}>
-          <Text style={[text, styles.name]} numberOfLines={2}>
-            {show.name}
+    <Animated.View style={flip} role="listitem">
+      {/* The link's name is its visible text (WCAG 2.5.3): a full spoken date would not match "SÁB 14/11". */}
+      <ShowLink showId={show.id} style={styles.row}
+      >
+        <Flap style={[styles.dateFlap, { width: dateWidth, minHeight }]}>
+          <Text style={[text, styles.date]} maxFontSizeMultiplier={maxFontScale.fixedCell}>
+            {date}
           </Text>
-          <Text style={[styles.sub, { fontSize: flapSize * SUB_TEXT_EM }]} numberOfLines={1}>
-            {show.venue}
-            {more ? (
-              <>
-                {" · "}
-                <Text style={styles.more}>{more}</Text>
-              </>
-            ) : null}
-          </Text>
-        </View>
-      </Flap>
+        </Flap>
+        <Flap style={[styles.nameFlap, { minHeight, paddingRight: photo ? `${photoShare * 100}%` : undefined }]}>
+          {photo ? <PhotoStrip uri={photo} share={photoShare} /> : null}
+          <View style={photo ? styles.nameBesidePhoto : undefined}>
+            <Text style={[text, styles.name]} numberOfLines={2}>
+              {show.name}
+            </Text>
+            <Text style={[styles.sub, { fontSize: flapSize * SUB_TEXT_EM }]} numberOfLines={1}>
+              {show.venue}
+              {more ? (
+                <>
+                  {" · "}
+                  <Text style={styles.more}>{more}</Text>
+                </>
+              ) : null}
+            </Text>
+          </View>
+        </Flap>
+      </ShowLink>
     </Animated.View>
   );
 });

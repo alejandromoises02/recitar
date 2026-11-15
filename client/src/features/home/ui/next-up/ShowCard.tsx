@@ -5,6 +5,7 @@ import type { Show } from "../../../events/domain/show";
 import { daysUntilLabel, imageSource, initials, shortDate, spokenDate } from "../../application/show-labels";
 import { styles } from "./ShowCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
+import { ShowLink } from "../controls/ShowLink";
 
 type Props = { show: Show; now: Date; apiBase: string; width: number };
 
@@ -15,7 +16,11 @@ export const ShowCard = memo(function ShowCard({ show, now, apiBase, width }: Pr
   const place = `${show.venue} · ${shortDate(next.startsAt, lang)}`;
   const source = imageSource(show.imageUrl, apiBase);
   return (
-    <View style={[styles.card, { width }]} accessible role="group" aria-label={`${show.name}. ${when}. ${show.venue}, ${spokenDate(next.startsAt, now, lang)}`}>
+    <ShowLink
+      showId={show.id}
+      label={`${show.name}. ${when}. ${show.venue}, ${spokenDate(next.startsAt, now, lang)}`}
+      style={[styles.card, { width }]}
+    >
       {source ? (
         <View aria-hidden>
           <Image source={source} style={styles.thumb} contentFit="cover" transition={150} accessibilityIgnoresInvertColors />
@@ -34,6 +39,6 @@ export const ShowCard = memo(function ShowCard({ show, now, apiBase, width }: Pr
           {place}
         </Text>
       </View>
-    </View>
+    </ShowLink>
   );
 });

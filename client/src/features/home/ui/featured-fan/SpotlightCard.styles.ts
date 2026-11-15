@@ -1,7 +1,6 @@
 import { StyleSheet } from "react-native";
-import { colors, fontFamily, motion, radius, spacing, typography } from "../../../../design/tokens";
+import { colors, fontFamily, radius, spacing, typography } from "../../../../design/tokens";
 import { labelText, mutedSmallText } from "../home.styles";
-import { CTA_ICON_SIZE } from "./featured.constants";
 
 export const styles = StyleSheet.create({
   card: {
@@ -37,20 +36,6 @@ export const styles = StyleSheet.create({
   meta: { fontFamily: fontFamily.body, fontSize: typography.body.size.min, color: colors.textMuted, marginTop: 6, marginBottom: spacing.md },
   more: { fontFamily: fontFamily.bodyStrong, color: colors.accent },
   actions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 18, rowGap: 10 },
-  cta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: 6,
-    paddingLeft: 6,
-    paddingRight: 20,
-    borderRadius: radius.pill,
-    backgroundColor: colors.primary,
-  },
-  ctaPressed: { transform: [{ scale: motion.scale.press }] },
-  ctaIcon: { width: CTA_ICON_SIZE, height: CTA_ICON_SIZE, borderRadius: CTA_ICON_SIZE / 2, alignItems: "center", justifyContent: "center", backgroundColor: colors.accent },
-  ctaIconText: { fontFamily: fontFamily.bodyStrong, fontSize: 16, color: colors.onAccent },
-  ctaText: { fontFamily: fontFamily.bodyStrong, fontSize: 14, color: colors.onPrimary },
   source: { ...mutedSmallText, fontSize: 12.5 },
   sourceDomain: { fontFamily: fontFamily.bodyStrong, color: colors.text },
   trust: { ...mutedSmallText, fontSize: 12.5, marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.line },
