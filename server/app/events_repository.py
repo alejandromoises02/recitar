@@ -218,6 +218,14 @@ def list_upcoming_shows(
     return _shows_for(connection, now, connection.execute(query.limit(limit)).all())
 
 
+def get_upcoming_show(connection: Connection, key: str, now: datetime) -> Show | None:
+    """One show by its key (compared whole) with all of its upcoming dates; None when it has none."""
+    per_show = _per_show(now)
+    query = select(per_show).where(per_show.c.key == key, per_show.c.next_starts_at.is_not(None))
+    found = _shows_for(connection, now, connection.execute(query).all())
+    return found[0] if found else None
+
+
 def _per_show(now: datetime):
     """One row per stored show: its key, next upcoming date (null when none) and first_seen_at, the
     earliest of any of its dates, past ones included."""

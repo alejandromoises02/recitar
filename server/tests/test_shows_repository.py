@@ -119,3 +119,31 @@ def test_announced_from_looks_at_the_show_not_at_its_newest_date(db_engine):
 def test_a_show_carries_the_readable_name_of_its_next_date(db_engine):
     (show,) = shows(db_engine, [event("livepass-tb-20261120T2100", 12, title="TAN BIONICA en Estadio Uno")])
     assert (show.title, show.name) == ("TAN BIONICA en Estadio Uno", "Tan Bionica")
+
+
+def one_show(db_engine, stored: list[Event], key: str):
+    from app.events_repository import get_upcoming_show
+
+    with db_engine.begin() as conn:
+        upsert_events(conn, stored)
+    with db_engine.connect() as conn:
+        return get_upcoming_show(conn, key, NOW)
+
+
+def test_one_show_comes_with_all_its_upcoming_dates_and_none_of_another_show(db_engine):
+    stored = [
+        event("movistar-divididos-20261125T2100", 17, updated_at=NOW - timedelta(hours=1)),
+        event("movistar-divididos-20261120T2100", 12, updated_at=NOW - timedelta(hours=4)),
+        event("movistar-divididos-20261101T2100", -7),  # already happened
+        event("movistar-divididos-2-20261121T2100", 13),  # another show whose key starts the same
+    ]
+    show = one_show(db_engine, stored, "movistar-divididos")
+    assert show is not None
+    assert [d.id for d in show.dates] == ["movistar-divididos-20261120T2100", "movistar-divididos-20261125T2100"]
+    assert show.updated_at == NOW - timedelta(hours=1)
+
+
+def test_a_show_with_only_past_dates_or_no_dates_is_not_found(db_engine):
+    stored = [event("movistar-ayer-20261101T2100", -7)]
+    assert one_show(db_engine, stored, "movistar-ayer") is None
+    assert one_show(db_engine, [], "movistar-nadie") is None

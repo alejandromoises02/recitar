@@ -77,6 +77,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/shows/{show_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One show with all of its upcoming dates
+         * @description The show page: every upcoming date, soonest first, each with its own event id and ticket
+         *     links, plus `updated_at`, the last time a scraper read any of them. `show_id` is the `id` of an
+         *     item of GET /shows (an event id without its date), compared whole. A show whose dates have all
+         *     passed is not found.
+         */
+        get: operations["get_show_shows__show_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/featured": {
         parameters: {
             query?: never;
@@ -338,6 +361,11 @@ export interface components {
              * Format: date-time
              */
             first_seen_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
             /** Dates */
             dates: components["schemas"]["ShowDateTickets"][];
         };
@@ -647,6 +675,62 @@ export interface operations {
                             [key: string]: unknown;
                         }[] | null;
                     };
+                };
+            };
+        };
+    };
+    get_show_shows__show_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                show_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Show"];
+                };
+            };
+            /** @description There is no show with this id, or it has no upcoming dates */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -112,3 +112,15 @@ def test_the_name_is_the_tidy_title_for_its_source():
 
 def test_the_name_is_sent_with_the_event():
     assert make_event().model_dump(mode="json")["name"] == "Un sueño navideño"
+
+
+def test_a_show_was_last_read_when_any_of_its_upcoming_dates_was():
+    from datetime import timedelta
+
+    from app.domain.event import Show
+
+    base = make_event()
+    older = base.model_copy(update={"id": "x-1", "updated_at": base.updated_at - timedelta(hours=6)})
+    newer = base.model_copy(update={"id": "x-2", "updated_at": base.updated_at - timedelta(hours=1)})
+    show = Show.from_dates("x", [older, newer], base.first_seen_at)
+    assert show.updated_at == newer.updated_at

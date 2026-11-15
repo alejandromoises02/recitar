@@ -18,6 +18,7 @@ export const apiShow = (id: string, dates = ["2026-11-14T22:00:00-03:00"]): ApiS
   image_license: "CC BY 4.0",
   image_source_url: "https://commons.wikimedia.org/wiki/File:X.jpg",
   first_seen_at: "2026-11-02T12:00:00Z",
+  updated_at: "2026-11-13T12:00:00Z",
   dates: dates.map((startsAt, i) => ({
     id: `${id}-${i}`,
     starts_at: startsAt,

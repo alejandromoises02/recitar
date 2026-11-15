@@ -14,6 +14,7 @@ def show(id_: str, hours: list[int], seen_days_ago: int = 0) -> Show:
     return Show(
         id=id_, category="concert", title=f"Show {id_}", name=f"Show {id_}", venue="Niceto Club", source_url=f"https://venti.live/{id_}",
         first_seen_at=NOW - timedelta(days=seen_days_ago),
+        updated_at=NOW,
         dates=[
             ShowDateTickets(
                 id=f"{id_}-{h}", starts_at=NOW + timedelta(hours=h),

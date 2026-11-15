@@ -710,6 +710,105 @@
         }
       }
     },
+    "/shows/{show_id}": {
+      "get": {
+        "tags": [
+          "shows"
+        ],
+        "summary": "One show with all of its upcoming dates",
+        "description": "The show page: every upcoming date, soonest first, each with its own event id and ticket\nlinks, plus `updated_at`, the last time a scraper read any of them. `show_id` is the `id` of an\nitem of GET /shows (an event id without its date), compared whole. A show whose dates have all\npassed is not found.",
+        "operationId": "get_show_shows__show_id__get",
+        "parameters": [
+          {
+            "name": "show_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Show Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Show"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "There is no show with this id, or it has no upcoming dates",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "status": {
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Detail"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/featured": {
       "get": {
         "tags": [
@@ -1589,6 +1688,11 @@
             "format": "date-time",
             "title": "First Seen At"
           },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
           "dates": {
             "items": {
               "$ref": "#/components/schemas/ShowDateTickets"
@@ -1615,6 +1719,7 @@
           "image_license",
           "image_source_url",
           "first_seen_at",
+          "updated_at",
           "dates"
         ],
         "title": "Show",

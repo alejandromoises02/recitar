@@ -118,6 +118,7 @@ class Show(BaseModel):
     image_license: str | None = None
     image_source_url: str | None = None
     first_seen_at: AwareDatetime  # the earliest first_seen_at of any of its dates, past ones included
+    updated_at: AwareDatetime  # the last time a scraper read any of its upcoming dates ("updated X ago")
     dates: list[ShowDateTickets]  # upcoming only, soonest first; never empty
 
     @model_validator(mode="after")
@@ -131,6 +132,7 @@ class Show(BaseModel):
     @classmethod
     def from_dates(cls, show_id: str, upcoming: list[Event], first_seen_at: datetime) -> "Show":
         """`upcoming`: the show's upcoming events, soonest first."""
-        display = upcoming[0].model_dump(include=set(cls.model_fields) - {"id", "first_seen_at", "dates"})
+        display = upcoming[0].model_dump(include=set(cls.model_fields) - {"id", "first_seen_at", "updated_at", "dates"})
         dates = [ShowDateTickets(id=e.id, starts_at=e.starts_at, ticket_links=e.ticket_links) for e in upcoming]
-        return cls(id=show_id, first_seen_at=first_seen_at, dates=dates, **display)
+        updated_at = max(e.updated_at for e in upcoming)
+        return cls(id=show_id, first_seen_at=first_seen_at, updated_at=updated_at, dates=dates, **display)
