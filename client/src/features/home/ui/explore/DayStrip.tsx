@@ -4,6 +4,7 @@ import { pickedDayTile } from "../../application/explore";
 import { useStrings } from "../strings";
 import { styles } from "./DayStrip.styles";
 import { useLang } from "../../../../i18n/lang-context";
+import { spokenDate } from "../../application/show-labels";
 
 type Props = {
   now: Date;
@@ -20,16 +21,16 @@ export function DayStrip({ now, days, withShows, selected, onSelect, onMore }: P
   const strings = useStrings();
   const pickedElsewhere = selected !== null && !days.some((day) => day.iso === selected) ? pickedDayTile(selected, now, lang) : null;
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} accessibilityLabel={strings.explore.nextDays}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.scroll} contentContainerStyle={styles.row} role="radiogroup" aria-label={strings.explore.nextDays}>
       {days.map((day) => {
         const active = day.iso === selected;
         const has = withShows.has(day.iso);
         return (
           <Pressable
             key={day.iso}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={`${day.label} ${day.day}${has ? `, ${strings.explore.hasShows}` : ""}`}
+            role="radio"
+            aria-checked={active}
+            aria-label={`${spokenDate(day.iso, now, lang)}${has ? `, ${strings.explore.hasShows}` : ""}`}
             onPress={() => onSelect(day.iso)}
             style={[styles.day, active && styles.dayActive]}
           >
@@ -41,8 +42,7 @@ export function DayStrip({ now, days, withShows, selected, onSelect, onMore }: P
       })}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={pickedElsewhere ? `${pickedElsewhere.label} ${pickedElsewhere.day} ${pickedElsewhere.month}. ${strings.explore.otherDate}` : strings.explore.otherDate}
-        accessibilityState={{ selected: pickedElsewhere !== null }}
+        aria-label={pickedElsewhere ? `${spokenDate(pickedElsewhere.iso, now, lang)}. ${strings.explore.otherDate}` : strings.explore.otherDate}
         onPress={onMore}
         style={[styles.day, styles.more, pickedElsewhere && styles.dayActive]}
       >

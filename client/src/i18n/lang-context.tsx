@@ -1,11 +1,13 @@
 import { useLocales } from "expo-localization";
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Platform } from "react-native";
 import type { Lang } from "./lang";
 import { langFromCode, storedLang } from "./lang";
 
 const STORAGE_KEY = "recitar.lang";
+
+const subscribeNever = () => () => undefined;
 
 type LangState = { lang: Lang; setLang: (lang: Lang) => void };
 
@@ -35,8 +37,11 @@ function save(lang: Lang) {
  */
 export function LangProvider({ children }: { children: ReactNode }) {
   const [first] = useLocales();
-  const [picked, setPicked] = useState<Lang | null>(readSaved);
-  const lang = picked ?? langFromCode(first?.languageCode);
+  const [picked, setPicked] = useState<Lang | null>(null);
+  // The web build is pre-rendered without a browser, in Spanish (the shell's <html lang="es">). The first
+  // browser render must match it, so the browser's language and a saved pick apply right after hydration.
+  const hydrated = useSyncExternalStore(subscribeNever, () => true, () => false);
+  const lang: Lang = hydrated ? (picked ?? readSaved() ?? langFromCode(first?.languageCode)) : "es";
 
   useEffect(() => {
     // Screen readers and browser translation read the page language from <html lang>.

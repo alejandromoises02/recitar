@@ -21,7 +21,7 @@ export const styles = StyleSheet.create({
   close: { width: CLOSE_SIZE, height: CLOSE_SIZE, alignItems: "center", justifyContent: "center", borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
   closePressed: { backgroundColor: colors.surface },
   closeText: { fontFamily: fontFamily.bodyStrong, fontSize: 15, color: colors.text },
-  done: { height: MIN_TARGET, alignItems: "center", justifyContent: "center", borderRadius: radius.pill, backgroundColor: colors.accent },
+  done: { minHeight: MIN_TARGET, alignItems: "center", justifyContent: "center", borderRadius: radius.pill, backgroundColor: colors.accent },
   donePressed: { opacity: 0.85 },
   doneText: { fontFamily: fontFamily.bodyStrong, fontSize: typography.body.size.min, color: colors.onAccent },
 });

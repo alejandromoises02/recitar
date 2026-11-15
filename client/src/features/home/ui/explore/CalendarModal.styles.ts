@@ -5,6 +5,7 @@ import { CALENDAR_CELL, CALENDAR_MAX_WIDTH, CLOSE_SIZE } from "./explore.constan
 
 export const styles = StyleSheet.create({
   backdrop: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.md, backgroundColor: scrim },
+  dismiss: StyleSheet.absoluteFill,
   panel: {
     width: "100%",
     maxWidth: CALENDAR_MAX_WIDTH,

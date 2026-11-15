@@ -1,9 +1,11 @@
 import { StyleSheet } from "react-native";
 import { colors, fontFamily } from "../../../../design/tokens";
+import { focusRoomContent, focusRoomScroll } from "../home.styles";
 import { DAY_GAP, DAY_WIDTH } from "./explore.constants";
 
 export const styles = StyleSheet.create({
-  row: { gap: DAY_GAP },
+  scroll: focusRoomScroll,
+  row: { ...focusRoomContent, gap: DAY_GAP },
   day: { width: DAY_WIDTH, alignItems: "center", gap: 2, paddingVertical: 8, borderWidth: 1, borderColor: colors.line, borderRadius: 12 },
   more: { justifyContent: "center", minWidth: DAY_WIDTH, width: undefined, paddingHorizontal: 6, borderStyle: "dashed" },
   plus: { fontFamily: fontFamily.displayMedium, fontSize: 22, color: colors.accent },

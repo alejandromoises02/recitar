@@ -172,3 +172,20 @@ export function cardRows(groups: ShowGroup[], columns: number, collapsed = NONE_
 export function activeFilterCount(filters: { text: string; venue: string | null; when: When }): number {
   return [filters.text.trim() !== "", filters.venue !== null, filters.when !== "all"].filter(Boolean).length;
 }
+
+export type ListingStatus = { kind: "error" } | { kind: "empty" } | { kind: "count"; count: number; more: boolean };
+
+/** What the listing says to screen readers once it settles; null while there is nothing settled to say. */
+export function listingStatus(state: {
+  isPending: boolean;
+  isError: boolean;
+  loaded: boolean;
+  visible: number;
+  count: number;
+  hasNextPage: boolean;
+}): ListingStatus | null {
+  if (state.isError) return { kind: "error" };
+  if (state.isPending || !state.loaded) return null;
+  if (state.visible === 0) return state.hasNextPage ? null : { kind: "empty" };
+  return { kind: "count", count: state.count, more: state.hasNextPage };
+}

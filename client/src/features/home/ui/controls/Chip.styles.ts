@@ -4,7 +4,7 @@ import { CHIP_HEIGHT } from "./controls.constants";
 
 export const styles = StyleSheet.create({
   chip: {
-    height: CHIP_HEIGHT,
+    minHeight: CHIP_HEIGHT,
     justifyContent: "center",
     paddingHorizontal: 14,
     borderWidth: 1,

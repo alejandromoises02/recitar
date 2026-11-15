@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent } from "react-native";
-import { FlatList, View, useWindowDimensions } from "react-native";
+import { FlatList, Platform, View, useWindowDimensions } from "react-native";
 import { breakpoints } from "../../../../design/tokens";
 import type { Show } from "../../../events/domain/show";
 import { configuredApiBase } from "../../../events/infrastructure/events-api";
@@ -74,6 +74,8 @@ export function NextUpStrip() {
           decelerationRate="fast"
           onScroll={onScroll}
           scrollEventThrottle={32}
+          // The cards are not focusable, so on web the strip itself is: Tab reaches it and the arrow keys scroll it.
+          {...(Platform.OS === "web" ? { tabIndex: 0, role: "region", "aria-label": strings.sections.next } : {})}
         />
       )}
     </View>

@@ -1,5 +1,5 @@
 import { Easing } from "react-native-reanimated";
-import { motion } from "../../../../design/tokens";
+import { motion, touchTarget } from "../../../../design/tokens";
 
 export const EXPLORE_PAGE_SIZE = 50;
 /** The API's largest page: enough to mark which of the next 14 days have shows. */
@@ -17,11 +17,10 @@ export const ERROR_MIN_HEIGHT = 120;
 export const CARD_MIN_WIDTH = 230;
 export const CARD_GAP = 16;
 export const CARD_IMAGE_RATIO = 4 / 3;
-export const CALENDAR_CELL = 40;
+export const CALENDAR_CELL = touchTarget;
 export const CALENDAR_MAX_WIDTH = 380;
 export const CLOSE_SIZE = 36;
-/** Smallest touch target (WCAG 2.5.5 / platform guidelines). */
-export const MIN_TARGET = 44;
+export const MIN_TARGET = touchTarget;
 /** A collapsed group's chevron points right. */
 export const CHEVRON_TURN = { collapsed: -90, timing: { duration: motion.duration.fast, easing: Easing.bezier(...motion.easing.smoothOut) } };
 /** How long rows of a just-unfolded group fade in when mounted; after it, rows mount without fading. */

@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStrings } from "../strings";
 import { BoundExploreFilters } from "./BoundExploreFilters";
 import { styles } from "./FiltersSheet.styles";
+import { heading } from "../a11y";
 
 type Props = { visible: boolean; onClose: () => void };
 
@@ -13,10 +14,11 @@ export function FiltersSheet({ visible, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <Pressable style={styles.dismiss} onPress={onClose} accessibilityLabel={explore.calendar.close} />
+        {/* Tapping above the sheet closes it; ✕ and "Listo" are the named, focusable ways. */}
+        <Pressable style={styles.dismiss} onPress={onClose} accessible={false} focusable={false} importantForAccessibility="no" />
         <View style={[styles.sheet, { paddingBottom: insets.bottom + styles.sheet.padding }]} accessibilityViewIsModal>
           <View style={styles.headingRow}>
-            <Text style={styles.heading} accessibilityRole="header">
+            <Text style={styles.heading} {...heading(2)}>
               {explore.filters}
             </Text>
             <Pressable

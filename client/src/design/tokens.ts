@@ -16,6 +16,8 @@ export const palette = {
   flapHinge: "#0A0908",
   cardSmoke: "rgba(18, 17, 16, 0.72)",
   sleeveEmpty: "#1C1A18",
+  badgeInk: "rgba(14, 13, 12, 0.88)",
+  fieldLine: "rgba(244, 238, 223, 0.4)",
 } as const;
 
 /** Semantic roles. Components use these, not the raw palette. */
@@ -37,6 +39,12 @@ export const colors = {
   flapBottom: palette.flapBottom,
   flapHinge: palette.flapHinge,
   imageFallback: palette.sleeveEmpty,
+  /** Behind text laid on photos: dark enough for AA over a plain white photo. */
+  badge: palette.badgeInk,
+  /** Text field outline: 3:1 against the background (WCAG 1.4.11). */
+  fieldBorder: palette.fieldLine,
+  /** Keyboard focus ring on web. */
+  focus: palette.marqueeYellow,
 } as const;
 
 /**
@@ -88,6 +96,18 @@ export const breakpoints = { stacked: 900, boardVenueHidden: 1100 } as const;
  * (.claude/skills/transitions-polish/_root.css); `signature` holds the home's own moments from DESIGN.md.
  * Easings are cubic-bezier control points: use Easing.bezier(...points).
  */
+/**
+ * How far system text size may grow text inside cells that cannot grow (WCAG 1.4.4 asks for 200 % overall;
+ * everything else scales freely). Decorative text that screen readers skip does not scale.
+ */
+export const maxFontScale = { fixedCell: 1.3, dateColumn: 1.5, decorative: 1 } as const;
+
+/** Smallest touch target in pt / px (Apple and Android guidance; WCAG 2.5.8 AA asks for 24). */
+export const touchTarget = 44;
+
+/** Keyboard focus ring on web: width and gap outside the element; `room` is the space a clipping container must leave. */
+export const focusRing = { width: 3, offset: 2, room: 5 } as const;
+
 export const motion = {
   duration: { stagger: 40, micro: 80, quick: 150, fast: 250, medium: 350, slow: 400, verySlow: 500 },
   easing: {

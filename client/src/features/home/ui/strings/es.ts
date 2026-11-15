@@ -9,6 +9,7 @@ export const es = {
     explore: "Toda la cartelera",
   },
   language: "Idioma",
+  skipToListing: "Saltar a la cartelera",
   loading: "Cargando…",
   loadFailed: "No pudimos cargar esta sección.",
   retry: "Reintentar",
@@ -35,6 +36,8 @@ export const es = {
       previous: "Mes anterior",
       next: "Mes siguiente",
       close: "Cerrar",
+      today: "hoy",
+      selected: "seleccionado",
       weekdays: ["L", "M", "M", "J", "V", "S", "D"],
     },
     hasShows: "hay shows",
@@ -47,6 +50,7 @@ export const es = {
     filtersButtonLabel: (count: number) => (count > 0 ? `Filtros, ${count} ${count === 1 ? "activo" : "activos"}` : "Filtros"),
     filtersDone: "Listo",
     empty: "No hay shows con esos filtros.",
+    found: (shows: string) => `${shows} con estos filtros`,
   },
   featured: {
     carousel: "Carrusel de destacados",
@@ -58,6 +62,7 @@ export const es = {
     play: "Reproducir",
     previous: "Show anterior",
     next: "Show siguiente",
+    opensNewTab: "Se abre en otra pestaña.",
   },
 };
 

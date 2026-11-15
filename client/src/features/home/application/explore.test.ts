@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Show } from "../../events/domain/show";
-import { activeFilterCount, cardDate, cardRows, daysWithShows, exploreRows, groupShows, pickedDayTile, stripDays, timeLabel, whenRange } from "./explore";
+import { activeFilterCount, cardDate, listingStatus, cardRows, daysWithShows, exploreRows, groupShows, pickedDayTile, stripDays, timeLabel, whenRange } from "./explore";
 
 // Friday 13 November 2026, 12:00 in Buenos Aires.
 const NOW = new Date("2026-11-13T15:00:00Z");
@@ -298,5 +298,24 @@ describe("activeFilterCount", () => {
     expect(activeFilterCount({ ...none, text: "   " })).toBe(0);
     expect(activeFilterCount({ text: "jazz", venue: "Niceto Club", when: "weekend" })).toBe(3);
     expect(activeFilterCount({ ...none, when: "day" })).toBe(1);
+  });
+});
+
+describe("listingStatus", () => {
+  const base = { isPending: false, isError: false, loaded: true, visible: 12, count: 12, hasNextPage: false };
+
+  it("has nothing to say while the first page loads", () => {
+    expect(listingStatus({ ...base, isPending: true, loaded: false })).toBeNull();
+  });
+
+  it("reports errors, no results, and the count with a plus while more pages exist", () => {
+    expect(listingStatus({ ...base, isError: true })).toEqual({ kind: "error" });
+    expect(listingStatus({ ...base, visible: 0, count: 0 })).toEqual({ kind: "empty" });
+    expect(listingStatus(base)).toEqual({ kind: "count", count: 12, more: false });
+    expect(listingStatus({ ...base, count: 50, hasNextPage: true })).toEqual({ kind: "count", count: 50, more: true });
+  });
+
+  it("waits while a page shows nothing yet but more are coming", () => {
+    expect(listingStatus({ ...base, visible: 0, count: 50, hasNextPage: true })).toBeNull();
   });
 });

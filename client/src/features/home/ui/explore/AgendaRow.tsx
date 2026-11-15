@@ -15,11 +15,11 @@ export const AgendaRow = memo(function AgendaRow({ show, date, apiBase }: Props)
   const more = moreDatesLabel(show.dates.length, lang);
   const place = `${show.venue} · ${timeLabel(date)}`;
   return (
-    <View style={styles.row} accessible accessibilityLabel={[show.name, place, more].filter(Boolean).join(". ")}>
+    <View style={styles.row} accessible role="listitem" aria-label={[show.name, place, more].filter(Boolean).join(". ")}>
       {photo ? (
         <FittedImage uri={photo} style={styles.thumb} />
       ) : (
-        <View style={[styles.thumb, styles.fallback]}>
+        <View style={[styles.thumb, styles.fallback]} aria-hidden>
           <Text style={styles.initials}>{initials(show.name)}</Text>
         </View>
       )}

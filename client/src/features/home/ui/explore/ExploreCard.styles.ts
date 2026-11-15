@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: spacing.xs,
     borderRadius: 10,
-    backgroundColor: colors.card,
+    backgroundColor: colors.badge,
   },
   dateSmall: { fontFamily: fontFamily.board, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: colors.textMuted },
   dateDay: { fontFamily: fontFamily.board, fontSize: 26, lineHeight: 28, color: colors.accent },

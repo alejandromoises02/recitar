@@ -79,7 +79,7 @@ export function ExploreFilters(props: Props) {
           />
         </View>
         {props.active ? (
-          <Pressable accessibilityRole="button" onPress={props.onClear} hitSlop={8}>
+          <Pressable accessibilityRole="button" onPress={props.onClear} style={styles.clearTarget}>
             <Text style={styles.clear}>{explore.clear}</Text>
           </Pressable>
         ) : null}

@@ -17,6 +17,8 @@ export type DateWords = {
   /** Monday to Sunday of one week; months are 1-based. */
   weekTitle: (from: { day: number; month: number }, to: { day: number; month: number }) => string;
   monthTitle: (month: number, year: number) => string;
+  /** `dayTitle` plus the year: "Sábado 28 de agosto de 2027" / "Saturday, August 28, 2027". */
+  withYear: (title: string, year: number) => string;
   shortDate: (day: number, month: number) => string;
 };
 
@@ -45,6 +47,7 @@ const es: DateWords = {
     return `Semana del ${start} al ${to.day} de ${ES_MONTHS[to.month - 1]}`;
   },
   monthTitle: (month, year) => `${capitalise(ES_MONTHS[month - 1])} ${year}`,
+  withYear: (title, year) => `${title} de ${year}`,
   shortDate: (day, month) => `${day} ${ES_MONTHS[month - 1].slice(0, 3)}`,
 };
 
@@ -65,6 +68,7 @@ const en: DateWords = {
       ? `Week of ${EN_MONTHS[from.month - 1]} ${from.day}–${to.day}`
       : `Week of ${EN_MONTHS[from.month - 1]} ${from.day} – ${EN_MONTHS[to.month - 1]} ${to.day}`,
   monthTitle: (month, year) => `${EN_MONTHS[month - 1]} ${year}`,
+  withYear: (title, year) => `${title}, ${year}`,
   shortDate: (day, month) => `${EN_MONTHS[month - 1].slice(0, 3)} ${day}`,
 };
 

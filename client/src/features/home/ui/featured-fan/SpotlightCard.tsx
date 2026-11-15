@@ -1,15 +1,16 @@
 import * as WebBrowser from "expo-web-browser";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import Animated, { FadeIn } from "react-native-reanimated";
 import type { Featured, Show } from "../../../events/domain/show";
-import { longDate, moreDatesLabel } from "../../application/show-labels";
+import { longDate, moreDatesLabel, spokenDate } from "../../application/show-labels";
 import { ticketTarget } from "../../application/ticket-target";
 import { useStrings } from "../strings";
 import { AutoplayBar } from "./AutoplayBar";
 import { CARD_SWAP_MS } from "./featured.constants";
 import { styles } from "./SpotlightCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
+import { heading } from "../a11y";
 
 type Props = {
   show: Show;
@@ -36,9 +37,11 @@ export function SpotlightCard({
       <Animated.View key={show.id} entering={FadeIn.duration(CARD_SWAP_MS)}>
         <View style={styles.top}>
           <Text style={styles.tag}>{featured.tag[kind]}</Text>
-          <Text style={styles.date}>{longDate(show.dates[0].startsAt, lang)}</Text>
+          <Text style={styles.date} aria-label={spokenDate(show.dates[0].startsAt, new Date(), lang)}>
+            {longDate(show.dates[0].startsAt, lang)}
+          </Text>
         </View>
-        <Text style={styles.name} numberOfLines={2} accessibilityRole="header">
+        <Text style={styles.name} numberOfLines={2} {...heading(3)}>
           {show.name}
         </Text>
         <Text style={styles.meta}>
@@ -54,7 +57,8 @@ export function SpotlightCard({
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="link"
-          onPress={() => WebBrowser.openBrowserAsync(tickets.url)}
+          {...ticketLinkProps(tickets.url)}
+          aria-label={Platform.OS === "web" ? `${featured.cta}, ${tickets.domain}. ${featured.opensNewTab}` : undefined}
           style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
         >
           <View style={styles.ctaIcon}>
@@ -73,4 +77,14 @@ export function SpotlightCard({
       {showProgress ? <AutoplayBar progress={progress} /> : null}
     </View>
   );
+}
+
+/**
+ * On web a real <a href> (react-native-web renders a View with href as a link): Enter, middle-click and
+ * "open in new tab" work, and react-native-web would not run onPress from the keyboard for a link role.
+ * On iOS / Android the in-app browser opens the ticket page.
+ */
+function ticketLinkProps(url: string): object {
+  if (Platform.OS === "web") return { href: url, hrefAttrs: { target: "_blank", rel: "noopener noreferrer" } };
+  return { onPress: () => WebBrowser.openBrowserAsync(url) };
 }

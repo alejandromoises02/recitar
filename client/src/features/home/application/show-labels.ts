@@ -1,6 +1,6 @@
 /** Labels for the home's show cards. All dates are Buenos Aires calendar days. */
 
-import { calendarDay } from "./calendar";
+import { calendarDay, dayFromIso } from "./calendar";
 import { DATE_WORDS } from "./date-words";
 import type { Lang } from "../../../i18n/lang";
 
@@ -34,6 +34,17 @@ export function boardDate(startsAt: Date, now: Date, lang: Lang): string {
 export function longDate(startsAt: Date, lang: Lang): string {
   const { year, month, day, weekday } = calendarDay(startsAt);
   return `${DATE_WORDS[lang].weekdaysShort[weekday]} ${pad2(day)}/${pad2(month)}/${year}`;
+}
+
+/**
+ * The full date screen readers say instead of an abbreviation ("SÁB 14/11" reads as "sáb catorce barra once"):
+ * weekday, day and month, plus the year when not this year. Takes a "YYYY-MM-DD" day or a Date.
+ */
+export function spokenDate(day: string | Date, now: Date, lang: Lang): string {
+  const words = DATE_WORDS[lang];
+  const { year, month, day: date, weekday } = typeof day === "string" ? dayFromIso(day) : calendarDay(day);
+  const title = words.dayTitle(weekday, date, month);
+  return year === calendarDay(now).year ? title : words.withYear(title, year);
 }
 
 /** How many dates follow the first one; empty for a single date. */

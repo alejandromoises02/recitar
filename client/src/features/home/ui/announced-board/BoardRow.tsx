@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import type { Show } from "../../../events/domain/show";
-import { boardDate, imageSource, moreDatesLabel } from "../../application/show-labels";
+import { boardDate, imageSource, moreDatesLabel, spokenDate } from "../../application/show-labels";
 import type { BoardGeometry } from "./board.constants";
 import { ROW_HEIGHT_EM, SUB_TEXT_EM } from "./board.constants";
 import { boardText, styles } from "./BoardRow.styles";
@@ -10,6 +10,7 @@ import { Flap } from "./Flap";
 import { PhotoStrip } from "./PhotoStrip";
 import { useFlipIn } from "./use-flip-in";
 import { useLang } from "../../../../i18n/lang-context";
+import { maxFontScale } from "../../../../design/tokens";
 
 type Props = { show: Show; index: number; now: Date; apiBase: string; geometry: BoardGeometry };
 
@@ -27,10 +28,13 @@ export const BoardRow = memo(function BoardRow({ show, index, now, apiBase, geom
     <Animated.View
       style={[styles.row, flip]}
       accessible
-      accessibilityLabel={[show.name, show.venue, date, more].filter(Boolean).join(". ")}
+      role="listitem"
+      aria-label={[show.name, show.venue, spokenDate(show.dates[0].startsAt, now, lang), more].filter(Boolean).join(". ")}
     >
       <Flap style={[styles.dateFlap, { width: dateWidth, minHeight }]}>
-        <Text style={[text, styles.date]}>{date}</Text>
+        <Text style={[text, styles.date]} maxFontSizeMultiplier={maxFontScale.fixedCell}>
+          {date}
+        </Text>
       </Flap>
       <Flap style={[styles.nameFlap, { minHeight, paddingRight: photo ? `${photoShare * 100}%` : undefined }]}>
         {photo ? <PhotoStrip uri={photo} share={photoShare} /> : null}

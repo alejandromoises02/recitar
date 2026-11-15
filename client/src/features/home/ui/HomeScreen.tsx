@@ -18,9 +18,11 @@ import { useCompactBar } from "./explore/use-compact-bar";
 import { useExplore } from "./explore/use-explore";
 import { HomeSection } from "./HomeSection";
 import { LangSwitch } from "./LangSwitch";
+import { SkipLink } from "./skip-link/SkipLink";
 import { END_REACHED_THRESHOLD, PHONE_WIDTH } from "./HomeScreen.constants";
 import { headlineSizing, styles } from "./HomeScreen.styles";
 import { useStrings } from "./strings";
+import { heading } from "./a11y";
 
 /**
  * The home is one virtualised list: the sections are its header, then the explore filters and the
@@ -69,11 +71,12 @@ export function HomeScreen() {
 
   const header = (
     <View style={styles.header} onLayout={compactBar.onHeaderLayout}>
+      <SkipLink />
       <View style={styles.topRow}>
         <BrandLogo size={fluid(typography.logo.size, width)} />
         <LangSwitch />
       </View>
-      <Text accessibilityRole="header" style={[styles.headline, headlineSizing(fluid(typography.display.size, width))]}>
+      <Text {...heading(1)} style={[styles.headline, headlineSizing(fluid(typography.display.size, width))]}>
         {strings.headlineLead}
         <Text style={styles.city}>{strings.headlineCity}</Text>
       </Text>
@@ -99,7 +102,7 @@ export function HomeScreen() {
 
   return (
     <ExploreProvider value={explore}>
-      <View style={styles.root}>
+      <View style={styles.root} role="main">
         <Animated.FlatList
           style={styles.screen}
           contentInsetAdjustmentBehavior="automatic"

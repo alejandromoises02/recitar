@@ -7,6 +7,7 @@ import { fanOffset, fanPose } from "../../application/fan";
 import { imageSource } from "../../application/show-labels";
 import { FittedImage } from "../media/FittedImage";
 import { sleeveText, styles } from "./Sleeve.styles";
+import { maxFontScale } from "../../../../design/tokens";
 
 type Props = {
   show: Show;
@@ -65,10 +66,10 @@ export const Sleeve = memo(function Sleeve({
           <FittedImage uri={photo} style={styles.fill} />
         ) : (
           <View style={styles.typeSleeve}>
-            <Text style={text.title} numberOfLines={3}>
+            <Text style={text.title} numberOfLines={3} maxFontSizeMultiplier={maxFontScale.decorative}>
               {show.name}
             </Text>
-            <Text style={text.venue} numberOfLines={1}>
+            <Text style={text.venue} numberOfLines={1} maxFontSizeMultiplier={maxFontScale.decorative}>
               {show.venue}
             </Text>
           </View>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardDate, daysUntilLabel, imageSource, initials, longDate, moreDatesLabel, shortDate } from "./show-labels";
+import { boardDate, daysUntilLabel, spokenDate, imageSource, initials, longDate, moreDatesLabel, shortDate } from "./show-labels";
 
 // 15:00 UTC = 12:00 in Buenos Aires on 2026-11-13.
 const NOW = new Date("2026-11-13T15:00:00Z");
@@ -119,5 +119,18 @@ describe("English labels", () => {
     expect(moreDatesLabel(1, "en")).toBe("");
     expect(moreDatesLabel(2, "en")).toBe("+1 date");
     expect(moreDatesLabel(4, "en")).toBe("+3 dates");
+  });
+});
+
+describe("spokenDate", () => {
+  it("is the full date screen readers say, with the year only when not this year", () => {
+    expect(spokenDate("2026-11-14", NOW, "es")).toBe("Sábado 14 de noviembre");
+    expect(spokenDate("2027-08-28", NOW, "es")).toBe("Sábado 28 de agosto de 2027");
+    expect(spokenDate("2026-11-14", NOW, "en")).toBe("Saturday, November 14");
+    expect(spokenDate("2027-08-28", NOW, "en")).toBe("Saturday, August 28, 2027");
+  });
+
+  it("takes a Date as a Buenos Aires day", () => {
+    expect(spokenDate(at("2026-11-15T01:00:00Z"), NOW, "es")).toBe("Sábado 14 de noviembre");
   });
 });

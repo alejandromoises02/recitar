@@ -63,8 +63,43 @@ describe("colors", () => {
     ["accent on background", colors.accent, colors.background],
     ["text on accent", colors.onAccent, colors.accent],
     ["text on the primary button", colors.onPrimary, colors.primary],
+    ["muted text on the lower flap half", colors.textMuted, colors.flapBottom],
+    ["accent on a flap cell", colors.accent, colors.flapTop],
+    ["text on a missing-image block", colors.text, colors.imageFallback],
+    ["muted text on a missing-image block", colors.textMuted, colors.imageFallback],
   ])("%s reaches WCAG AA (4.5:1)", (_, fg, bg) => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+// Badges sit on photos of any colour: check them over the worst cases, plain white and plain black.
+const WHITE_PHOTO = "#FFFFFF";
+const BLACK_PHOTO = "#000000";
+const badgeOver = (photo: string) => {
+  const [r, g, b] = over(colors.badge, photo).map(Math.round);
+  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+};
+
+describe("badges over photos (WCAG 1.4.3)", () => {
+  it.each([WHITE_PHOTO, BLACK_PHOTO])("keeps small text at 4.5:1 over %s", (photo) => {
+    expect(contrast(colors.text, badgeOver(photo))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(colors.textMuted, badgeOver(photo))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each([WHITE_PHOTO, BLACK_PHOTO])("keeps the large accent day number at 3:1 over %s", (photo) => {
+    expect(contrast(colors.accent, badgeOver(photo))).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("non-text contrast (WCAG 1.4.11)", () => {
+  it.each([
+    ["text field border on background", colors.fieldBorder, colors.background],
+    ["focus ring on background", colors.focus, colors.background],
+    ["calendar today ring on background", colors.accent, colors.background],
+    ["selected chip fill on background", colors.accent, colors.background],
+    ["has-shows dot on background", colors.accent, colors.background],
+  ])("%s reaches 3:1", (_, fg, bg) => {
+    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
   });
 });
 

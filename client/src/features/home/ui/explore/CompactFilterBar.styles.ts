@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
   },
   search: { flex: 1 },
   button: {
-    height: MIN_TARGET,
+    minHeight: MIN_TARGET,
     justifyContent: "center",
     paddingHorizontal: spacing.md,
     borderWidth: 1,

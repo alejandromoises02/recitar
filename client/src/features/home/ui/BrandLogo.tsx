@@ -11,7 +11,7 @@ const SHADOW_LAYERS = [...brandShadow].reverse();
 export function BrandLogo({ size }: Props) {
   const text = logoText(size);
   return (
-    <View accessibilityRole="header" accessibilityLabel={BRAND_NAME}>
+    <View accessible role="img" aria-label={BRAND_NAME}>
       {SHADOW_LAYERS.map(({ offset, color }) => (
         <Text
           key={offset}

@@ -10,6 +10,7 @@ export const en: HomeStrings = {
     explore: "All shows",
   },
   language: "Language",
+  skipToListing: "Skip to all shows",
   loading: "Loading…",
   loadFailed: "We couldn't load this section.",
   retry: "Try again",
@@ -36,6 +37,8 @@ export const en: HomeStrings = {
       previous: "Previous month",
       next: "Next month",
       close: "Close",
+      today: "today",
+      selected: "selected",
       weekdays: ["M", "T", "W", "T", "F", "S", "S"],
     },
     hasShows: "has shows",
@@ -48,6 +51,7 @@ export const en: HomeStrings = {
     filtersButtonLabel: (count) => (count > 0 ? `Filters, ${count} active` : "Filters"),
     filtersDone: "Done",
     empty: "No shows match these filters.",
+    found: (shows) => `${shows} match these filters`,
   },
   featured: {
     carousel: "Featured shows carousel",
@@ -59,5 +63,6 @@ export const en: HomeStrings = {
     play: "Play",
     previous: "Previous show",
     next: "Next show",
+    opensNewTab: "Opens in a new tab.",
   },
 };

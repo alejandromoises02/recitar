@@ -1,5 +1,5 @@
 import type { TextStyle, ViewStyle } from "react-native";
-import { colors, fontFamily, radius, spacing, typography } from "../../../design/tokens";
+import { colors, focusRing, fontFamily, radius, spacing, touchTarget, typography } from "../../../design/tokens";
 
 /** Style pieces shared by the home components; spread them into each component's styles. */
 
@@ -17,6 +17,8 @@ export const surfacePanel: ViewStyle = {
 };
 
 export const pillButton: ViewStyle = {
+  minHeight: touchTarget,
+  justifyContent: "center",
   paddingHorizontal: spacing.md,
   paddingVertical: spacing.xs,
   borderRadius: radius.pill,
@@ -34,3 +36,7 @@ export const mutedSmallText: TextStyle = {
   fontSize: typography.bodySmall.size.min,
   color: colors.textMuted,
 };
+
+/** Sideways scroll rows clip what overflows: leave room for the focus ring and pull the row back so nothing shifts. */
+export const focusRoomScroll: ViewStyle = { margin: -focusRing.room };
+export const focusRoomContent: ViewStyle = { padding: focusRing.room };

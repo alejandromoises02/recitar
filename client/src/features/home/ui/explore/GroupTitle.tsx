@@ -5,6 +5,7 @@ import { useStrings } from "../strings";
 import { CHEVRON_TURN } from "./explore.constants";
 import { useExploreContext } from "./explore-context";
 import { styles } from "./GroupTitle.styles";
+import { heading } from "../a11y";
 
 type Props = { group: string; title: string; note: string | null; count: number; expanded: boolean };
 
@@ -24,11 +25,11 @@ export function GroupTitle({ group, title, note, count, expanded }: Props) {
   const shows = strings.shows(count, false);
 
   return (
-    <View accessibilityRole="header" style={styles.wrap}>
+    <View {...heading(3)} style={styles.wrap}>
       <Pressable
         onPress={() => toggleGroup(group)}
         accessibilityRole="button"
-        accessibilityState={{ expanded }}
+        aria-expanded={expanded}
         accessibilityLabel={strings.explore.groupLabel(title, note, shows)}
         style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       >

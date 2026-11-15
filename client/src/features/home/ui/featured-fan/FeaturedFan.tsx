@@ -19,7 +19,7 @@ import {
   fanSpread,
   tappedStep,
 } from "../../application/fan";
-import { imageSource, longDate } from "../../application/show-labels";
+import { imageSource, spokenDate } from "../../application/show-labels";
 import { SectionError } from "../section/SectionError";
 import { SectionHeader } from "../section/SectionHeader";
 import { useStrings } from "../strings";
@@ -94,7 +94,7 @@ export function FeaturedFan() {
       const show = shows[mod(target, count)];
       if (show)
         AccessibilityInfo.announceForAccessibility(
-          `${show.name}, ${show.venue}, ${longDate(show.dates[0].startsAt, lang)}`,
+          `${show.name}, ${show.venue}, ${spokenDate(show.dates[0].startsAt, new Date(), lang)}`,
         );
     },
     [stop, count, shows, lang],
@@ -170,7 +170,8 @@ export function FeaturedFan() {
   return (
     <View
       style={styles.section}
-      accessibilityLabel={strings.featured.carousel}
+      role="region"
+      aria-label={strings.featured.carousel}
     >
       <SectionHeader title={strings.sections.featured} />
       {isError ? (
@@ -186,8 +187,11 @@ export function FeaturedFan() {
               style={[styles.fan, { height: card * FAN_HEIGHT_SHARE }]}
               onLayout={onFanLayout}
             >
+              {/* Screen readers get the centre show from the spotlight card and move with the controls;
+                  the sleeves would read every name out of order. */}
               <View
                 style={[styles.stage, { transform: [{ translateX: -shift }] }]}
+                aria-hidden
               >
                 {shows.map((show, i) => (
                   <Sleeve

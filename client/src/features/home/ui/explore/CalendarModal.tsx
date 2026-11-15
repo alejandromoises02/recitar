@@ -4,6 +4,8 @@ import { monthGrid, monthTitle, shiftMonth } from "../../application/month-grid"
 import { useStrings } from "../strings";
 import { styles } from "./CalendarModal.styles";
 import { useLang } from "../../../../i18n/lang-context";
+import { spokenDate } from "../../application/show-labels";
+import { heading } from "../a11y";
 
 type Props = { visible: boolean; today: string; selected: string | null; onPick: (iso: string) => void; onClose: () => void };
 
@@ -14,14 +16,20 @@ export function CalendarModal({ visible, today, selected, onPick, onClose }: Pro
   const firstMonth = today.slice(0, 7);
   const [month, setMonth] = useState((selected ?? today).slice(0, 7));
   const weeks = useMemo(() => monthGrid(month, today), [month, today]);
+  // Noon in Buenos Aires: any time of `today` works, spokenDate only needs its year.
+  const todayDate = useMemo(() => new Date(`${today}T15:00:00Z`), [today]);
   const canGoBack = month > firstMonth;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={calendar.close}>
-        <Pressable style={styles.panel} onPress={() => undefined} accessibilityViewIsModal>
+      <View style={styles.backdrop}>
+        {/* Tapping outside closes too; the ✕ is the named, focusable way, so this one stays out of focus and screen readers. */}
+        <Pressable style={styles.dismiss} onPress={onClose} accessible={false} focusable={false} importantForAccessibility="no" />
+        <View style={styles.panel} accessibilityViewIsModal>
           <View style={styles.headingRow}>
-            <Text style={styles.heading}>{calendar.title}</Text>
+            <Text style={styles.heading} {...heading(2)}>
+              {calendar.title}
+            </Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={calendar.close}
@@ -38,7 +46,7 @@ export function CalendarModal({ visible, today, selected, onPick, onClose }: Pro
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={calendar.previous}
-              accessibilityState={{ disabled: !canGoBack }}
+              aria-disabled={!canGoBack}
               disabled={!canGoBack}
               onPress={() => setMonth(shiftMonth(month, -1))}
               style={[styles.arrow, !canGoBack && styles.arrowOff]}
@@ -46,7 +54,7 @@ export function CalendarModal({ visible, today, selected, onPick, onClose }: Pro
             >
               <Text style={styles.arrowText}>‹</Text>
             </Pressable>
-            <Text style={styles.month} accessibilityRole="header">
+            <Text style={styles.month} {...heading(3)}>
               {monthTitle(month, lang)}
             </Text>
             <Pressable
@@ -59,7 +67,7 @@ export function CalendarModal({ visible, today, selected, onPick, onClose }: Pro
               <Text style={styles.arrowText}>›</Text>
             </Pressable>
           </View>
-          <View style={styles.week}>
+          <View style={styles.week} aria-hidden>
             {calendar.weekdays.map((letter, i) => (
               <Text key={i} style={[styles.cell, styles.weekday]}>
                 {letter}
@@ -74,7 +82,8 @@ export function CalendarModal({ visible, today, selected, onPick, onClose }: Pro
                   <Pressable
                     key={cell.iso}
                     accessibilityRole="button"
-                    accessibilityState={{ disabled: cell.disabled, selected: active }}
+                    aria-disabled={cell.disabled}
+                    aria-label={[spokenDate(cell.iso, todayDate, lang), cell.today && calendar.today, active && calendar.selected].filter(Boolean).join(", ")}
                     disabled={cell.disabled}
                     onPress={() => onPick(cell.iso)}
                     style={[styles.cell, styles.day, cell.today && styles.today, active && styles.selected]}
@@ -94,8 +103,8 @@ export function CalendarModal({ visible, today, selected, onPick, onClose }: Pro
               })}
             </View>
           ))}
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

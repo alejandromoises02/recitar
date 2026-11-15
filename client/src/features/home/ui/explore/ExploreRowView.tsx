@@ -24,7 +24,7 @@ export const ExploreRowView = memo(function ExploreRowView({ row, apiBase, itemW
     return <GroupTitle group={row.group} title={row.title} note={row.note} count={row.count} expanded={row.expanded} />;
   if (row.kind === "cards")
     return (
-      <Animated.View entering={entering} style={styles.cards}>
+      <Animated.View entering={entering} style={styles.cards} role="list">
         {row.items.map(({ key, show, date }) => (
           <ExploreCard key={key} show={show} date={date} apiBase={apiBase} width={itemWidth} />
         ))}

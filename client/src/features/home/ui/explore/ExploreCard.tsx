@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Text, View } from "react-native";
 import type { Show } from "../../../events/domain/show";
 import { cardDate, timeLabel } from "../../application/explore";
-import { imageSource, initials, moreDatesLabel } from "../../application/show-labels";
+import { imageSource, initials, moreDatesLabel, spokenDate } from "../../application/show-labels";
 import { FittedImage } from "../media/FittedImage";
 import { styles } from "./ExploreCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
@@ -17,12 +17,12 @@ export const ExploreCard = memo(function ExploreCard({ show, date, apiBase, widt
   const more = moreDatesLabel(show.dates.length, lang);
   const place = `${show.venue} · ${timeLabel(date)}`;
   return (
-    <View style={[styles.card, { width }]} accessible accessibilityLabel={`${show.name}. ${when.weekday} ${when.day} ${when.month}. ${place}`}>
+    <View style={[styles.card, { width }]} accessible role="listitem" aria-label={[show.name, spokenDate(date, new Date(), lang), place, more].filter(Boolean).join(". ")}>
       <View style={styles.media}>
         {photo ? (
           <FittedImage uri={photo} style={styles.image} />
         ) : (
-          <View style={[styles.image, styles.fallback]}>
+          <View style={[styles.image, styles.fallback]} aria-hidden>
             <Text style={styles.initials}>{initials(show.name)}</Text>
           </View>
         )}

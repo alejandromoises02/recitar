@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { memo } from "react";
 import { Text, View } from "react-native";
 import type { Show } from "../../../events/domain/show";
-import { daysUntilLabel, imageSource, initials, shortDate } from "../../application/show-labels";
+import { daysUntilLabel, imageSource, initials, shortDate, spokenDate } from "../../application/show-labels";
 import { styles } from "./ShowCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
 
@@ -15,11 +15,13 @@ export const ShowCard = memo(function ShowCard({ show, now, apiBase, width }: Pr
   const place = `${show.venue} · ${shortDate(next.startsAt, lang)}`;
   const source = imageSource(show.imageUrl, apiBase);
   return (
-    <View style={[styles.card, { width }]} accessible accessibilityLabel={`${show.name}. ${when}. ${place}`}>
+    <View style={[styles.card, { width }]} accessible role="group" aria-label={`${show.name}. ${when}. ${show.venue}, ${spokenDate(next.startsAt, now, lang)}`}>
       {source ? (
-        <Image source={source} style={styles.thumb} contentFit="cover" transition={150} accessibilityIgnoresInvertColors />
+        <View aria-hidden>
+          <Image source={source} style={styles.thumb} contentFit="cover" transition={150} accessibilityIgnoresInvertColors />
+        </View>
       ) : (
-        <View style={[styles.thumb, styles.fallback]}>
+        <View style={[styles.thumb, styles.fallback]} aria-hidden>
           <Text style={styles.initials}>{initials(show.name)}</Text>
         </View>
       )}

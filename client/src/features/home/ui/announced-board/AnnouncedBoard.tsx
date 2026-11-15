@@ -42,7 +42,7 @@ export function AnnouncedBoard() {
       ) : isError ? (
         <SectionError onRetry={() => refetch()} minHeight={geometry.flapSize * ERROR_HEIGHT_EM} />
       ) : (
-        <View style={styles.rows}>
+        <View style={styles.rows} role="list">
           {shows.map((show, i) => (
             <BoardRow key={show.id} show={show} index={i} now={now} apiBase={apiBase} geometry={geometry} />
           ))}

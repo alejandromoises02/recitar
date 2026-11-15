@@ -8,7 +8,9 @@ export function SectionError({ onRetry, minHeight }: Props) {
   const strings = useStrings();
   return (
     <View style={[styles.error, { minHeight }]}>
-      <Text style={styles.message}>{strings.loadFailed}</Text>
+      <Text style={styles.message} role="alert">
+        {strings.loadFailed}
+      </Text>
       <Pressable accessibilityRole="button" onPress={onRetry} style={styles.retry} hitSlop={8}>
         <Text style={styles.retryText}>{strings.retry}</Text>
       </Pressable>

@@ -17,7 +17,6 @@ export function FanControls({ playing, onPrevious, onNext, onToggle }: Props) {
       <ArrowButton label={featured.previous} glyph="←" onPress={onPrevious} />
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{ selected: !playing }}
         onPress={onToggle}
         style={({ pressed }) => [styles.toggle, pressed && styles.pressed]}
       >

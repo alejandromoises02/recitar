@@ -15,6 +15,8 @@ colors:
   flap-hinge: "#0A0908"
   card-smoke: "rgba(18, 17, 16, 0.72)"
   sleeve-empty: "#1C1A18"
+  badge-ink: "rgba(14, 13, 12, 0.88)"
+  field-line: "rgba(244, 238, 223, 0.4)"
 typography:
   logo:
     fontFamily: "Alfa Slab One, serif"
@@ -161,11 +163,13 @@ A warm night palette: one yellow accent over ink and cream, with the fileteado r
 - **Night Ink** (#0E0D0C): page background and text on yellow or cream surfaces.
 - **Marquee Cream** (#F4EEDF): primary text and the primary button fill. 16.8:1 on Night Ink.
 - **Cream Muted** (cream at 60%): secondary text (venues, metadata, section labels). About 6:1 on Night Ink and 5.8:1 on a flap.
-- **Hairline** (cream at 12%): borders of cards, chips, fields and dividers.
+- **Hairline** (cream at 12%): borders of cards, chips and dividers.
+- **Field Line** (cream at 40%): the outline of text fields, 3:1 on Night Ink so the field reads as a field (WCAG 1.4.11).
 - **Glass** (white at 4%): resting fill of chips, fields, icon buttons and show cards.
 - **Flap Top / Flap Bottom** (#25221F / #1B1917): the two halves of a split-flap cell.
 - **Flap Hinge** (#0A0908): the 1px hinge line behind the letters of a flap cell.
 - **Card Smoke** (Night Ink at 72%): the spotlight card over the blurred cover tint.
+- **Badge Ink** (Night Ink at 88%): small badges laid on photos (the date on show cards); dark enough that cream and muted text stay above 4.5:1 even over a white photo.
 
 ### Named Rules
 **The One Light Rule.** Marquee Yellow is the only accent. It marks dates, selection and the way to tickets, and nothing else; never use it as a large fill behind text blocks.
