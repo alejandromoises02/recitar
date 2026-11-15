@@ -15,6 +15,10 @@ describe("dateTile", () => {
   it("adds a two-digit year to the month when not this year", () => {
     expect(dateTile(at("2027-02-07T00:00:00Z"), NOW, "es").month).toBe("FEB 27");
   });
+
+  it("says the time is to be confirmed when it is unknown", () => {
+    expect(dateTile(at("2026-11-18T03:00:00Z"), NOW, "es", false).time).toBe("A confirmar");
+  });
 });
 
 describe("buttonWhen", () => {
@@ -23,10 +27,14 @@ describe("buttonWhen", () => {
     expect(buttonWhen(at("2026-11-19T00:00:00Z"), NOW, "en")).toBe("Wed 18/11 · 21:00");
     expect(buttonWhen(at("2027-02-07T00:00:00Z"), NOW, "es")).toBe("Sáb 06/02/27 · 21:00");
   });
+
+  it("says the time is to be confirmed when it is unknown", () => {
+    expect(buttonWhen(at("2026-11-18T03:00:00Z"), NOW, "es", false)).toBe("Mié 18/11 · Hora a confirmar");
+  });
 });
 
 describe("dateTargets", () => {
-  const date = (links: { vendor: string; url: string }[]): ShowDateTickets => ({ id: "x-1", startsAt: NOW, ticketLinks: links });
+  const date = (links: { vendor: string; url: string }[]): ShowDateTickets => ({ id: "x-1", startsAt: NOW, timeKnown: true, ticketLinks: links });
 
   it("is one target per vendor with its domain", () => {
     expect(
@@ -64,6 +72,7 @@ describe("dateMode and ticketPlan", () => {
   const date = (id: string, urls: string[]): ShowDateTickets => ({
     id,
     startsAt: NOW,
+    timeKnown: true,
     ticketLinks: urls.map((url) => ({ vendor: "Entradas BA", url })),
   });
   const SHARED = "https://entradasba.buenosaires.gob.ar/evento/1";

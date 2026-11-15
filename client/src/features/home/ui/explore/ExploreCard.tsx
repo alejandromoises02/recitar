@@ -8,15 +8,15 @@ import { styles } from "./ExploreCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
 import { ShowLink } from "../controls/ShowLink";
 
-type Props = { show: Show; date: Date; apiBase: string; width: number };
+type Props = { show: Show; date: Date; timeKnown: boolean; apiBase: string; width: number };
 
 /** Wide screens: a show as a card with its photo, date block and "+N fechas". */
-export const ExploreCard = memo(function ExploreCard({ show, date, apiBase, width }: Props) {
+export const ExploreCard = memo(function ExploreCard({ show, date, timeKnown, apiBase, width }: Props) {
   const lang = useLang();
   const photo = imageSource(show.imageUrl, apiBase);
   const when = cardDate(date, lang);
   const more = moreDatesLabel(show.dates.length, lang);
-  const place = `${show.venue} · ${timeLabel(date)}`;
+  const place = `${show.venue} · ${timeLabel(date, timeKnown, lang)}`;
   return (
     <View role="listitem" style={{ width }}>
       <ShowLink

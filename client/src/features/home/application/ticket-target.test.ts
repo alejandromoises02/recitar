@@ -19,7 +19,7 @@ const show = (ticketLinks: { vendor: string; url: string }[], sourceUrl = "https
   imageLicense: null,
   imageSourceUrl: null,
   firstSeenAt: new Date("2026-11-01T12:00:00Z"), updatedAt: new Date("2026-11-01T12:00:00Z"),
-  dates: [{ id: "s-0", startsAt: new Date("2026-12-01T23:00:00Z"), ticketLinks }],
+  dates: [{ id: "s-0", startsAt: new Date("2026-12-01T23:00:00Z"), timeKnown: true, ticketLinks }],
 });
 
 describe("ticketTarget", () => {

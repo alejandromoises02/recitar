@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardDate, daysUntil, daysUntilLabel, spokenDate, imageSource, initials, longDate, moreDatesLabel, shortDate } from "./show-labels";
+import { boardDate, daysUntil, daysUntilLabel, startTime, spokenDate, imageSource, initials, longDate, moreDatesLabel, shortDate } from "./show-labels";
 
 // 15:00 UTC = 12:00 in Buenos Aires on 2026-11-13.
 const NOW = new Date("2026-11-13T15:00:00Z");
@@ -32,6 +32,22 @@ describe("daysUntil", () => {
     ["2026-11-26T21:00:00-03:00", 13],
   ])("%s is %i days away in Buenos Aires", (iso, days) => {
     expect(daysUntil(at(iso), NOW)).toBe(days);
+  });
+});
+
+describe("startTime", () => {
+  const nine = at("2026-11-19T00:00:00Z"); // 21:00 in Buenos Aires
+
+  it("is HH:MM in Buenos Aires when the time is known", () => {
+    expect(startTime(nine, true, "es")).toBe("21:00");
+    expect(startTime(nine, true, "es", "short")).toBe("21:00");
+  });
+
+  it("says the time is to be confirmed when the source gave only the day", () => {
+    expect(startTime(nine, false, "es")).toBe("Hora a confirmar");
+    expect(startTime(nine, false, "es", "short")).toBe("A confirmar");
+    expect(startTime(nine, false, "en")).toBe("Time TBC");
+    expect(startTime(nine, false, "en", "short")).toBe("TBC");
   });
 });
 

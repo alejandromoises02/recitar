@@ -45,7 +45,7 @@ export function ShowPage({ show, apiBase }: Props) {
   const gutter = width < 600 ? spacing.md : spacing.xl;
   const date = show.dates[Math.min(picked, show.dates.length - 1)];
   const mode = dateMode(show.dates);
-  const when = buttonWhen(date.startsAt, now, lang);
+  const when = buttonWhen(date.startsAt, now, lang, date.timeKnown);
   const offer = ticketOffer(ticketPlan(show.dates, picked, show.sourceUrl), when, strings);
   const photo = imageSource(show.imageUrl, apiBase);
   const several = show.dates.length > 1;

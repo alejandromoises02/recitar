@@ -5,7 +5,9 @@ import { featuredFromApi, showFromApi } from "./event-from-api";
 
 describe("showFromApi", () => {
   it("renames every field and reads every date", () => {
-    const show = showFromApi(apiShow("venti-mila", ["2026-11-14T22:00:00-03:00", "2026-11-21T22:00:00-03:00"]));
+    const api = apiShow("venti-mila", ["2026-11-14T22:00:00-03:00", "2026-11-21T22:00:00-03:00"]);
+    api.dates[1].time_known = false;
+    const show = showFromApi(api);
     expect(show).toEqual({
       id: "venti-mila",
       category: "concert",
@@ -25,8 +27,8 @@ describe("showFromApi", () => {
       firstSeenAt: new Date("2026-11-02T12:00:00Z"),
       updatedAt: new Date("2026-11-13T12:00:00Z"),
       dates: [
-        { id: "venti-mila-0", startsAt: new Date("2026-11-15T01:00:00Z"), ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/0" }] },
-        { id: "venti-mila-1", startsAt: new Date("2026-11-22T01:00:00Z"), ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/1" }] },
+        { id: "venti-mila-0", startsAt: new Date("2026-11-15T01:00:00Z"), timeKnown: true, ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/0" }] },
+        { id: "venti-mila-1", startsAt: new Date("2026-11-22T01:00:00Z"), timeKnown: false, ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/1" }] },
       ],
     });
   });

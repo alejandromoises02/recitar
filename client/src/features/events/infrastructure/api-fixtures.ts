@@ -22,6 +22,7 @@ export const apiShow = (id: string, dates = ["2026-11-14T22:00:00-03:00"]): ApiS
   dates: dates.map((startsAt, i) => ({
     id: `${id}-${i}`,
     starts_at: startsAt,
+    time_known: true,
     ticket_links: [{ vendor: "Venti", url: `https://venti.live/${id}/${i}` }],
   })),
 });

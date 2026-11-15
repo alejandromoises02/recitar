@@ -23,7 +23,7 @@ const show = (id: string, starts: string[]): Show => ({
   imageLicense: null,
   imageSourceUrl: null,
   firstSeenAt: at("2026-11-01T12:00:00Z"), updatedAt: at("2026-11-01T12:00:00Z"),
-  dates: starts.map((iso, i) => ({ id: `${id}-${i}`, startsAt: at(iso), ticketLinks: [] })),
+  dates: starts.map((iso, i) => ({ id: `${id}-${i}`, startsAt: at(iso), timeKnown: true, ticketLinks: [] })),
 });
 
 describe("whenRange", () => {
@@ -189,13 +189,26 @@ describe("groupShows", () => {
   });
 });
 
+describe("groupShows items", () => {
+  it("carry whether each date's time is known", () => {
+    const undated = show("a", ["2026-11-20T03:00:00Z", "2026-11-21T00:00:00Z"]);
+    undated.dates[0].timeKnown = false;
+    const items = groupShows([undated], "month", NOW, "es", {}).flatMap((g) => g.days.flatMap((d) => d.items));
+    expect(items.map((i) => [i.key, i.timeKnown])).toEqual([["a-0", false], ["a-1", true]]);
+  });
+});
+
 describe("cardDate and timeLabel", () => {
   it("is the weekday, day and short month in Buenos Aires", () => {
     expect(cardDate(at("2026-11-14T01:00:00Z"), "es")).toEqual({ weekday: "VIE", day: 13, month: "NOV" });
   });
 
   it("is HH:MM in Buenos Aires", () => {
-    expect(timeLabel(at("2026-11-14T00:30:00Z"))).toBe("21:30");
+    expect(timeLabel(at("2026-11-14T00:30:00Z"), true, "es")).toBe("21:30");
+  });
+
+  it("says the time is to be confirmed when it is unknown", () => {
+    expect(timeLabel(at("2026-11-14T03:00:00Z"), false, "es")).toBe("Hora a confirmar");
   });
 });
 

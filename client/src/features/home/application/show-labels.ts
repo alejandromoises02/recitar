@@ -1,6 +1,6 @@
 /** Labels for the home's show cards. All dates are Buenos Aires calendar days. */
 
-import { calendarDay, dayFromIso } from "./calendar";
+import { calendarDay, clockTime, dayFromIso } from "./calendar";
 import { DATE_WORDS } from "./date-words";
 import type { Lang } from "../../../i18n/lang";
 
@@ -17,6 +17,13 @@ export function daysUntil(startsAt: Date, now: Date): number {
 
 export function daysUntilLabel(startsAt: Date, now: Date, lang: Lang): string {
   return DATE_WORDS[lang].daysUntil(daysUntil(startsAt, now));
+}
+
+/** HH:MM in Buenos Aires, or "to be confirmed" when the source gave only the day. */
+export function startTime(startsAt: Date, timeKnown: boolean, lang: Lang, length: "long" | "short" = "long"): string {
+  if (timeKnown) return clockTime(startsAt);
+  const words = DATE_WORDS[lang];
+  return length === "short" ? words.timeUnknownShort : words.timeUnknown;
 }
 
 /** Day and short month name. */

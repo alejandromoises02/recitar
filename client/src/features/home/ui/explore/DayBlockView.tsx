@@ -37,8 +37,8 @@ export const DayBlockView = memo(function DayBlockView({ block, apiBase, width }
         ) : null}
       </View>
       <View style={styles.rows} role="list">
-        {block.items.map(({ key, show, date }) => (
-          <AgendaRow key={key} show={show} date={date} apiBase={apiBase} />
+        {block.items.map(({ key, show, date, timeKnown }) => (
+          <AgendaRow key={key} show={show} date={date} timeKnown={timeKnown} apiBase={apiBase} />
         ))}
       </View>
     </View>

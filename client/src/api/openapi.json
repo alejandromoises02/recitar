@@ -1154,6 +1154,11 @@
             "format": "date-time",
             "title": "Starts At"
           },
+          "time_known": {
+            "type": "boolean",
+            "title": "Time Known",
+            "default": true
+          },
           "ticket_links": {
             "items": {
               "$ref": "#/components/schemas/TicketLink"
@@ -1253,6 +1258,7 @@
           "region",
           "country",
           "starts_at",
+          "time_known",
           "ticket_links",
           "source_url",
           "image_url",
@@ -1339,6 +1345,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Starts At"
+          },
+          "time_known": {
+            "type": "boolean",
+            "title": "Time Known",
+            "default": true
           },
           "ticket_links": {
             "items": {
@@ -1446,6 +1457,7 @@
           "region",
           "country",
           "starts_at",
+          "time_known",
           "ticket_links",
           "source_url",
           "image_url",
@@ -1735,12 +1747,18 @@
             "type": "string",
             "format": "date-time",
             "title": "Starts At"
+          },
+          "time_known": {
+            "type": "boolean",
+            "title": "Time Known",
+            "default": true
           }
         },
         "type": "object",
         "required": [
           "id",
-          "starts_at"
+          "starts_at",
+          "time_known"
         ],
         "title": "ShowDate",
         "description": "Another date of the same show: enough to link to it."
@@ -1756,6 +1774,11 @@
             "format": "date-time",
             "title": "Starts At"
           },
+          "time_known": {
+            "type": "boolean",
+            "title": "Time Known",
+            "default": true
+          },
           "ticket_links": {
             "items": {
               "$ref": "#/components/schemas/TicketLink"
@@ -1768,6 +1791,7 @@
         "required": [
           "id",
           "starts_at",
+          "time_known",
           "ticket_links"
         ],
         "title": "ShowDateTickets",

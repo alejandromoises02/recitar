@@ -1,7 +1,8 @@
 import type { Lang } from "../../../i18n/lang";
 import type { ShowDateTickets } from "../../events/domain/show";
-import { calendarDay, clockTime } from "../../home/application/calendar";
+import { calendarDay } from "../../home/application/calendar";
 import { DATE_WORDS } from "../../home/application/date-words";
+import { startTime } from "../../home/application/show-labels";
 import { domainOf } from "../../home/application/ticket-target";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -10,18 +11,18 @@ const capitalise = (text: string) => text.charAt(0) + text.slice(1).toLowerCase(
 export type DateTile = { weekday: string; day: string; month: string; time: string };
 
 /** A date tile: weekday, day, short month (plus a two-digit year when not this year) and time, in Buenos Aires. */
-export function dateTile(startsAt: Date, now: Date, lang: Lang): DateTile {
+export function dateTile(startsAt: Date, now: Date, lang: Lang, timeKnown = true): DateTile {
   const words = DATE_WORDS[lang];
   const day = calendarDay(startsAt);
   const year = day.year === calendarDay(now).year ? "" : ` ${pad2(day.year % 100)}`;
-  return { weekday: words.weekdaysShort[day.weekday], day: pad2(day.day), month: `${words.monthsShort[day.month - 1]}${year}`, time: clockTime(startsAt) };
+  return { weekday: words.weekdaysShort[day.weekday], day: pad2(day.day), month: `${words.monthsShort[day.month - 1]}${year}`, time: startTime(startsAt, timeKnown, lang, "short") };
 }
 
-/** The picked date under the ticket button: "Mié 18/11 · 21:00", with "/27" when not this year. */
-export function buttonWhen(startsAt: Date, now: Date, lang: Lang): string {
+/** The picked date under the ticket button: "Mié 18/11 · 21:00", with "/27" when not this year and "Hora a confirmar" for an unknown time. */
+export function buttonWhen(startsAt: Date, now: Date, lang: Lang, timeKnown = true): string {
   const day = calendarDay(startsAt);
   const year = day.year === calendarDay(now).year ? "" : `/${pad2(day.year % 100)}`;
-  return `${capitalise(DATE_WORDS[lang].weekdaysShort[day.weekday])} ${pad2(day.day)}/${pad2(day.month)}${year} · ${clockTime(startsAt)}`;
+  return `${capitalise(DATE_WORDS[lang].weekdaysShort[day.weekday])} ${pad2(day.day)}/${pad2(day.month)}${year} · ${startTime(startsAt, timeKnown, lang)}`;
 }
 
 export type TicketTarget = { vendor: string | null; url: string; domain: string };

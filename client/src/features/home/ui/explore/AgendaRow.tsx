@@ -8,13 +8,13 @@ import { styles } from "./AgendaRow.styles";
 import { useLang } from "../../../../i18n/lang-context";
 import { ShowLink } from "../controls/ShowLink";
 
-type Props = { show: Show; date: Date; apiBase: string };
+type Props = { show: Show; date: Date; timeKnown: boolean; apiBase: string };
 
-export const AgendaRow = memo(function AgendaRow({ show, date, apiBase }: Props) {
+export const AgendaRow = memo(function AgendaRow({ show, date, timeKnown, apiBase }: Props) {
   const lang = useLang();
   const photo = imageSource(show.imageUrl, apiBase);
   const more = moreDatesLabel(show.dates.length, lang);
-  const place = `${show.venue} · ${timeLabel(date)}`;
+  const place = `${show.venue} · ${timeLabel(date, timeKnown, lang)}`;
   return (
     <View role="listitem">
       <ShowLink showId={show.id} label={[show.name, place, more].filter(Boolean).join(". ")} style={styles.row}>

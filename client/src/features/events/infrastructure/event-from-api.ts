@@ -26,6 +26,7 @@ export function eventFromApi(api: ApiEvent): Event {
     region: api.region,
     country: api.country,
     startsAt: new Date(api.starts_at),
+    timeKnown: api.time_known,
     ticketLinks: api.ticket_links.map(({ vendor, url }) => ({ vendor, url })),
     sourceUrl: api.source_url,
     imageUrl: api.image_url,
@@ -41,7 +42,7 @@ export function eventFromApi(api: ApiEvent): Event {
 export function eventDetailFromApi(api: ApiEventDetail): EventDetail {
   return {
     ...eventFromApi(api),
-    otherDates: api.other_dates.map((date) => ({ id: date.id, startsAt: new Date(date.starts_at) })),
+    otherDates: api.other_dates.map((date) => ({ id: date.id, startsAt: new Date(date.starts_at), timeKnown: date.time_known })),
   };
 }
 
@@ -71,6 +72,7 @@ export function showFromApi(api: ApiShow): Show {
     dates: api.dates.map((date) => ({
       id: date.id,
       startsAt: new Date(date.starts_at),
+      timeKnown: date.time_known,
       ticketLinks: date.ticket_links.map(({ vendor, url }) => ({ vendor, url })),
     })),
   };

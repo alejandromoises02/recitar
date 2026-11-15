@@ -4,6 +4,8 @@ import type { EventCategory, ImageOrigin, TicketLink } from "./event";
 export type ShowDateTickets = {
   id: string;
   startsAt: Date;
+  /** False when the source gave only the day: `startsAt` is then that day's midnight. */
+  timeKnown: boolean;
   ticketLinks: TicketLink[];
 };
 

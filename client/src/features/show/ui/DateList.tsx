@@ -1,8 +1,7 @@
 import { Text, View } from "react-native";
 import { useLang } from "../../../i18n/lang-context";
 import type { ShowDateTickets } from "../../events/domain/show";
-import { clockTime } from "../../home/application/calendar";
-import { boardDate, daysUntil, daysUntilLabel } from "../../home/application/show-labels";
+import { boardDate, daysUntil, daysUntilLabel, startTime } from "../../home/application/show-labels";
 import { Flap } from "../../home/ui/announced-board/Flap";
 import { styles } from "./DateList.styles";
 import { useShowStrings } from "./strings";
@@ -16,7 +15,7 @@ export function DateList({ dates, now }: { dates: ShowDateTickets[]; now: Date }
       {dates.map((date) => (
         <Flap key={date.id} style={styles.row} role="listitem">
           <Text style={styles.date}>{boardDate(date.startsAt, now, lang)}</Text>
-          <Text style={styles.time}>{clockTime(date.startsAt)}</Text>
+          <Text style={styles.time}>{startTime(date.startsAt, date.timeKnown, lang, "short")}</Text>
           <Text style={[styles.until, daysUntil(date.startsAt, now) <= 1 && styles.soon]} numberOfLines={1}>
             {daysUntilLabel(date.startsAt, now, lang)}
           </Text>

@@ -15,6 +15,7 @@ const make = (id: string, startsAt: string, category: Event["category"] = "conce
   region: "AR-C",
   country: "AR",
   startsAt: new Date(startsAt),
+  timeKnown: true,
   ticketLinks: [],
   sourceUrl: "https://example.com",
   imageUrl: null,

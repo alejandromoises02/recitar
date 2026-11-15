@@ -16,6 +16,7 @@ const apiEvent = (id: string): ApiEvent => ({
   region: "AR-C",
   country: "AR",
   starts_at: "2026-11-14T22:00:00-03:00",
+  time_known: true,
   ticket_links: [{ vendor: "Venti", url: `https://venti.live/${id}` }],
   source_url: `https://venti.live/${id}`,
   image_url: null,
@@ -70,11 +71,11 @@ describe("listEvents", () => {
 
 describe("getEvent", () => {
   it("maps the event and its other dates", async () => {
-    const detail = { ...apiEvent("colon-x-20261118T2000"), other_dates: [{ id: "colon-x-20261120T2000", starts_at: "2026-11-20T20:00:00-03:00" }] };
+    const detail = { ...apiEvent("colon-x-20261118T2000"), other_dates: [{ id: "colon-x-20261120T2000", starts_at: "2026-11-20T20:00:00-03:00", time_known: false }] };
     const { fetch, urls } = fakeFetch(() => json(detail));
     const event = await createEventsApi({ baseUrl: "https://api.example", fetch }).getEvent("colon-x-20261118T2000");
     expect(urls).toEqual(["https://api.example/events/colon-x-20261118T2000"]);
-    expect(event?.otherDates).toEqual([{ id: "colon-x-20261120T2000", startsAt: new Date("2026-11-20T23:00:00Z") }]);
+    expect(event?.otherDates).toEqual([{ id: "colon-x-20261120T2000", startsAt: new Date("2026-11-20T23:00:00Z"), timeKnown: false }]);
     expect(event?.title).toBe("Show colon-x-20261118T2000");
   });
 

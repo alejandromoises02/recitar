@@ -1,6 +1,7 @@
 import type { Show } from "../../events/domain/show";
-import { addDays, calendarDay, clockTime, dayFromIso, lastDayOfMonth, mondayOf } from "./calendar";
+import { addDays, calendarDay, dayFromIso, lastDayOfMonth, mondayOf } from "./calendar";
 import { DATE_WORDS } from "./date-words";
+import { startTime } from "./show-labels";
 import type { Lang } from "../../../i18n/lang";
 import { EXPLORE_DAYS } from "./explore.constants";
 
@@ -56,7 +57,7 @@ export function daysWithShows(shows: Show[]): Set<string> {
   return new Set(shows.flatMap((show) => show.dates.map((date) => calendarDay(date.startsAt).iso)));
 }
 
-export type ShowItem = { key: string; show: Show; date: Date };
+export type ShowItem = { key: string; show: Show; date: Date; timeKnown: boolean };
 export type DayBlock = { iso: string; weekday: string; day: number; month: string; note: string | null; items: ShowItem[] };
 export type ShowGroup = { key: string; title: string; note: string | null; count: number; days: DayBlock[] };
 
@@ -97,7 +98,7 @@ export function groupShows(shows: Show[], by: GroupBy, now: Date, lang: Lang, ra
     .flatMap((show) =>
       show.dates
         .filter(({ startsAt }) => inRange(calendarDay(startsAt).iso, range) && (!horizon || startsAt <= horizon))
-        .map(({ id, startsAt }) => ({ key: id, show, date: startsAt })),
+        .map(({ id, startsAt, timeKnown }) => ({ key: id, show, date: startsAt, timeKnown })),
     )
     .sort((a, b) => a.date.getTime() - b.date.getTime());
   const groups = new Map<string, ShowGroup>();
@@ -123,7 +124,7 @@ export function cardDate(date: Date, lang: Lang) {
   return { weekday: words.weekdaysShort[day.weekday], day: day.day, month: words.monthsShort[day.month - 1] };
 }
 
-export const timeLabel = clockTime;
+export const timeLabel = (date: Date, timeKnown: boolean, lang: Lang) => startTime(date, timeKnown, lang);
 
 export type ExploreRow =
   | { kind: "group"; key: string; group: string; title: string; note: string | null; count: number; expanded: boolean }

@@ -12,7 +12,7 @@ export function DateTiles({ dates, picked, onPick, now, label }: Props) {
   return (
     <View style={styles.row} role="radiogroup" aria-label={label}>
       {dates.map((date, index) => {
-        const tile = dateTile(date.startsAt, now, lang);
+        const tile = dateTile(date.startsAt, now, lang, date.timeKnown);
         const active = index === picked;
         return (
           <Pressable

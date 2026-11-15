@@ -198,6 +198,11 @@ export interface components {
              * Format: date-time
              */
             starts_at: string;
+            /**
+             * Time Known
+             * @default true
+             */
+            time_known: boolean;
             /** Ticket Links */
             ticket_links: components["schemas"]["TicketLink"][];
             /** Source Url */
@@ -255,6 +260,11 @@ export interface components {
              * Format: date-time
              */
             starts_at: string;
+            /**
+             * Time Known
+             * @default true
+             */
+            time_known: boolean;
             /** Ticket Links */
             ticket_links: components["schemas"]["TicketLink"][];
             /** Source Url */
@@ -381,6 +391,11 @@ export interface components {
              * Format: date-time
              */
             starts_at: string;
+            /**
+             * Time Known
+             * @default true
+             */
+            time_known: boolean;
         };
         /**
          * ShowDateTickets
@@ -394,6 +409,11 @@ export interface components {
              * Format: date-time
              */
             starts_at: string;
+            /**
+             * Time Known
+             * @default true
+             */
+            time_known: boolean;
             /** Ticket Links */
             ticket_links: components["schemas"]["TicketLink"][];
         };

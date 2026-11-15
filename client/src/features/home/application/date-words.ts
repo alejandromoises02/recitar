@@ -10,6 +10,9 @@ export type DateWords = {
   today: string;
   tomorrow: string;
   thisWeek: string;
+  /** In place of the time when the source gave only the day; the short one fits a date tile. */
+  timeUnknown: string;
+  timeUnknownShort: string;
   daysUntil: (days: number) => string;
   moreDates: (more: number) => string;
   /** "Sábado 14 de noviembre" / "Saturday, November 14". */
@@ -39,6 +42,8 @@ const es: DateWords = {
   today: "Hoy",
   tomorrow: "Mañana",
   thisWeek: "esta semana",
+  timeUnknown: "Hora a confirmar",
+  timeUnknownShort: "A confirmar",
   daysUntil: (days) => (days <= 0 ? "Hoy" : days === 1 ? "Mañana" : days === 2 ? "Pasado mañana" : `En ${days} días`),
   moreDates: (more) => (more <= 0 ? "" : `+${more} ${more === 1 ? "fecha" : "fechas"}`),
   dayTitle: (weekday, day, month) => `${ES_WEEKDAYS[weekday]} ${day} de ${ES_MONTHS[month - 1]}`,
@@ -60,6 +65,8 @@ const en: DateWords = {
   today: "Today",
   tomorrow: "Tomorrow",
   thisWeek: "this week",
+  timeUnknown: "Time TBC",
+  timeUnknownShort: "TBC",
   daysUntil: (days) => (days <= 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days`),
   moreDates: (more) => (more <= 0 ? "" : `+${more} ${more === 1 ? "date" : "dates"}`),
   dayTitle: (weekday, day, month) => `${EN_WEEKDAYS[weekday]}, ${EN_MONTHS[month - 1]} ${day}`,

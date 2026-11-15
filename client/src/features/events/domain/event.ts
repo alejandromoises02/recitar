@@ -25,6 +25,8 @@ export type Event = {
   /** ISO 3166-1 alpha-2, e.g. "AR". */
   country: string | null;
   startsAt: Date;
+  /** False when the source gave only the day: `startsAt` is then that day's midnight. */
+  timeKnown: boolean;
   ticketLinks: TicketLink[];
   sourceUrl: string;
   imageUrl: string | null;
@@ -44,6 +46,7 @@ export type Event = {
 export type ShowDate = {
   id: string;
   startsAt: Date;
+  timeKnown: boolean;
 };
 
 /** One event with the other upcoming dates of its show (without itself). */

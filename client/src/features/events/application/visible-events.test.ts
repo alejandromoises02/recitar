@@ -13,6 +13,7 @@ const make = (id: string, category: EventCategory): Event => ({
   region: "AR-C",
   country: "AR",
   startsAt: new Date("2026-11-20T21:00:00Z"),
+  timeKnown: true,
   ticketLinks: [],
   sourceUrl: "https://example.com",
   imageUrl: null,
