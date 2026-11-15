@@ -10,8 +10,13 @@ const dayNumber = (date: Date) => {
   return Date.UTC(year, month - 1, day) / 86_400_000;
 };
 
+/** Buenos Aires calendar days from `now` to `startsAt`: 0 today, 1 tomorrow. */
+export function daysUntil(startsAt: Date, now: Date): number {
+  return dayNumber(startsAt) - dayNumber(now);
+}
+
 export function daysUntilLabel(startsAt: Date, now: Date, lang: Lang): string {
-  return DATE_WORDS[lang].daysUntil(dayNumber(startsAt) - dayNumber(now));
+  return DATE_WORDS[lang].daysUntil(daysUntil(startsAt, now));
 }
 
 /** Day and short month name. */

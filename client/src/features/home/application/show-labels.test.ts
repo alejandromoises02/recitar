@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardDate, daysUntilLabel, spokenDate, imageSource, initials, longDate, moreDatesLabel, shortDate } from "./show-labels";
+import { boardDate, daysUntil, daysUntilLabel, spokenDate, imageSource, initials, longDate, moreDatesLabel, shortDate } from "./show-labels";
 
 // 15:00 UTC = 12:00 in Buenos Aires on 2026-11-13.
 const NOW = new Date("2026-11-13T15:00:00Z");
@@ -22,6 +22,16 @@ describe("daysUntilLabel", () => {
   it("counts from the Buenos Aires day of `now`, also late at night", () => {
     // 02:00 UTC on the 14th is 23:00 on the 13th in Buenos Aires.
     expect(daysUntilLabel(at("2026-11-14T21:00:00-03:00"), new Date("2026-11-14T02:00:00Z"), "es")).toBe("Mañana");
+  });
+});
+
+describe("daysUntil", () => {
+  it.each([
+    ["2026-11-13T23:00:00-03:00", 0],
+    ["2026-11-14T00:30:00-03:00", 1],
+    ["2026-11-26T21:00:00-03:00", 13],
+  ])("%s is %i days away in Buenos Aires", (iso, days) => {
+    expect(daysUntil(at(iso), NOW)).toBe(days);
   });
 });
 
