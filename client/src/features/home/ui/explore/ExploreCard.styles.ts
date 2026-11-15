@@ -4,7 +4,8 @@ import { mutedSmallText, surfacePanel } from "../home.styles";
 import { CARD_IMAGE_RATIO } from "./explore.constants";
 
 export const styles = StyleSheet.create({
-  card: { ...surfacePanel, borderRadius: radius.cardSmall, overflow: "hidden" },
+  // Fills its list item, which the row stretches to its tallest card, so every card in a row is as tall.
+  card: { ...surfacePanel, flex: 1, borderRadius: radius.cardSmall, overflow: "hidden" },
   media: { aspectRatio: CARD_IMAGE_RATIO },
   image: StyleSheet.absoluteFill,
   fallback: { alignItems: "center", justifyContent: "center", backgroundColor: colors.imageFallback },
