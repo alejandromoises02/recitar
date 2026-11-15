@@ -12,23 +12,23 @@ describe("daysUntilLabel", () => {
     ["2026-11-15T21:00:00-03:00", "Pasado mañana"],
     ["2026-11-26T21:00:00-03:00", "En 13 días"],
   ])("%s is %s", (iso, label) => {
-    expect(daysUntilLabel(at(iso), NOW)).toBe(label);
+    expect(daysUntilLabel(at(iso), NOW, "es")).toBe(label);
   });
 
   it("counts Buenos Aires days: 00:30 there is already the next day", () => {
-    expect(daysUntilLabel(at("2026-11-14T00:30:00-03:00"), NOW)).toBe("Mañana");
+    expect(daysUntilLabel(at("2026-11-14T00:30:00-03:00"), NOW, "es")).toBe("Mañana");
   });
 
   it("counts from the Buenos Aires day of `now`, also late at night", () => {
     // 02:00 UTC on the 14th is 23:00 on the 13th in Buenos Aires.
-    expect(daysUntilLabel(at("2026-11-14T21:00:00-03:00"), new Date("2026-11-14T02:00:00Z"))).toBe("Mañana");
+    expect(daysUntilLabel(at("2026-11-14T21:00:00-03:00"), new Date("2026-11-14T02:00:00Z"), "es")).toBe("Mañana");
   });
 });
 
 describe("shortDate", () => {
   it("is day and short month in Spanish, in Buenos Aires time", () => {
-    expect(shortDate(at("2026-11-14T21:00:00-03:00"))).toBe("14 nov");
-    expect(shortDate(at("2026-12-02T00:30:00-03:00"))).toBe("2 dic"); // stored as Dec 2 03:30 UTC
+    expect(shortDate(at("2026-11-14T21:00:00-03:00"), "es")).toBe("14 nov");
+    expect(shortDate(at("2026-12-02T00:30:00-03:00"), "es")).toBe("2 dic"); // stored as Dec 2 03:30 UTC
   });
 });
 
@@ -62,23 +62,23 @@ describe("imageSource", () => {
 
 describe("boardDate", () => {
   it("is the Buenos Aires weekday and DD/MM when the show is this year", () => {
-    expect(boardDate(at("2026-12-06T21:00:00-03:00"), NOW)).toBe("DOM 06/12");
+    expect(boardDate(at("2026-12-06T21:00:00-03:00"), NOW, "es")).toBe("DOM 06/12");
   });
 
   it("adds the two-digit year when the show is in another year", () => {
-    expect(boardDate(at("2027-03-19T21:00:00-03:00"), NOW)).toBe("VIE 19/03/27");
+    expect(boardDate(at("2027-03-19T21:00:00-03:00"), NOW, "es")).toBe("VIE 19/03/27");
   });
 
   it("uses the Buenos Aires day: 01:00 UTC on Saturday is still Friday there", () => {
-    expect(boardDate(at("2027-03-20T01:00:00Z"), NOW)).toBe("VIE 19/03/27");
+    expect(boardDate(at("2027-03-20T01:00:00Z"), NOW, "es")).toBe("VIE 19/03/27");
   });
 
   it("uses the Buenos Aires year: 02:00 UTC on 1 January is still 31 December there", () => {
-    expect(boardDate(at("2027-01-01T02:00:00Z"), NOW)).toBe("JUE 31/12");
+    expect(boardDate(at("2027-01-01T02:00:00Z"), NOW, "es")).toBe("JUE 31/12");
   });
 
   it("writes the accented weekday", () => {
-    expect(boardDate(at("2026-11-18T21:00:00-03:00"), NOW)).toBe("MIÉ 18/11");
+    expect(boardDate(at("2026-11-18T21:00:00-03:00"), NOW, "es")).toBe("MIÉ 18/11");
   });
 });
 
@@ -88,12 +88,36 @@ describe("moreDatesLabel", () => {
     [2, "+1 fecha"],
     [4, "+3 fechas"],
   ])("a show with %i dates says %j", (count, label) => {
-    expect(moreDatesLabel(count)).toBe(label);
+    expect(moreDatesLabel(count, "es")).toBe(label);
   });
 });
 
 describe("longDate", () => {
   it("is the Buenos Aires weekday and DD/MM/YYYY", () => {
-    expect(longDate(at("2027-03-20T01:00:00Z"))).toBe("VIE 19/03/2027");
+    expect(longDate(at("2027-03-20T01:00:00Z"), "es")).toBe("VIE 19/03/2027");
+  });
+});
+
+describe("English labels", () => {
+  it("counts days in English", () => {
+    expect(daysUntilLabel(at("2026-11-13T21:00:00-03:00"), NOW, "en")).toBe("Today");
+    expect(daysUntilLabel(at("2026-11-14T21:00:00-03:00"), NOW, "en")).toBe("Tomorrow");
+    expect(daysUntilLabel(at("2026-11-15T21:00:00-03:00"), NOW, "en")).toBe("In 2 days");
+    expect(daysUntilLabel(at("2026-11-20T21:00:00-03:00"), NOW, "en")).toBe("In 7 days");
+  });
+
+  it("puts the month first in short dates", () => {
+    expect(shortDate(at("2026-11-14T21:00:00-03:00"), "en")).toBe("Nov 14");
+  });
+
+  it("keeps the board's day/month order with English weekdays", () => {
+    expect(boardDate(at("2026-12-06T21:00:00-03:00"), NOW, "en")).toBe("SUN 06/12");
+    expect(longDate(at("2027-03-20T01:00:00Z"), "en")).toBe("FRI 19/03/2027");
+  });
+
+  it("counts more dates in English", () => {
+    expect(moreDatesLabel(1, "en")).toBe("");
+    expect(moreDatesLabel(2, "en")).toBe("+1 date");
+    expect(moreDatesLabel(4, "en")).toBe("+3 dates");
   });
 });

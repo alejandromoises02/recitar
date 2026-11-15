@@ -39,6 +39,10 @@ describe("shiftMonth and monthTitle", () => {
   });
 
   it("names the month in Spanish", () => {
-    expect(monthTitle("2026-11")).toBe("Noviembre 2026");
+    expect(monthTitle("2026-11", "es")).toBe("Noviembre 2026");
+  });
+
+  it("names the month in English", () => {
+    expect(monthTitle("2026-11", "en")).toBe("November 2026");
   });
 });

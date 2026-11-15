@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from "react-native";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { styles } from "./CompactFilterBar.styles";
 import { useExploreContext } from "./explore-context";
 import { SearchField } from "./SearchField";
@@ -7,7 +7,7 @@ import { SearchField } from "./SearchField";
 /** Phones: once the filter panel scrolls away, this bar stays on top with the search and a way back to every filter. */
 export function CompactFilterBar({ onOpenFilters }: { onOpenFilters: () => void }) {
   const explore = useExploreContext();
-  const { explore: strings } = homeStrings;
+  const { explore: strings } = useStrings();
   return (
     <View style={styles.bar}>
       <View style={styles.search}>

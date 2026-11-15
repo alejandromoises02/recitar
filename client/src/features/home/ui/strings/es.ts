@@ -1,5 +1,5 @@
-/** Home UI copy. The English table comes with cli02 T7. */
-export const homeStrings = {
+/** Home UI copy in Spanish (voseo): the source table, English must match its shape. */
+export const es = {
   headlineLead: "Lo nuevo en la cartelera de ",
   headlineCity: "Buenos Aires",
   sections: {
@@ -8,6 +8,7 @@ export const homeStrings = {
     next: "Próximos",
     explore: "Toda la cartelera",
   },
+  language: "Idioma",
   loading: "Cargando…",
   loadFailed: "No pudimos cargar esta sección.",
   retry: "Reintentar",
@@ -58,4 +59,6 @@ export const homeStrings = {
     previous: "Show anterior",
     next: "Show siguiente",
   },
-} as const;
+};
+
+export type HomeStrings = typeof es;

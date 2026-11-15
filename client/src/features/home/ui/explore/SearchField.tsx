@@ -1,11 +1,12 @@
 import { Text, TextInput, View } from "react-native";
 import { colors } from "../../../../design/tokens";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { styles } from "./SearchField.styles";
 
 type Props = { value: string; onChange: (text: string) => void };
 
 export function SearchField({ value, onChange }: Props) {
+  const strings = useStrings();
   return (
     <View style={styles.field}>
       <Text style={styles.icon} aria-hidden>
@@ -14,9 +15,9 @@ export function SearchField({ value, onChange }: Props) {
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder={homeStrings.explore.searchPlaceholder}
+        placeholder={strings.explore.searchPlaceholder}
         placeholderTextColor={colors.textMuted}
-        accessibilityLabel={homeStrings.explore.searchLabel}
+        accessibilityLabel={strings.explore.searchLabel}
         returnKeyType="search"
         autoCorrect={false}
         clearButtonMode="while-editing"

@@ -5,10 +5,11 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import type { Featured, Show } from "../../../events/domain/show";
 import { longDate, moreDatesLabel } from "../../application/show-labels";
 import { ticketTarget } from "../../application/ticket-target";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { AutoplayBar } from "./AutoplayBar";
 import { CARD_SWAP_MS } from "./featured.constants";
 import { styles } from "./SpotlightCard.styles";
+import { useLang } from "../../../../i18n/lang-context";
 
 type Props = {
   show: Show;
@@ -25,8 +26,9 @@ export function SpotlightCard({
   progress,
   showProgress,
 }: Props) {
-  const { featured } = homeStrings;
-  const more = moreDatesLabel(show.dates.length);
+  const { featured } = useStrings();
+  const lang = useLang();
+  const more = moreDatesLabel(show.dates.length, lang);
   const tickets = ticketTarget(show);
 
   return (
@@ -34,7 +36,7 @@ export function SpotlightCard({
       <Animated.View key={show.id} entering={FadeIn.duration(CARD_SWAP_MS)}>
         <View style={styles.top}>
           <Text style={styles.tag}>{featured.tag[kind]}</Text>
-          <Text style={styles.date}>{longDate(show.dates[0].startsAt)}</Text>
+          <Text style={styles.date}>{longDate(show.dates[0].startsAt, lang)}</Text>
         </View>
         <Text style={styles.name} numberOfLines={2} accessibilityRole="header">
           {show.name}

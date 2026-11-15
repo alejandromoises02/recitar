@@ -5,14 +5,16 @@ import { cardDate, timeLabel } from "../../application/explore";
 import { imageSource, initials, moreDatesLabel } from "../../application/show-labels";
 import { FittedImage } from "../media/FittedImage";
 import { styles } from "./ExploreCard.styles";
+import { useLang } from "../../../../i18n/lang-context";
 
 type Props = { show: Show; date: Date; apiBase: string; width: number };
 
 /** Wide screens: a show as a card with its photo, date block and "+N fechas". */
 export const ExploreCard = memo(function ExploreCard({ show, date, apiBase, width }: Props) {
+  const lang = useLang();
   const photo = imageSource(show.imageUrl, apiBase);
-  const when = cardDate(date);
-  const more = moreDatesLabel(show.dates.length);
+  const when = cardDate(date, lang);
+  const more = moreDatesLabel(show.dates.length, lang);
   const place = `${show.venue} · ${timeLabel(date)}`;
   return (
     <View style={[styles.card, { width }]} accessible accessibilityLabel={`${show.name}. ${when.weekday} ${when.day} ${when.month}. ${place}`}>

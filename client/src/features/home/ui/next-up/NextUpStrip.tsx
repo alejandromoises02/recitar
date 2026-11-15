@@ -8,13 +8,14 @@ import { useShows } from "../../../events/infrastructure/events-queries";
 import { NEXT_UP_COUNT } from "../home.constants";
 import { SectionError } from "../section/SectionError";
 import { SectionHeader } from "../section/SectionHeader";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { ArrowButton } from "../controls/ArrowButton";
 import { CARDS_PER_VIEW, CARD_GAP, CARD_HEIGHT, PAGE_FRACTION, PHONE_CARD_WIDTH, SKELETON_CARDS } from "./NextUpStrip.constants";
 import { styles } from "./NextUpStrip.styles";
 import { ShowCard } from "./ShowCard";
 
 export function NextUpStrip() {
+  const strings = useStrings();
   const { width: screen } = useWindowDimensions();
   const wide = screen > breakpoints.stacked;
   const [filters] = useState({ limit: NEXT_UP_COUNT });
@@ -43,11 +44,11 @@ export function NextUpStrip() {
 
   return (
     <View style={styles.section} onLayout={onLayout}>
-      <SectionHeader title={homeStrings.sections.next}>
+      <SectionHeader title={strings.sections.next}>
         {wide && shows.length > 0 ? (
           <View style={styles.arrows}>
-            <ArrowButton label={homeStrings.scrollBack} glyph="←" onPress={() => page(-1)} />
-            <ArrowButton label={homeStrings.scrollMore} glyph="→" onPress={() => page(1)} />
+            <ArrowButton label={strings.scrollBack} glyph="←" onPress={() => page(-1)} />
+            <ArrowButton label={strings.scrollMore} glyph="→" onPress={() => page(1)} />
           </View>
         ) : null}
       </SectionHeader>

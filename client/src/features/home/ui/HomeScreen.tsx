@@ -17,15 +17,17 @@ import { FiltersSheet } from "./explore/FiltersSheet";
 import { useCompactBar } from "./explore/use-compact-bar";
 import { useExplore } from "./explore/use-explore";
 import { HomeSection } from "./HomeSection";
+import { LangSwitch } from "./LangSwitch";
 import { END_REACHED_THRESHOLD, PHONE_WIDTH } from "./HomeScreen.constants";
 import { headlineSizing, styles } from "./HomeScreen.styles";
-import { homeStrings } from "./strings";
+import { useStrings } from "./strings";
 
 /**
  * The home is one virtualised list: the sections are its header, then the explore filters and the
  * explore listing (group titles, day blocks or cards) are its rows, so only the visible rows are drawn.
  */
 export function HomeScreen() {
+  const strings = useStrings();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const layout = homeLayout(width);
@@ -67,10 +69,13 @@ export function HomeScreen() {
 
   const header = (
     <View style={styles.header} onLayout={compactBar.onHeaderLayout}>
-      <BrandLogo size={fluid(typography.logo.size, width)} />
+      <View style={styles.topRow}>
+        <BrandLogo size={fluid(typography.logo.size, width)} />
+        <LangSwitch />
+      </View>
       <Text accessibilityRole="header" style={[styles.headline, headlineSizing(fluid(typography.display.size, width))]}>
-        {homeStrings.headlineLead}
-        <Text style={styles.city}>{homeStrings.headlineCity}</Text>
+        {strings.headlineLead}
+        <Text style={styles.city}>{strings.headlineCity}</Text>
       </Text>
       {layout.kind === "stacked" ? (
         layout.order.map((section) => <HomeSection key={section} section={section} />)

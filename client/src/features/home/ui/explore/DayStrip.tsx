@@ -1,8 +1,9 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import type { StripDay } from "../../application/explore";
 import { pickedDayTile } from "../../application/explore";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { styles } from "./DayStrip.styles";
+import { useLang } from "../../../../i18n/lang-context";
 
 type Props = {
   now: Date;
@@ -15,9 +16,11 @@ type Props = {
 
 /** This week's days, then a tile that opens the calendar (or shows the day picked there). */
 export function DayStrip({ now, days, withShows, selected, onSelect, onMore }: Props) {
-  const pickedElsewhere = selected !== null && !days.some((day) => day.iso === selected) ? pickedDayTile(selected, now) : null;
+  const lang = useLang();
+  const strings = useStrings();
+  const pickedElsewhere = selected !== null && !days.some((day) => day.iso === selected) ? pickedDayTile(selected, now, lang) : null;
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} accessibilityLabel={homeStrings.explore.nextDays}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} accessibilityLabel={strings.explore.nextDays}>
       {days.map((day) => {
         const active = day.iso === selected;
         const has = withShows.has(day.iso);
@@ -26,7 +29,7 @@ export function DayStrip({ now, days, withShows, selected, onSelect, onMore }: P
             key={day.iso}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
-            accessibilityLabel={`${day.label} ${day.day}${has ? `, ${homeStrings.explore.hasShows}` : ""}`}
+            accessibilityLabel={`${day.label} ${day.day}${has ? `, ${strings.explore.hasShows}` : ""}`}
             onPress={() => onSelect(day.iso)}
             style={[styles.day, active && styles.dayActive]}
           >
@@ -38,7 +41,7 @@ export function DayStrip({ now, days, withShows, selected, onSelect, onMore }: P
       })}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={pickedElsewhere ? `${pickedElsewhere.label} ${pickedElsewhere.day} ${pickedElsewhere.month}. ${homeStrings.explore.otherDate}` : homeStrings.explore.otherDate}
+        accessibilityLabel={pickedElsewhere ? `${pickedElsewhere.label} ${pickedElsewhere.day} ${pickedElsewhere.month}. ${strings.explore.otherDate}` : strings.explore.otherDate}
         accessibilityState={{ selected: pickedElsewhere !== null }}
         onPress={onMore}
         style={[styles.day, styles.more, pickedElsewhere && styles.dayActive]}

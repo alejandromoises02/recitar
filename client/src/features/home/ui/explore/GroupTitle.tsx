@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { CHEVRON_TURN } from "./explore.constants";
 import { useExploreContext } from "./explore-context";
 import { styles } from "./GroupTitle.styles";
@@ -10,6 +10,7 @@ type Props = { group: string; title: string; note: string | null; count: number;
 
 /** A listing group's title: tapping it folds or unfolds the group's shows. */
 export function GroupTitle({ group, title, note, count, expanded }: Props) {
+  const strings = useStrings();
   const { toggleGroup } = useExploreContext();
   const reduced = useReducedMotion();
   const turn = useSharedValue(expanded ? 0 : CHEVRON_TURN.collapsed);
@@ -20,7 +21,7 @@ export function GroupTitle({ group, title, note, count, expanded }: Props) {
   }, [expanded, reduced, turn]);
 
   const chevron = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.get()}deg` }] }));
-  const shows = homeStrings.shows(count, false);
+  const shows = strings.shows(count, false);
 
   return (
     <View accessibilityRole="header" style={styles.wrap}>
@@ -28,7 +29,7 @@ export function GroupTitle({ group, title, note, count, expanded }: Props) {
         onPress={() => toggleGroup(group)}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
-        accessibilityLabel={homeStrings.explore.groupLabel(title, note, shows)}
+        accessibilityLabel={strings.explore.groupLabel(title, note, shows)}
         style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       >
         <Animated.Text style={[styles.chevron, chevron]}>▾</Animated.Text>

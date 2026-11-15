@@ -9,6 +9,7 @@ import { useRefetchOnAppFocus } from "@/api/app-focus";
 import { createQueryClient } from "@/api/query-client";
 import { fontAssets } from "@/design/fonts";
 import { colors } from "@/design/tokens";
+import { LangProvider } from "@/i18n/lang-context";
 
 // Keep the splash screen up until the fonts are ready, so no screen flashes in the system font.
 SplashScreen.preventAutoHideAsync();
@@ -27,8 +28,10 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+        <LangProvider>
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+        </LangProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

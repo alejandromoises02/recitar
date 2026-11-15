@@ -1,8 +1,8 @@
-import { MONTHS, addDays, dayFromIso, mondayOf } from "./calendar";
+import { addDays, dayFromIso, mondayOf } from "./calendar";
+import { DATE_WORDS } from "./date-words";
+import type { Lang } from "../../../i18n/lang";
 
 export type MonthCell = { iso: string; day: number; inMonth: boolean; disabled: boolean; today: boolean };
-
-const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** "2026-11" moved by `months` months. */
 export function shiftMonth(month: string, months: number): string {
@@ -10,9 +10,9 @@ export function shiftMonth(month: string, months: number): string {
   return new Date(Date.UTC(year, index - 1 + months, 1)).toISOString().slice(0, 7);
 }
 
-export function monthTitle(month: string): string {
+export function monthTitle(month: string, lang: Lang): string {
   const [year, index] = month.split("-").map(Number);
-  return `${capitalise(MONTHS[index - 1])} ${year}`;
+  return DATE_WORDS[lang].monthTitle(index, year);
 }
 
 /** The weeks (Monday to Sunday) that cover `month`; days before `today` cannot be picked. */

@@ -1,14 +1,16 @@
 import { useMemo, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import { monthGrid, monthTitle, shiftMonth } from "../../application/month-grid";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { styles } from "./CalendarModal.styles";
+import { useLang } from "../../../../i18n/lang-context";
 
 type Props = { visible: boolean; today: string; selected: string | null; onPick: (iso: string) => void; onClose: () => void };
 
 /** A month calendar to pick any day from today on. */
 export function CalendarModal({ visible, today, selected, onPick, onClose }: Props) {
-  const { calendar } = homeStrings.explore;
+  const lang = useLang();
+  const { calendar } = useStrings().explore;
   const firstMonth = today.slice(0, 7);
   const [month, setMonth] = useState((selected ?? today).slice(0, 7));
   const weeks = useMemo(() => monthGrid(month, today), [month, today]);
@@ -45,7 +47,7 @@ export function CalendarModal({ visible, today, selected, onPick, onClose }: Pro
               <Text style={styles.arrowText}>‹</Text>
             </Pressable>
             <Text style={styles.month} accessibilityRole="header">
-              {monthTitle(month)}
+              {monthTitle(month, lang)}
             </Text>
             <Pressable
               accessibilityRole="button"

@@ -1,18 +1,19 @@
 import { Text, View } from "react-native";
 import { SectionAside } from "../section/SectionAside";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { useExploreContext } from "./explore-context";
 import { styles } from "./ExploreHeader.styles";
 
 export function ExploreHeader() {
+  const strings = useStrings();
   const explore = useExploreContext();
   return (
     <View style={styles.section}>
       <View style={styles.header}>
         <Text style={styles.title} accessibilityRole="header">
-          {homeStrings.sections.explore}
+          {strings.sections.explore}
         </Text>
-        {explore.loaded ? <SectionAside>{homeStrings.shows(explore.count, explore.hasNextPage)}</SectionAside> : null}
+        {explore.loaded ? <SectionAside>{strings.shows(explore.count, explore.hasNextPage)}</SectionAside> : null}
       </View>
     </View>
   );

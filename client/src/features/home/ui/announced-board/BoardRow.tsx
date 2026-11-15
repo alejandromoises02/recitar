@@ -9,13 +9,15 @@ import { boardText, styles } from "./BoardRow.styles";
 import { Flap } from "./Flap";
 import { PhotoStrip } from "./PhotoStrip";
 import { useFlipIn } from "./use-flip-in";
+import { useLang } from "../../../../i18n/lang-context";
 
 type Props = { show: Show; index: number; now: Date; apiBase: string; geometry: BoardGeometry };
 
 export const BoardRow = memo(function BoardRow({ show, index, now, apiBase, geometry }: Props) {
+  const lang = useLang();
   const { flapSize, dateWidth, photoShare } = geometry;
-  const date = boardDate(show.dates[0].startsAt, now);
-  const more = moreDatesLabel(show.dates.length);
+  const date = boardDate(show.dates[0].startsAt, now, lang);
+  const more = moreDatesLabel(show.dates.length, lang);
   const photo = imageSource(show.imageUrl, apiBase);
   const flip = useFlipIn(index);
   const minHeight = flapSize * ROW_HEIGHT_EM;

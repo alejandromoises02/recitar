@@ -6,14 +6,16 @@ import { daysWithShows, groupShows, stripDays, whenRange } from "../../applicati
 import { EXPLORE_PAGE_SIZE, GROUP_OPEN_MS, SEARCH_DEBOUNCE_MS, STRIP_QUERY_LIMIT } from "./explore.constants";
 import { useDebouncedValue } from "./use-debounced-value";
 import { useExploreFilters } from "./use-explore-filters";
+import { useLang } from "../../../../i18n/lang-context";
 
 const NONE: ReadonlySet<string> = new Set();
 
 /** Everything "Toda la cartelera" shows: filters, the listing pages, and the data for the filter panel. */
 export function useExplore() {
+  const lang = useLang();
   const [now] = useState(() => new Date());
   const [apiBase] = useState(configuredApiBase);
-  const days = useMemo(() => stripDays(now), [now]);
+  const days = useMemo(() => stripDays(now, lang), [now, lang]);
   const filterState = useExploreFilters();
   const { filters } = filterState;
   const text = useDebouncedValue(filters.text.trim(), SEARCH_DEBOUNCE_MS);
@@ -32,7 +34,7 @@ export function useExplore() {
   const { hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = listing;
   // Shows come by their next date, so later pages can still hold dates up to the last loaded show's.
   const horizon = hasNextPage && shows.length > 0 ? shows[shows.length - 1].dates[0].startsAt : null;
-  const groups = useMemo(() => groupShows(shows, filters.group, now, range, horizon), [shows, filters.group, now, range, horizon]);
+  const groups = useMemo(() => groupShows(shows, filters.group, now, lang, range, horizon), [shows, filters.group, now, lang, range, horizon]);
   const visible = useMemo(() => groups.reduce((sum, group) => sum + group.count, 0), [groups]);
   const marked = useMemo(() => daysWithShows(strip.data?.pages[0].items ?? []), [strip.data]);
   const venueNames = useMemo(() => venues.data?.map((venue) => venue.name) ?? [], [venues.data]);

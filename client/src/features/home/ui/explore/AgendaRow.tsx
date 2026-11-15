@@ -5,12 +5,14 @@ import { timeLabel } from "../../application/explore";
 import { imageSource, initials, moreDatesLabel } from "../../application/show-labels";
 import { FittedImage } from "../media/FittedImage";
 import { styles } from "./AgendaRow.styles";
+import { useLang } from "../../../../i18n/lang-context";
 
 type Props = { show: Show; date: Date; apiBase: string };
 
 export const AgendaRow = memo(function AgendaRow({ show, date, apiBase }: Props) {
+  const lang = useLang();
   const photo = imageSource(show.imageUrl, apiBase);
-  const more = moreDatesLabel(show.dates.length);
+  const more = moreDatesLabel(show.dates.length, lang);
   const place = `${show.venue} · ${timeLabel(date)}`;
   return (
     <View style={styles.row} accessible accessibilityLabel={[show.name, place, more].filter(Boolean).join(". ")}>

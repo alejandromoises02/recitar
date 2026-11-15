@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { GroupBy, StripDay, When } from "../../application/explore";
 import { Chip } from "../controls/Chip";
 import { Segmented } from "../controls/Segmented";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { CalendarModal } from "./CalendarModal";
 import { ChipRow } from "./ChipRow";
 import { DayStrip } from "./DayStrip";
@@ -30,7 +30,7 @@ const WHEN_ORDER: Exclude<When, "day">[] = ["all", "today", "weekend", "week", "
 const GROUP_ORDER: GroupBy[] = ["day", "week", "month"];
 
 export function ExploreFilters(props: Props) {
-  const { explore } = homeStrings;
+  const { explore } = useStrings();
   const { filters } = props;
   const [calendarOpen, setCalendarOpen] = useState(false);
   return (

@@ -4,9 +4,6 @@ const BUENOS_AIRES = "America/Argentina/Buenos_Aires";
 const DAY = new Intl.DateTimeFormat("en-CA", { timeZone: BUENOS_AIRES, year: "numeric", month: "2-digit", day: "2-digit" });
 const TIME = new Intl.DateTimeFormat("en-GB", { timeZone: BUENOS_AIRES, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
-export const WEEKDAYS_SHORT = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
-export const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-export const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 export type CalendarDay = { iso: string; year: number; month: number; day: number; weekday: number };
 

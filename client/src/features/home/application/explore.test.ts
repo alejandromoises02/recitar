@@ -54,7 +54,7 @@ describe("whenRange", () => {
 
 describe("stripDays", () => {
   it("is today and the next 6 days, today labelled HOY", () => {
-    const days = stripDays(NOW);
+    const days = stripDays(NOW, "es");
     expect(days).toHaveLength(7);
     expect(days[0]).toEqual({ iso: "2026-11-13", label: "HOY", day: 13 });
     expect(days[1]).toEqual({ iso: "2026-11-14", label: "SÁB", day: 14 });
@@ -64,11 +64,45 @@ describe("stripDays", () => {
 
 describe("pickedDayTile", () => {
   it("is the weekday, day and month of a day picked this year", () => {
-    expect(pickedDayTile("2026-12-24", NOW)).toEqual({ iso: "2026-12-24", label: "JUE", day: 24, month: "DIC" });
+    expect(pickedDayTile("2026-12-24", NOW, "es")).toEqual({ iso: "2026-12-24", label: "JUE", day: 24, month: "DIC" });
   });
 
   it("adds the two-digit year to the month for another year", () => {
-    expect(pickedDayTile("2027-08-28", NOW)).toEqual({ iso: "2027-08-28", label: "SÁB", day: 28, month: "AGO 27" });
+    expect(pickedDayTile("2027-08-28", NOW, "es")).toEqual({ iso: "2027-08-28", label: "SÁB", day: 28, month: "AGO 27" });
+  });
+});
+
+describe("English dates", () => {
+  const shows = [
+    show("today", ["2026-11-13T21:00:00-03:00"]),
+    show("tomorrow", ["2026-11-14T21:00:00-03:00"]),
+    show("december", ["2026-12-01T21:00:00-03:00"]),
+  ];
+
+  it("titles days, weeks and months in English", () => {
+    expect(groupShows(shows, "day", NOW, "en", {}).map((g) => [g.title, g.note])).toEqual([
+      ["Friday, November 13", "Today"],
+      ["Saturday, November 14", "Tomorrow"],
+      ["Tuesday, December 1", null],
+    ]);
+    expect(groupShows(shows, "week", NOW, "en", {}).map((g) => [g.title, g.note])).toEqual([
+      ["Week of November 9–15", "this week"],
+      ["Week of November 30 – December 6", null],
+    ]);
+    expect(groupShows(shows, "month", NOW, "en", {}).map((g) => g.title)).toEqual(["November 2026", "December 2026"]);
+  });
+
+  it("labels the day strip, picked day and cards in English", () => {
+    const days = stripDays(NOW, "en");
+    expect(days[0].label).toBe("TODAY");
+    expect(days[1].label).toBe("SAT");
+    expect(pickedDayTile("2027-08-28", NOW, "en")).toEqual({ iso: "2027-08-28", label: "SAT", day: 28, month: "AUG 27" });
+    expect(cardDate(at("2026-11-14T01:00:00Z"), "en")).toEqual({ weekday: "FRI", day: 13, month: "NOV" });
+  });
+
+  it("gives day blocks English weekday, month and note", () => {
+    const [today] = groupShows(shows, "month", NOW, "en", {})[0].days;
+    expect(today).toMatchObject({ weekday: "FRI", month: "NOV", note: "Today" });
   });
 });
 
@@ -88,7 +122,7 @@ describe("groupShows", () => {
   ];
 
   it("groups by month, in date order", () => {
-    const groups = groupShows(shows, "month", NOW, {});
+    const groups = groupShows(shows, "month", NOW, "es", {});
     expect(groups.map((g) => [g.title, g.days.flatMap((d) => d.items.map((i) => i.show.id))])).toEqual([
       ["Noviembre 2026", ["today", "tomorrow", "next-week"]],
       ["Diciembre 2026", ["december"]],
@@ -96,7 +130,7 @@ describe("groupShows", () => {
   });
 
   it("groups by week from Monday to Sunday and marks this week", () => {
-    const groups = groupShows(shows, "week", NOW, {});
+    const groups = groupShows(shows, "week", NOW, "es", {});
     expect(groups.map((g) => [g.title, g.note])).toEqual([
       ["Semana del 9 al 15 de noviembre", "esta semana"],
       ["Semana del 16 al 22 de noviembre", null],
@@ -105,7 +139,7 @@ describe("groupShows", () => {
   });
 
   it("groups by day and marks today and tomorrow", () => {
-    const groups = groupShows(shows, "day", NOW, {});
+    const groups = groupShows(shows, "day", NOW, "es", {});
     expect(groups.map((g) => [g.title, g.note, g.days.length])).toEqual([
       ["Viernes 13 de noviembre", "Hoy", 1],
       ["Sábado 14 de noviembre", "Mañana", 1],
@@ -116,7 +150,7 @@ describe("groupShows", () => {
 
   it("splits each group into one block per day, in date order, with Hoy and Mañana", () => {
     const sameDay = show("same-day", ["2026-11-14T18:00:00-03:00"]);
-    const [november] = groupShows([...shows, sameDay], "month", NOW, {});
+    const [november] = groupShows([...shows, sameDay], "month", NOW, "es", {});
     expect(november.count).toBe(4);
     expect(november.days.map((d) => [d.iso, d.weekday, d.day, d.month, d.note, d.items.map((i) => i.show.id)])).toEqual([
       ["2026-11-13", "VIE", 13, "NOV", "Hoy", ["today"]],
@@ -127,7 +161,7 @@ describe("groupShows", () => {
 
   it("lists a show once for every date it has, each under its own day", () => {
     const multi = show("multi", ["2026-11-13T21:00:00-03:00", "2026-11-14T21:00:00-03:00", "2026-12-05T21:00:00-03:00"]);
-    const groups = groupShows([multi], "day", NOW, {});
+    const groups = groupShows([multi], "day", NOW, "es", {});
     expect(groups.map((g) => [g.title, g.days[0].items.map((i) => i.show.id)])).toEqual([
       ["Viernes 13 de noviembre", ["multi"]],
       ["Sábado 14 de noviembre", ["multi"]],
@@ -137,27 +171,27 @@ describe("groupShows", () => {
 
   it("keeps only the dates inside the range", () => {
     const multi = show("multi", ["2026-11-14T21:00:00-03:00", "2026-12-05T21:00:00-03:00"]);
-    const groups = groupShows([multi], "month", NOW, { from: "2026-12-01", to: "2026-12-31" });
+    const groups = groupShows([multi], "month", NOW, "es", { from: "2026-12-01", to: "2026-12-31" });
     expect(groups.map((g) => g.title)).toEqual(["Diciembre 2026"]);
     expect(groups[0].days[0].items[0].date).toEqual(at("2026-12-05T21:00:00-03:00"));
   });
 
   it("leaves out dates after the horizon, where shows not loaded yet could still come", () => {
     const multi = show("multi", ["2026-11-13T21:00:00-03:00", "2026-12-05T21:00:00-03:00"]);
-    const groups = groupShows([multi], "day", NOW, {}, at("2026-11-20T21:00:00-03:00"));
+    const groups = groupShows([multi], "day", NOW, "es", {}, at("2026-11-20T21:00:00-03:00"));
     expect(groups.map((g) => g.title)).toEqual(["Viernes 13 de noviembre"]);
   });
 
   it("gives each date its own item key, so a show twice on one day stays two items", () => {
     const twice = show("twice", ["2026-11-13T18:00:00-03:00", "2026-11-13T21:00:00-03:00"]);
-    const [day] = groupShows([twice], "day", NOW, {});
+    const [day] = groupShows([twice], "day", NOW, "es", {});
     expect(day.days[0].items.map((i) => i.key)).toEqual(["twice-0", "twice-1"]);
   });
 });
 
 describe("cardDate and timeLabel", () => {
   it("is the weekday, day and short month in Buenos Aires", () => {
-    expect(cardDate(at("2026-11-14T01:00:00Z"))).toEqual({ weekday: "VIE", day: 13, month: "NOV" });
+    expect(cardDate(at("2026-11-14T01:00:00Z"), "es")).toEqual({ weekday: "VIE", day: 13, month: "NOV" });
   });
 
   it("is HH:MM in Buenos Aires", () => {
@@ -172,7 +206,7 @@ describe("exploreRows", () => {
     show("c", ["2026-11-18T21:00:00-03:00"]),
     show("d", ["2026-12-01T21:00:00-03:00"]),
   ];
-  const groups = groupShows(shows, "month", NOW, {});
+  const groups = groupShows(shows, "month", NOW, "es", {});
 
   it("is one title row per group, then its day blocks one per row on phones", () => {
     const rows = exploreRows(groups, 1);
@@ -224,7 +258,7 @@ describe("cardRows", () => {
     show("c", ["2026-11-18T21:00:00-03:00"]),
     show("d", ["2026-12-01T21:00:00-03:00"]),
   ];
-  const groups = groupShows(shows, "month", NOW, {});
+  const groups = groupShows(shows, "month", NOW, "es", {});
 
   it("is each group's title, then its shows as cards `columns` per row across days", () => {
     const rows = cardRows(groups, 2);

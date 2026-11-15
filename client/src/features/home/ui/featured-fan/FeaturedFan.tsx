@@ -22,7 +22,7 @@ import {
 import { imageSource, longDate } from "../../application/show-labels";
 import { SectionError } from "../section/SectionError";
 import { SectionHeader } from "../section/SectionHeader";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import {
   DRAG_ACTIVATION,
   FAN_HEIGHT_SHARE,
@@ -38,10 +38,13 @@ import { Record } from "./Record";
 import { Sleeve } from "./Sleeve";
 import { SpotlightCard } from "./SpotlightCard";
 import { useFanAutoplay } from "./use-fan-autoplay";
+import { useLang } from "../../../../i18n/lang-context";
 
 const mod = (value: number, count: number) => ((value % count) + count) % count;
 
 export function FeaturedFan() {
+  const lang = useLang();
+  const strings = useStrings();
   const { width: screen } = useWindowDimensions();
   const stacked = screen <= breakpoints.stacked;
   const card = fanCardSize(screen, stacked);
@@ -91,10 +94,10 @@ export function FeaturedFan() {
       const show = shows[mod(target, count)];
       if (show)
         AccessibilityInfo.announceForAccessibility(
-          `${show.name}, ${show.venue}, ${longDate(show.dates[0].startsAt)}`,
+          `${show.name}, ${show.venue}, ${longDate(show.dates[0].startsAt, lang)}`,
         );
     },
-    [stop, count, shows],
+    [stop, count, shows, lang],
   );
 
   const selectStep = useCallback(
@@ -167,11 +170,15 @@ export function FeaturedFan() {
   return (
     <View
       style={styles.section}
-      accessibilityLabel={homeStrings.featured.carousel}
+      accessibilityLabel={strings.featured.carousel}
     >
-      <SectionHeader title={homeStrings.sections.featured} />
+      <SectionHeader title={strings.sections.featured} />
       {isError ? (
         <SectionError onRetry={() => refetch()} minHeight={card} />
+      ) : isPending ? (
+        <View style={[styles.fan, styles.pending, { height: card * FAN_HEIGHT_SHARE }]}>
+          <View style={[styles.sleeveSkeleton, { width: card, height: card }]} />
+        </View>
       ) : (
         <>
           <GestureDetector gesture={fanGesture}>

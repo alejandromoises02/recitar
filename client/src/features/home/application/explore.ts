@@ -1,5 +1,7 @@
 import type { Show } from "../../events/domain/show";
-import { MONTHS, WEEKDAYS, WEEKDAYS_SHORT, addDays, calendarDay, clockTime, dayFromIso, lastDayOfMonth, mondayOf } from "./calendar";
+import { addDays, calendarDay, clockTime, dayFromIso, lastDayOfMonth, mondayOf } from "./calendar";
+import { DATE_WORDS } from "./date-words";
+import type { Lang } from "../../../i18n/lang";
 import { EXPLORE_DAYS } from "./explore.constants";
 
 export type When = "all" | "today" | "weekend" | "week" | "month" | "day";
@@ -31,56 +33,55 @@ export function whenRange(when: When, now: Date, pickedDay?: string): DayRange {
 export type StripDay = { iso: string; label: string; day: number };
 
 /** Today and the days right after it, for the quick day picker. */
-export function stripDays(now: Date): StripDay[] {
+export function stripDays(now: Date, lang: Lang): StripDay[] {
+  const words = DATE_WORDS[lang];
   const today = calendarDay(now).iso;
   return Array.from({ length: EXPLORE_DAYS }, (_, i) => {
     const day = dayFromIso(addDays(today, i));
-    return { iso: day.iso, label: i === 0 ? "HOY" : WEEKDAYS_SHORT[day.weekday], day: day.day };
+    return { iso: day.iso, label: i === 0 ? words.todayShort : words.weekdaysShort[day.weekday], day: day.day };
   });
 }
 
 export type PickedDayTile = StripDay & { month: string };
 
 /** A day picked in the calendar: weekday, day and short month, plus a two-digit year when not this year. */
-export function pickedDayTile(iso: string, now: Date): PickedDayTile {
+export function pickedDayTile(iso: string, now: Date, lang: Lang): PickedDayTile {
+  const words = DATE_WORDS[lang];
   const day = dayFromIso(iso);
   const year = day.year === calendarDay(now).year ? "" : ` ${String(day.year % 100).padStart(2, "0")}`;
-  return { iso, label: WEEKDAYS_SHORT[day.weekday], day: day.day, month: `${MONTHS_SHORT[day.month - 1]}${year}` };
+  return { iso, label: words.weekdaysShort[day.weekday], day: day.day, month: `${words.monthsShort[day.month - 1]}${year}` };
 }
 
 export function daysWithShows(shows: Show[]): Set<string> {
   return new Set(shows.flatMap((show) => show.dates.map((date) => calendarDay(date.startsAt).iso)));
 }
 
-const MONTHS_SHORT = MONTHS.map((m) => m.slice(0, 3).toUpperCase());
-
 export type ShowItem = { key: string; show: Show; date: Date };
 export type DayBlock = { iso: string; weekday: string; day: number; month: string; note: string | null; items: ShowItem[] };
 export type ShowGroup = { key: string; title: string; note: string | null; count: number; days: DayBlock[] };
 
-const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+function dayNote(iso: string, today: string, lang: Lang): string | null {
+  if (iso === today) return DATE_WORDS[lang].today;
+  return iso === addDays(today, 1) ? DATE_WORDS[lang].tomorrow : null;
+}
 
-function groupHead(iso: string, by: GroupBy, today: string) {
-  if (by === "day") {
-    const day = dayFromIso(iso);
-    const note = iso === today ? "Hoy" : iso === addDays(today, 1) ? "Mañana" : null;
-    return { key: iso, title: `${WEEKDAYS[day.weekday]} ${day.day} de ${MONTHS[day.month - 1]}`, note };
-  }
+function groupHead(iso: string, by: GroupBy, today: string, lang: Lang) {
+  const words = DATE_WORDS[lang];
+  const day = dayFromIso(iso);
+  if (by === "day") return { key: iso, title: words.dayTitle(day.weekday, day.day, day.month), note: dayNote(iso, today, lang) };
   if (by === "week") {
     const monday = dayFromIso(mondayOf(iso));
     const sunday = dayFromIso(addDays(monday.iso, 6));
-    const start = monday.month === sunday.month ? `${monday.day}` : `${monday.day} de ${MONTHS[monday.month - 1]}`;
-    const note = monday.iso === mondayOf(today) ? "esta semana" : null;
-    return { key: monday.iso, title: `Semana del ${start} al ${sunday.day} de ${MONTHS[sunday.month - 1]}`, note };
+    const note = monday.iso === mondayOf(today) ? words.thisWeek : null;
+    return { key: monday.iso, title: words.weekTitle(monday, sunday), note };
   }
-  const day = dayFromIso(iso);
-  return { key: iso.slice(0, 7), title: `${capitalise(MONTHS[day.month - 1])} ${day.year}`, note: null };
+  return { key: iso.slice(0, 7), title: words.monthTitle(day.month, day.year), note: null };
 }
 
-function dayBlock(iso: string, today: string): DayBlock {
+function dayBlock(iso: string, today: string, lang: Lang): DayBlock {
+  const words = DATE_WORDS[lang];
   const day = dayFromIso(iso);
-  const note = iso === today ? "Hoy" : iso === addDays(today, 1) ? "Mañana" : null;
-  return { iso, weekday: WEEKDAYS_SHORT[day.weekday], day: day.day, month: MONTHS_SHORT[day.month - 1], note, items: [] };
+  return { iso, weekday: words.weekdaysShort[day.weekday], day: day.day, month: words.monthsShort[day.month - 1], note: dayNote(iso, today, lang), items: [] };
 }
 
 const inRange = (iso: string, range: DayRange) => (!range.from || iso >= range.from) && (!range.to || iso <= range.to);
@@ -90,7 +91,7 @@ const inRange = (iso: string, range: DayRange) => (!range.from || iso >= range.f
  * per day, in date order. Dates after `horizon` are left out: shows not loaded yet may still have
  * dates before them (the API pages shows by their next date).
  */
-export function groupShows(shows: Show[], by: GroupBy, now: Date, range: DayRange, horizon: Date | null = null): ShowGroup[] {
+export function groupShows(shows: Show[], by: GroupBy, now: Date, lang: Lang, range: DayRange, horizon: Date | null = null): ShowGroup[] {
   const today = calendarDay(now).iso;
   const items = shows
     .flatMap((show) =>
@@ -102,11 +103,11 @@ export function groupShows(shows: Show[], by: GroupBy, now: Date, range: DayRang
   const groups = new Map<string, ShowGroup>();
   for (const item of items) {
     const iso = calendarDay(item.date).iso;
-    const head = groupHead(iso, by, today);
+    const head = groupHead(iso, by, today, lang);
     const group = groups.get(head.key) ?? { ...head, count: 0, days: [] };
     let block = group.days.at(-1);
     if (block?.iso !== iso) {
-      block = dayBlock(iso, today);
+      block = dayBlock(iso, today, lang);
       group.days.push(block);
     }
     block.items.push(item);
@@ -116,9 +117,10 @@ export function groupShows(shows: Show[], by: GroupBy, now: Date, range: DayRang
   return [...groups.values()];
 }
 
-export function cardDate(date: Date) {
+export function cardDate(date: Date, lang: Lang) {
+  const words = DATE_WORDS[lang];
   const day = calendarDay(date);
-  return { weekday: WEEKDAYS_SHORT[day.weekday], day: day.day, month: MONTHS_SHORT[day.month - 1] };
+  return { weekday: words.weekdaysShort[day.weekday], day: day.day, month: words.monthsShort[day.month - 1] };
 }
 
 export const timeLabel = clockTime;

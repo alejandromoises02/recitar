@@ -1,6 +1,8 @@
 /** Labels for the home's show cards. All dates are Buenos Aires calendar days. */
 
-import { MONTHS, WEEKDAYS_SHORT, calendarDay } from "./calendar";
+import { calendarDay } from "./calendar";
+import { DATE_WORDS } from "./date-words";
+import type { Lang } from "../../../i18n/lang";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const dayNumber = (date: Date) => {
@@ -8,38 +10,35 @@ const dayNumber = (date: Date) => {
   return Date.UTC(year, month - 1, day) / 86_400_000;
 };
 
-export function daysUntilLabel(startsAt: Date, now: Date): string {
-  const days = dayNumber(startsAt) - dayNumber(now);
-  if (days <= 0) return "Hoy";
-  if (days === 1) return "Mañana";
-  if (days === 2) return "Pasado mañana";
-  return `En ${days} días`;
+export function daysUntilLabel(startsAt: Date, now: Date, lang: Lang): string {
+  return DATE_WORDS[lang].daysUntil(dayNumber(startsAt) - dayNumber(now));
 }
 
 /** Day and short month name. */
-export function shortDate(startsAt: Date): string {
+export function shortDate(startsAt: Date, lang: Lang): string {
   const { month, day } = calendarDay(startsAt);
-  return `${day} ${MONTHS[month - 1].slice(0, 3)}`;
+  return DATE_WORDS[lang].shortDate(day, month);
 }
 
-/** Weekday and DD/MM, plus a two-digit year when not this year: shows get announced a year ahead. */
-export function boardDate(startsAt: Date, now: Date): string {
+/**
+ * Weekday and DD/MM, plus a two-digit year when not this year: shows get announced a year ahead.
+ * Day first in English too: the shows are in Buenos Aires and the board cell has a fixed width.
+ */
+export function boardDate(startsAt: Date, now: Date, lang: Lang): string {
   const { year, month, day, weekday } = calendarDay(startsAt);
   const yearSuffix = year === calendarDay(now).year ? "" : `/${pad2(year % 100)}`;
-  return `${WEEKDAYS_SHORT[weekday]} ${pad2(day)}/${pad2(month)}${yearSuffix}`;
+  return `${DATE_WORDS[lang].weekdaysShort[weekday]} ${pad2(day)}/${pad2(month)}${yearSuffix}`;
 }
 
 /** Weekday and DD/MM/YYYY. */
-export function longDate(startsAt: Date): string {
+export function longDate(startsAt: Date, lang: Lang): string {
   const { year, month, day, weekday } = calendarDay(startsAt);
-  return `${WEEKDAYS_SHORT[weekday]} ${pad2(day)}/${pad2(month)}/${year}`;
+  return `${DATE_WORDS[lang].weekdaysShort[weekday]} ${pad2(day)}/${pad2(month)}/${year}`;
 }
 
 /** How many dates follow the first one; empty for a single date. */
-export function moreDatesLabel(dateCount: number): string {
-  const more = dateCount - 1;
-  if (more <= 0) return "";
-  return `+${more} ${more === 1 ? "fecha" : "fechas"}`;
+export function moreDatesLabel(dateCount: number, lang: Lang): string {
+  return DATE_WORDS[lang].moreDates(dateCount - 1);
 }
 
 const ALNUM = /[\p{L}\p{N}]/u;

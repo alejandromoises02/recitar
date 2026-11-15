@@ -1,6 +1,6 @@
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { BoundExploreFilters } from "./BoundExploreFilters";
 import { styles } from "./FiltersSheet.styles";
 
@@ -8,7 +8,7 @@ type Props = { visible: boolean; onClose: () => void };
 
 /** Phones: every explore filter in a sheet from the bottom, opened from the compact filter bar. */
 export function FiltersSheet({ visible, onClose }: Props) {
-  const { explore } = homeStrings;
+  const { explore } = useStrings();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

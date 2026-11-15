@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: spacing.xxxl },
   header: { gap: spacing.lg },
+  topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
   rowGap: { height: BLOCK_GAP },
   cardRowGap: { height: CARD_GAP },
   headline: { fontFamily: typography.display.fontFamily, color: colors.text, maxWidth: 900 },

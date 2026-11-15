@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { ArrowButton } from "../controls/ArrowButton";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { styles } from "./FanControls.styles";
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function FanControls({ playing, onPrevious, onNext, onToggle }: Props) {
-  const { featured } = homeStrings;
+  const { featured } = useStrings();
   return (
     <View style={styles.controls}>
       <ArrowButton label={featured.previous} glyph="←" onPress={onPrevious} />

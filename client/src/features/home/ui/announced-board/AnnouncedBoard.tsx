@@ -9,7 +9,7 @@ import { ANNOUNCED_COUNT } from "../home.constants";
 import { SectionAside } from "../section/SectionAside";
 import { SectionError } from "../section/SectionError";
 import { SectionHeader } from "../section/SectionHeader";
-import { homeStrings } from "../strings";
+import { useStrings } from "../strings";
 import { styles } from "./AnnouncedBoard.styles";
 import type { BoardGeometry } from "./board.constants";
 import { DATE_WIDTH_EM, ERROR_HEIGHT_EM, PHONE_FLAP_SIZE, PHOTO_SHARE, SKELETON_ROWS } from "./board.constants";
@@ -17,6 +17,7 @@ import { BoardRow } from "./BoardRow";
 import { BoardSkeletonRow } from "./BoardSkeletonRow";
 
 export function AnnouncedBoard() {
+  const strings = useStrings();
   const { width: screen } = useWindowDimensions();
   const [filters] = useState(() => ({ sort: "announced" as const, announced_from: announcedFrom(new Date()), limit: ANNOUNCED_COUNT }));
   const [apiBase] = useState(configuredApiBase);
@@ -29,8 +30,8 @@ export function AnnouncedBoard() {
   const geometry = boardGeometry(screen);
   return (
     <View style={styles.section}>
-      <SectionHeader title={homeStrings.sections.justAnnounced}>
-        {shows.length > 0 ? <SectionAside>{homeStrings.shows(shows.length, hasNextPage)}</SectionAside> : null}
+      <SectionHeader title={strings.sections.justAnnounced}>
+        {shows.length > 0 ? <SectionAside>{strings.shows(shows.length, hasNextPage)}</SectionAside> : null}
       </SectionHeader>
       {isPending ? (
         <View style={styles.rows}>
