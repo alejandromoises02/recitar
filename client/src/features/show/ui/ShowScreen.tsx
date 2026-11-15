@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import Head from "expo-router/head";
 import { useState } from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spacing } from "../../../design/tokens";
 import { configuredApiBase } from "../../events/infrastructure/events-api";
 import { useShow } from "../../events/infrastructure/events-queries";
@@ -18,6 +19,7 @@ export function ShowScreen({ id }: { id: string }) {
   const strings = useShowStrings();
   const [apiBase] = useState(configuredApiBase);
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const query = useShow(id);
   if (query.data) return <ShowPage show={query.data} apiBase={apiBase} />;
 
@@ -27,7 +29,7 @@ export function ShowScreen({ id }: { id: string }) {
       <Head>
         <title>{query.isPending ? "recitAR" : `${query.isError ? strings.loadFailed : strings.notFoundTitle} · recitAR`}</title>
       </Head>
-      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: width < 600 ? spacing.md : spacing.xl }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: width < 600 ? spacing.md : spacing.xl, paddingTop: insets.top }]}>
         <ShowHeader compact={oneColumn} />
         <View role="main">
           {query.isPending ? (

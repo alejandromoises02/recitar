@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 import { colors, fontFamily, radius, spacing, touchTarget } from "../../../design/tokens";
 
 export const styles = StyleSheet.create({
-  wrap: { alignItems: "center", gap: spacing.hair },
+  wrap: { alignItems: "flex-end" },
   button: {
     width: touchTarget,
     height: touchTarget,
@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   pressed: { backgroundColor: colors.line },
-  copied: { fontFamily: fontFamily.body, fontSize: 11, color: colors.textMuted },
+  // Floats under the button, so it never adds height to the title row.
+  copied: { position: "absolute", top: touchTarget + spacing.hair, right: 0, width: 120, textAlign: "right", fontFamily: fontFamily.body, fontSize: 11, color: colors.textMuted },
   hidden: { opacity: 0 },
 });
