@@ -28,6 +28,8 @@ export type EventsApi = {
   listVenues(): Promise<Venue[]>;
   /** Each show once, with all of its upcoming dates. */
   listShows(query: ShowsQuery): Promise<ShowsPage>;
+  /** One show with all of its upcoming dates; null when it does not exist or has none left. */
+  getShow(id: string): Promise<Show | null>;
   getFeatured(): Promise<Featured>;
 };
 
@@ -109,6 +111,14 @@ export function createEventsApi({ baseUrl, fetch }: { baseUrl: string; fetch: ty
     async listShows(query) {
       const page = await get<components["schemas"]["ShowPage"]>("/shows", query);
       return { items: page.items.map(showFromApi), nextCursor: page.next_cursor };
+    },
+    async getShow(id) {
+      try {
+        return showFromApi(await get<components["schemas"]["Show"]>(`/shows/${encodeURIComponent(id)}`));
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }
     },
     async getFeatured() {
       return featuredFromApi(await get<components["schemas"]["Featured"]>("/featured"));

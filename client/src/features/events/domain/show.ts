@@ -28,6 +28,8 @@ export type Show = {
   imageSourceUrl: string | null;
   /** First time any of its dates was seen: when we learned it was announced. */
   firstSeenAt: Date;
+  /** Last time a scraper read any of its upcoming dates ("actualizado hace X"). */
+  updatedAt: Date;
   dates: ShowDateTickets[];
 };
 

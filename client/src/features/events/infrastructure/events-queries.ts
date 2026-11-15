@@ -21,6 +21,7 @@ export const eventKeys = {
   venues: ["venues"] as const,
   shows: (filters: ShowFilters) => ["shows", "list", withoutEmpty(filters)] as const,
   featured: ["featured"] as const,
+  show: (id: string) => ["shows", "detail", id] as const,
 };
 
 /** Upcoming events, a page at a time: each next page is asked for with the previous next_cursor. */
@@ -51,6 +52,11 @@ export function showsQueryOptions(api: EventsApi, filters: ShowFilters = {}) {
   });
 }
 
+/** One show for its page; null when it does not exist. */
+export function showQueryOptions(api: EventsApi, id: string) {
+  return queryOptions({ queryKey: eventKeys.show(id), queryFn: () => api.getShow(id) });
+}
+
 export function featuredQueryOptions(api: EventsApi) {
   return queryOptions({ queryKey: eventKeys.featured, queryFn: () => api.getFeatured() });
 }
@@ -60,3 +66,4 @@ export const useEvent = (id: string) => useQuery(eventQueryOptions(eventsApi(), 
 export const useVenues = () => useQuery(venuesQueryOptions(eventsApi()));
 export const useShows = (filters: ShowFilters = {}) => useInfiniteQuery(showsQueryOptions(eventsApi(), filters));
 export const useFeatured = () => useQuery(featuredQueryOptions(eventsApi()));
+export const useShow = (id: string) => useQuery(showQueryOptions(eventsApi(), id));

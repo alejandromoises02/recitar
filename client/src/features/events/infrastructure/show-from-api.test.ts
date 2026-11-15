@@ -23,6 +23,7 @@ describe("showFromApi", () => {
       imageLicense: "CC BY 4.0",
       imageSourceUrl: "https://commons.wikimedia.org/wiki/File:X.jpg",
       firstSeenAt: new Date("2026-11-02T12:00:00Z"),
+      updatedAt: new Date("2026-11-13T12:00:00Z"),
       dates: [
         { id: "venti-mila-0", startsAt: new Date("2026-11-15T01:00:00Z"), ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/0" }] },
         { id: "venti-mila-1", startsAt: new Date("2026-11-22T01:00:00Z"), ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/1" }] },

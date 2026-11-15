@@ -67,6 +67,7 @@ export function showFromApi(api: ApiShow): Show {
     imageLicense: api.image_license,
     imageSourceUrl: api.image_source_url,
     firstSeenAt: new Date(api.first_seen_at),
+    updatedAt: new Date(api.updated_at),
     dates: api.dates.map((date) => ({
       id: date.id,
       startsAt: new Date(date.starts_at),

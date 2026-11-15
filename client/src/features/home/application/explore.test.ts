@@ -22,7 +22,7 @@ const show = (id: string, starts: string[]): Show => ({
   imageAuthor: null,
   imageLicense: null,
   imageSourceUrl: null,
-  firstSeenAt: at("2026-11-01T12:00:00Z"),
+  firstSeenAt: at("2026-11-01T12:00:00Z"), updatedAt: at("2026-11-01T12:00:00Z"),
   dates: starts.map((iso, i) => ({ id: `${id}-${i}`, startsAt: at(iso), ticketLinks: [] })),
 });
 

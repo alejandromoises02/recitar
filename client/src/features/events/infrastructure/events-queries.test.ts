@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Event } from "../domain/event";
 import type { Show } from "../domain/show";
 import type { EventsApi, EventsPage, EventsQuery, ShowsPage, ShowsQuery } from "./events-api";
-import { eventQueryOptions, eventsQueryOptions, featuredQueryOptions, showsQueryOptions, venuesQueryOptions } from "./events-queries";
+import { eventQueryOptions, eventsQueryOptions, featuredQueryOptions, showQueryOptions, showsQueryOptions, venuesQueryOptions } from "./events-queries";
 
 const event = (id: string) => ({ id }) as Event;
 const show = (id: string) => ({ id }) as Show;
@@ -29,6 +29,9 @@ function fakeApi(pages: EventsPage[], showPages: ShowsPage[] = []) {
     },
     async getFeatured() {
       return { kind: "picked" as const, items: [show("f")] };
+    },
+    async getShow(id) {
+      return id === "known" ? show("known") : null;
     },
   };
   return { api, requests, showRequests };
@@ -105,6 +108,16 @@ describe("showsQueryOptions", () => {
   it("does not share its cache with the event list", () => {
     const { api } = fakeApi([]);
     expect(showsQueryOptions(api, {}).queryKey).not.toEqual(eventsQueryOptions(api, {}).queryKey);
+  });
+});
+
+describe("showQueryOptions", () => {
+  it("reads one show, null when it does not exist, in its own cache entry", async () => {
+    const { api } = fakeApi([]);
+    const client = new QueryClient();
+    expect((await client.fetchQuery(showQueryOptions(api, "known")))?.id).toBe("known");
+    expect(await client.fetchQuery(showQueryOptions(api, "missing"))).toBeNull();
+    expect(showQueryOptions(api, "known").queryKey).not.toEqual(eventQueryOptions(api, "known").queryKey);
   });
 });
 

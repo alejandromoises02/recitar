@@ -91,6 +91,34 @@ describe("getEvent", () => {
   });
 });
 
+describe("getShow", () => {
+  it("maps the show with every date and when it was last read", async () => {
+    const { fetch, urls } = fakeFetch(() => json(apiShow("movistar-x", ["2026-11-15T21:00:00-03:00", "2026-11-17T21:00:00-03:00"])));
+    const show = await createEventsApi({ baseUrl: "https://api.example", fetch }).getShow("movistar-x");
+    expect(urls).toEqual(["https://api.example/shows/movistar-x"]);
+    expect(show?.dates.map((d) => d.startsAt)).toEqual([new Date("2026-11-16T00:00:00Z"), new Date("2026-11-18T00:00:00Z")]);
+    expect(show?.updatedAt).toEqual(new Date("2026-11-13T12:00:00Z"));
+  });
+
+  it("escapes the id in the path", async () => {
+    const { fetch, urls } = fakeFetch(() => json(apiShow("a")));
+    await createEventsApi({ baseUrl: "https://api.example", fetch }).getShow("a/b?c");
+    expect(urls).toEqual(["https://api.example/shows/a%2Fb%3Fc"]);
+  });
+
+  it("is null when there is no such show", async () => {
+    const problem = { type: "about:blank", title: "Show not found", status: 404, detail: "There is no upcoming show with id x." };
+    const { fetch } = fakeFetch(() => json(problem, 404, "application/problem+json"));
+    expect(await createEventsApi({ baseUrl: "https://api.example", fetch }).getShow("x")).toBeNull();
+  });
+
+  it("still fails on other errors", async () => {
+    const problem = { type: "about:blank", title: "Internal error", status: 500, detail: "boom" };
+    const { fetch } = fakeFetch(() => json(problem, 500, "application/problem+json"));
+    await expect(createEventsApi({ baseUrl: "https://api.example", fetch }).getShow("x")).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
 describe("listVenues", () => {
   it("maps the venues", async () => {
     const { fetch, urls } = fakeFetch(() => json({ items: [{ name: "Niceto Club", upcoming_events: 96 }] }));
