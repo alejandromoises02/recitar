@@ -80,13 +80,13 @@ describe("dateMode and ticketPlan", () => {
   it("lists the dates when they all share one ticket page: the date is picked on the ticketer's site", () => {
     const dates = [date("a", [SHARED]), date("b", [SHARED]), date("c", [])];
     expect(dateMode(dates)).toBe("list");
-    expect(ticketPlan(dates, 0, SOURCE)).toEqual({ kind: "any-date", targets: [{ vendor: "Entradas BA", url: SHARED, domain: "entradasba.buenosaires.gob.ar" }] });
+    expect(ticketPlan(dates, 0, SOURCE)).toEqual({ kind: "any-date", eventId: "a", targets: [{ vendor: "Entradas BA", url: SHARED, domain: "entradasba.buenosaires.gob.ar" }] });
   });
 
   it("lets you pick when dates have their own ticket pages, and the plan follows the picked date", () => {
     const dates = [date("a", ["https://t.example/a"]), date("b", ["https://t.example/b"])];
     expect(dateMode(dates)).toBe("pick");
-    expect(ticketPlan(dates, 1, SOURCE)).toEqual({ kind: "date", targets: [{ vendor: "Entradas BA", url: "https://t.example/b", domain: "t.example" }] });
+    expect(ticketPlan(dates, 1, SOURCE)).toEqual({ kind: "date", eventId: "b", targets: [{ vendor: "Entradas BA", url: "https://t.example/b", domain: "t.example" }] });
   });
 
   it("is a single date when there is one", () => {
@@ -95,7 +95,7 @@ describe("dateMode and ticketPlan", () => {
   });
 
   it("says a date is not on sale yet and points to the official page", () => {
-    expect(ticketPlan([date("a", [])], 0, SOURCE)).toEqual({ kind: "not-on-sale", source: { url: SOURCE, domain: "teatrocolon.org.ar" } });
+    expect(ticketPlan([date("a", [])], 0, SOURCE)).toEqual({ kind: "not-on-sale", eventId: "a", source: { url: SOURCE, domain: "teatrocolon.org.ar" } });
     const picked = [date("a", ["https://t.example/a"]), date("b", ["https://t.example/b"]), date("c", [])];
     expect(dateMode(picked)).toBe("pick");
     expect(ticketPlan(picked, 2, SOURCE).kind).toBe("not-on-sale");
@@ -104,6 +104,14 @@ describe("dateMode and ticketPlan", () => {
   it("is not on sale when no listed date has a link yet", () => {
     expect(dateMode([date("a", []), date("b", [])])).toBe("list");
     expect(ticketPlan([date("a", []), date("b", [])], 0, SOURCE).kind).toBe("not-on-sale");
+  });
+
+  it("names the date the click is counted for: the picked one, the first one on sale, else the first", () => {
+    const picked = [date("a", ["https://t.example/a"]), date("b", ["https://t.example/b"]), date("c", [])];
+    expect(ticketPlan(picked, 1, SOURCE)).toMatchObject({ eventId: "b" });
+    expect(ticketPlan(picked, 2, SOURCE)).toMatchObject({ eventId: "c" });
+    expect(ticketPlan([date("a", []), date("b", [SHARED]), date("c", [SHARED])], 0, SOURCE)).toMatchObject({ eventId: "b" });
+    expect(ticketPlan([date("a", []), date("b", [])], 1, SOURCE)).toMatchObject({ eventId: "a" });
   });
 });
 

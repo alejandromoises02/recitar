@@ -3,7 +3,7 @@ import type { SharedValue } from "react-native-reanimated";
 import Animated, { FadeIn } from "react-native-reanimated";
 import type { Featured, Show } from "../../../events/domain/show";
 import { longDate, moreDatesLabel, spokenDate } from "../../application/show-labels";
-import { ticketTarget } from "../../application/ticket-target";
+import { ticketTarget, trackedTicketUrl } from "../../application/ticket-target";
 import { useStrings } from "../strings";
 import { AutoplayBar } from "./AutoplayBar";
 import { CARD_SWAP_MS } from "./featured.constants";
@@ -19,9 +19,10 @@ type Props = {
   width: number;
   progress: SharedValue<number>;
   showProgress: boolean;
+  apiBase: string;
 };
 
-export function SpotlightCard({ show, kind, width, progress, showProgress }: Props) {
+export function SpotlightCard({ show, kind, width, progress, showProgress, apiBase }: Props) {
   const { featured } = useStrings();
   const lang = useLang();
   const more = moreDatesLabel(show.dates.length, lang);
@@ -52,7 +53,7 @@ export function SpotlightCard({ show, kind, width, progress, showProgress }: Pro
         </Text>
       </Animated.View>
       <View style={styles.actions}>
-        <TicketLink url={tickets.url} label={featured.cta} webHint={`${tickets.domain}. ${featured.opensNewTab}`} />
+        <TicketLink url={trackedTicketUrl(apiBase, tickets.eventId, tickets.vendor, "spotlight")} label={featured.cta} webHint={`${tickets.domain}. ${featured.opensNewTab}`} />
         <Text style={styles.source}>
           {featured.ticketsAt} <Text style={styles.sourceDomain}>{tickets.domain}</Text>
         </Text>

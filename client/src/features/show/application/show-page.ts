@@ -46,20 +46,21 @@ export function dateMode(dates: ShowDateTickets[]): DateMode {
   return pages.size > 1 ? "pick" : "list";
 }
 
+/** `eventId` is the date a click on the button is counted for. */
 export type TicketPlan =
-  | { kind: "date"; targets: TicketTarget[] }
-  | { kind: "any-date"; targets: TicketTarget[] }
-  | { kind: "not-on-sale"; source: { url: string; domain: string } };
+  | { kind: "date"; eventId: string; targets: TicketTarget[] }
+  | { kind: "any-date"; eventId: string; targets: TicketTarget[] }
+  | { kind: "not-on-sale"; eventId: string; source: { url: string; domain: string } };
 
 /** What the ticket button does: buy the picked date, choose the date on the ticketer's site, or not on sale yet. */
 export function ticketPlan(dates: ShowDateTickets[], picked: number, sourceUrl: string): TicketPlan {
-  const notOnSale: TicketPlan = { kind: "not-on-sale", source: { url: sourceUrl, domain: domainOf(sourceUrl) } };
+  const notOnSale = (eventId: string): TicketPlan => ({ kind: "not-on-sale", eventId, source: { url: sourceUrl, domain: domainOf(sourceUrl) } });
   if (dateMode(dates) === "list") {
     const onSale = dates.find((date) => date.ticketLinks.length > 0);
-    return onSale ? { kind: "any-date", targets: dateTargets(onSale, sourceUrl) } : notOnSale;
+    return onSale ? { kind: "any-date", eventId: onSale.id, targets: dateTargets(onSale, sourceUrl) } : notOnSale(dates[0].id);
   }
   const date = dates[Math.min(picked, dates.length - 1)];
-  return date.ticketLinks.length > 0 ? { kind: "date", targets: dateTargets(date, sourceUrl) } : notOnSale;
+  return date.ticketLinks.length > 0 ? { kind: "date", eventId: date.id, targets: dateTargets(date, sourceUrl) } : notOnSale(date.id);
 }
 
 const MINUTE = 60_000;

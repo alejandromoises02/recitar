@@ -20,7 +20,7 @@ test("dates that share one ticket page are listed, and the date is picked on the
   await expect(page.getByRole("radiogroup", { name: "Elegí una fecha" })).toHaveCount(0);
   await expect(page.getByRole("list", { name: "Fechas" }).getByRole("listitem")).toHaveCount(3);
   const ticket = page.getByRole("link", { name: /^Ver fechas y entradas/ }).first();
-  await expect(ticket).toHaveAttribute("href", "https://tickets.example/s4");
+  await expect(ticket).toHaveAttribute("href", "http://a11y-api.test/go/s4-0?v=Ticketek&from=show");
   await expect(ticket).toHaveAttribute("target", "_blank");
   await expect(page.getByText("La fecha la elegís en tickets.example.").first()).toBeVisible();
 });
@@ -36,14 +36,14 @@ test("dates with their own ticket pages are picked here and the button buys the 
   await tiles.nth(1).focus();
   await page.keyboard.press("Enter");
   await expect(tiles.nth(1)).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByRole("link", { name: /^Entradas/ }).first()).toHaveAttribute("href", "https://tickets.example/s2/1");
+  await expect(page.getByRole("link", { name: /^Entradas/ }).first()).toHaveAttribute("href", "http://a11y-api.test/go/s2-1?v=Ticketek&from=show");
 });
 
 test("a show with one date has no tiles and a ticket link", async ({ page }) => {
   await page.goto("/show/s1");
   await expect(page.getByRole("heading", { level: 1, name: "Jazz Quartet" })).toBeVisible();
   await expect(page.getByRole("radiogroup", { name: "Elegí una fecha" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /^Entradas/ }).first()).toHaveAttribute("href", /^https:\/\//);
+  await expect(page.getByRole("link", { name: /^Entradas/ }).first()).toHaveAttribute("href", /^http:\/\/a11y-api\.test\/go\/[^?]+\?(v=[^&]+&)?from=(show|spotlight)$/);
   expect(await violations(page)).toEqual([]);
 });
 

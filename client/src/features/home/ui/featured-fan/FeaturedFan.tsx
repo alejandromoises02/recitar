@@ -240,6 +240,7 @@ export function FeaturedFan() {
               width={card * SPOT_WIDTH_SHARE}
               progress={progress}
               showProgress={active}
+              apiBase={apiBase}
             />
           ) : null}
         </>

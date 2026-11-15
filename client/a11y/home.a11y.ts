@@ -47,7 +47,7 @@ test("skip link is the first stop and moves focus to the listing", async ({ page
 
 test("ticket button is a real link that opens in a new tab", async ({ page }) => {
   const link = page.getByRole("link", { name: /Ver fechas y entradas/ });
-  await expect(link).toHaveAttribute("href", /^https:\/\//);
+  await expect(link).toHaveAttribute("href", /^http:\/\/a11y-api\.test\/go\/[^?]+\?(v=[^&]+&)?from=(show|spotlight)$/);
   await expect(link).toHaveAttribute("target", "_blank");
   await expect(link).toHaveAttribute("rel", /noopener/);
 });

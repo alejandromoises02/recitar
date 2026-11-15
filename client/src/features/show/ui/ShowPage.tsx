@@ -47,7 +47,7 @@ export function ShowPage({ show, apiBase }: Props) {
   const date = show.dates[Math.min(picked, show.dates.length - 1)];
   const mode = dateMode(show.dates);
   const when = buttonWhen(date.startsAt, now, lang, date.timeKnown);
-  const offer = ticketOffer(ticketPlan(show.dates, picked, show.sourceUrl), when, strings);
+  const offer = ticketOffer(ticketPlan(show.dates, picked, show.sourceUrl), when, strings, apiBase);
   const photo = imageSource(show.imageUrl, apiBase);
   const several = show.dates.length > 1;
   const shareUrl = Platform.OS === "web" ? window.location.href : Linking.createURL(`/show/${show.id}`);
