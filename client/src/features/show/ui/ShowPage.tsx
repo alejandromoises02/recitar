@@ -13,6 +13,7 @@ import { heading } from "../../home/ui/a11y";
 import { buttonWhen, dateMode, ticketPlan, updatedAgo } from "../application/show-page";
 import { DateList } from "./DateList";
 import { DateTiles } from "./DateTiles";
+import { MoreAtVenue } from "./MoreAtVenue";
 import { PinnedTicketBar } from "./PinnedTicketBar";
 import { ShareButton } from "./ShareButton";
 import { ONE_COLUMN_WIDTH, PINNED_BAR_HEIGHT, POSTER_MAX_HEIGHT_TWO_COLUMNS, POSTER_MIN_RATIO_ONE_COLUMN } from "./show.constants";
@@ -25,7 +26,7 @@ import { TicketActions } from "./TicketActions";
 
 type Props = { show: Show; apiBase: string };
 
-/** Beside the info the poster reaches at least the info's bottom, and grows past the cap only to do so. */
+/** Beside the info the poster reaches at least the bottom of the info column ("Más en" included), and grows past the cap only to do so. */
 const posterBesideInfo = (infoHeight: number) => ({ minHeight: infoHeight, maxHeight: Math.max(POSTER_MAX_HEIGHT_TWO_COLUMNS, infoHeight) });
 
 /**
@@ -122,8 +123,10 @@ export function ShowPage({ show, apiBase }: Props) {
               <Text style={styles.strong}>{domainOf(show.sourceUrl)}</Text>
               {` · ${updatedAgo(show.updatedAt, now, lang)}`}
             </Text>
+            {oneColumn ? null : <MoreAtVenue show={show} apiBase={apiBase} fillWidth />}
           </View>
         </View>
+        {oneColumn ? <MoreAtVenue show={show} apiBase={apiBase} fillWidth={false} /> : null}
       </ScrollView>
       {oneColumn ? <PinnedTicketBar link={offer.links[0]} /> : null}
     </View>

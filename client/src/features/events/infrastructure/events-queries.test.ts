@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Event } from "../domain/event";
 import type { Show } from "../domain/show";
 import type { EventsApi, EventsPage, EventsQuery, ShowsPage, ShowsQuery } from "./events-api";
-import { eventQueryOptions, eventsQueryOptions, featuredQueryOptions, showQueryOptions, showsQueryOptions, venuesQueryOptions } from "./events-queries";
+import { eventQueryOptions, eventsQueryOptions, featuredQueryOptions, showQueryOptions, showsQueryOptions, venueShowsQueryOptions, venuesQueryOptions } from "./events-queries";
 
 const event = (id: string) => ({ id }) as Event;
 const show = (id: string) => ({ id }) as Show;
@@ -126,5 +126,20 @@ describe("featuredQueryOptions", () => {
     const { api } = fakeApi([]);
     const featured = await new QueryClient().fetchQuery(featuredQueryOptions(api));
     expect(featured.kind).toBe("picked");
+  });
+});
+
+describe("venueShowsQueryOptions", () => {
+  it("asks for the first few shows at that venue, one more than shown so the current show can be left out", async () => {
+    const { api, showRequests } = fakeApi([], [{ items: [show("a"), show("b")], nextCursor: "1" }]);
+    const shows = await new QueryClient().fetchQuery(venueShowsQueryOptions(api, "Niceto Club"));
+    expect(shows.map((s) => s.id)).toEqual(["a", "b"]);
+    expect(showRequests).toEqual([{ venue: "Niceto Club", limit: 5 }]);
+  });
+
+  it("caches each venue apart from the paged listing", () => {
+    const { api } = fakeApi([]);
+    expect(venueShowsQueryOptions(api, "A").queryKey).not.toEqual(venueShowsQueryOptions(api, "B").queryKey);
+    expect(venueShowsQueryOptions(api, "A").queryKey).not.toEqual(showsQueryOptions(api, { venue: "A" }).queryKey);
   });
 });

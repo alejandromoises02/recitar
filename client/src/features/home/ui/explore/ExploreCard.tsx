@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Text, View } from "react-native";
 import type { Show } from "../../../events/domain/show";
 import { cardDate, timeLabel } from "../../application/explore";
-import { imageSource, initials, moreDatesLabel, spokenDate } from "../../application/show-labels";
+import { imageSource, initials, moreDatesLabel } from "../../application/show-labels";
 import { FittedImage } from "../media/FittedImage";
 import { styles } from "./ExploreCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
@@ -10,7 +10,10 @@ import { ShowLink } from "../controls/ShowLink";
 
 type Props = { show: Show; date: Date; timeKnown: boolean; apiBase: string; width: number };
 
-/** Wide screens: a show as a card with its photo, date block and "+N fechas". */
+/**
+ * Wide screens: a show as a card with its photo, date block and "+N fechas". The link is named by its own
+ * visible text (WCAG 2.5.3), so its spoken name always matches what is on screen.
+ */
 export const ExploreCard = memo(function ExploreCard({ show, date, timeKnown, apiBase, width }: Props) {
   const lang = useLang();
   const photo = imageSource(show.imageUrl, apiBase);
@@ -19,11 +22,7 @@ export const ExploreCard = memo(function ExploreCard({ show, date, timeKnown, ap
   const place = `${show.venue} · ${timeLabel(date, timeKnown, lang)}`;
   return (
     <View role="listitem" style={{ width }}>
-      <ShowLink
-        showId={show.id}
-        label={[show.name, spokenDate(date, new Date(), lang), place, more].filter(Boolean).join(". ")}
-        style={styles.card}
-      >
+      <ShowLink showId={show.id} style={styles.card}>
         <View style={styles.media}>
           {photo ? (
             <FittedImage uri={photo} style={styles.image} />

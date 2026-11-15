@@ -11,7 +11,7 @@ export function DateList({ dates, now }: { dates: ShowDateTickets[]; now: Date }
   const lang = useLang();
   const strings = useShowStrings();
   return (
-    <View style={styles.list} role="list">
+    <View style={styles.list} role="list" aria-label={strings.datesTitle}>
       {dates.map((date) => (
         <Flap key={date.id} style={styles.row} role="listitem">
           <Text style={styles.date}>{boardDate(date.startsAt, now, lang)}</Text>

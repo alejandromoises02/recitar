@@ -22,6 +22,7 @@ export const eventKeys = {
   shows: (filters: ShowFilters) => ["shows", "list", withoutEmpty(filters)] as const,
   featured: ["featured"] as const,
   show: (id: string) => ["shows", "detail", id] as const,
+  venueShows: (venue: string) => ["shows", "venue", venue] as const,
 };
 
 /** Upcoming events, a page at a time: each next page is asked for with the previous next_cursor. */
@@ -52,6 +53,17 @@ export function showsQueryOptions(api: EventsApi, filters: ShowFilters = {}) {
   });
 }
 
+/** Enough shows at one venue for a show page's "more at" row (4) plus the page's own show, which it leaves out. */
+const VENUE_SHOWS_LIMIT = 5;
+
+/** The soonest shows at one venue, first page only. */
+export function venueShowsQueryOptions(api: EventsApi, venue: string) {
+  return queryOptions({
+    queryKey: eventKeys.venueShows(venue),
+    queryFn: async () => (await api.listShows({ venue, limit: VENUE_SHOWS_LIMIT })).items,
+  });
+}
+
 /** One show for its page; null when it does not exist. */
 export function showQueryOptions(api: EventsApi, id: string) {
   return queryOptions({ queryKey: eventKeys.show(id), queryFn: () => api.getShow(id) });
@@ -67,3 +79,4 @@ export const useVenues = () => useQuery(venuesQueryOptions(eventsApi()));
 export const useShows = (filters: ShowFilters = {}) => useInfiniteQuery(showsQueryOptions(eventsApi(), filters));
 export const useFeatured = () => useQuery(featuredQueryOptions(eventsApi()));
 export const useShow = (id: string) => useQuery(showQueryOptions(eventsApi(), id));
+export const useVenueShows = (venue: string) => useQuery(venueShowsQueryOptions(eventsApi(), venue));

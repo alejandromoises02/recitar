@@ -6,6 +6,7 @@ export const es = {
   categories: { concert: "Concierto", theatre: "Teatro", party: "Fiesta", other: "Show" } as Record<string, string>,
   pickDate: "Elegí una fecha",
   datesTitle: "Fechas",
+  moreAt: (venue: string) => `Más en ${venue}`,
   anyDate: "Ver fechas y entradas",
   pickOnSite: (domain: string) => `La fecha la elegís en ${domain}.`,
   notOnSale: "Venta próximamente",

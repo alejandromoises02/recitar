@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ShowDateTickets } from "../../events/domain/show";
-import { buttonWhen, dateMode, dateTile, dateTargets, ticketPlan, updatedAgo } from "./show-page";
+import type { Show, ShowDateTickets } from "../../events/domain/show";
+import { buttonWhen, dateMode, dateTile, dateTargets, moreAtVenue, ticketPlan, updatedAgo } from "./show-page";
 
 // Saturday 14 November 2026, noon in Buenos Aires.
 const NOW = new Date("2026-11-14T15:00:00Z");
@@ -104,5 +104,21 @@ describe("dateMode and ticketPlan", () => {
   it("is not on sale when no listed date has a link yet", () => {
     expect(dateMode([date("a", []), date("b", [])])).toBe("list");
     expect(ticketPlan([date("a", []), date("b", [])], 0, SOURCE).kind).toBe("not-on-sale");
+  });
+});
+
+describe("moreAtVenue", () => {
+  const shows = (...ids: string[]) => ids.map((id) => ({ id }) as Show);
+
+  it("is up to 4 other shows at the venue, in the order they came", () => {
+    expect(moreAtVenue(shows("a", "b", "c", "d", "e"), "x").map((s) => s.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("never includes the current show", () => {
+    expect(moreAtVenue(shows("a", "x", "b", "c", "d"), "x").map((s) => s.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("is empty when the current show is the only one there", () => {
+    expect(moreAtVenue(shows("x"), "x")).toEqual([]);
   });
 });

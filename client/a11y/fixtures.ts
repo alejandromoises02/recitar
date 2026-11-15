@@ -25,7 +25,7 @@ function show(id: string, name: string, venue: string, inDays: number[], pagePer
     image_source_url: null,
     first_seen_at: day(-1, 10),
     updated_at: day(0, 9),
-    dates: inDays.map((d, i) => ({ id: `${id}-${i}`, starts_at: day(d), ticket_links: [{ vendor: "Ticketek", url: pagePerDate ? `https://tickets.example/${id}/${i}` : `https://tickets.example/${id}` }] })),
+    dates: inDays.map((d, i) => ({ id: `${id}-${i}`, starts_at: day(d), time_known: true, ticket_links: [{ vendor: "Ticketek", url: pagePerDate ? `https://tickets.example/${id}/${i}` : `https://tickets.example/${id}` }] })),
   };
 }
 
@@ -54,10 +54,13 @@ export async function withFakeApi(page: Page) {
   await page.route(
     (url) => url.hostname === "a11y-api.test",
     (route) => {
-      const { pathname } = new URL(route.request().url());
+      const { pathname, searchParams } = new URL(route.request().url());
       if (pathname.endsWith("/featured")) return route.fulfill(json({ kind: "picked", items: SHOWS.slice(0, 3) }));
       if (pathname.endsWith("/venues")) return route.fulfill(json({ items: [...new Set(SHOWS.map((s) => s.venue))].map((name) => ({ name, upcoming_events: 1 })) }));
-      if (pathname.endsWith("/shows")) return route.fulfill(json({ items: SHOWS, next_cursor: null }));
+      if (pathname.endsWith("/shows")) {
+        const venue = searchParams.get("venue");
+        return route.fulfill(json({ items: venue ? SHOWS.filter((show) => show.venue === venue) : SHOWS, next_cursor: null }));
+      }
       const one = /\/shows\/([^/]+)$/.exec(pathname);
       if (one) {
         const found = SHOWS.find((show) => show.id === decodeURIComponent(one[1]));

@@ -7,6 +7,7 @@ export const en: ShowStrings = {
   categories: { concert: "Concert", theatre: "Theatre", party: "Party", other: "Show" },
   pickDate: "Pick a date",
   datesTitle: "Dates",
+  moreAt: (venue: string) => `More at ${venue}`,
   anyDate: "See dates and tickets",
   pickOnSite: (domain) => `You pick the date on ${domain}.`,
   notOnSale: "Not on sale yet",

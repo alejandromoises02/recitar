@@ -1,5 +1,5 @@
 import type { Lang } from "../../../i18n/lang";
-import type { ShowDateTickets } from "../../events/domain/show";
+import type { Show, ShowDateTickets } from "../../events/domain/show";
 import { calendarDay } from "../../home/application/calendar";
 import { DATE_WORDS } from "../../home/application/date-words";
 import { startTime } from "../../home/application/show-labels";
@@ -82,4 +82,12 @@ export function updatedAgo(updatedAt: Date, now: Date, lang: Lang): string {
   if (hours < 1) return `actualizado hace ${minutes} min`;
   if (days < 1) return `actualizado hace ${hours} h`;
   return `actualizado hace ${days} ${days === 1 ? "día" : "días"}`;
+}
+
+/** How many other shows the page offers at the same venue. */
+export const MORE_AT_VENUE = 4;
+
+/** Up to MORE_AT_VENUE shows at the venue, soonest first as the API sends them, never the page's own show. */
+export function moreAtVenue(shows: Show[], currentId: string): Show[] {
+  return shows.filter((show) => show.id !== currentId).slice(0, MORE_AT_VENUE);
 }

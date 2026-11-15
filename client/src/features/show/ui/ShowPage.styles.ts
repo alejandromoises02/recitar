@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 import { colors, fontFamily, spacing, typography } from "../../../design/tokens";
 import { NAME_MAX_SIZE, NAME_MIN_SIZE, TINT_HEIGHT } from "./show.constants";
+import { sectionTitle } from "./show.styles";
 
 /** The name scales with the screen and shrinks on phones so a long single word still fits. */
 export const nameSizing = (width: number) => {
@@ -30,7 +31,7 @@ export const styles = StyleSheet.create({
   venue: { fontFamily: fontFamily.bodyStrong, color: colors.text },
   count: { fontFamily: fontFamily.bodyStrong, color: colors.accent },
   block: { marginTop: spacing.lg, gap: spacing.sm },
-  h2: { fontFamily: typography.headline.fontFamily, fontSize: 18, color: colors.text },
+  h2: sectionTitle,
   oneDate: { marginTop: spacing.lg, fontFamily: fontFamily.board, fontSize: 28, letterSpacing: 1.5, textTransform: "uppercase", color: colors.accent },
   trustOneColumn: { marginTop: "auto" },
   trust: {
