@@ -15,7 +15,7 @@ import { DateList } from "./DateList";
 import { DateTiles } from "./DateTiles";
 import { PinnedTicketBar } from "./PinnedTicketBar";
 import { ShareButton } from "./ShareButton";
-import { ONE_COLUMN_WIDTH, PINNED_BAR_HEIGHT, POSTER_MIN_RATIO_ONE_COLUMN } from "./show.constants";
+import { ONE_COLUMN_WIDTH, PINNED_BAR_HEIGHT, POSTER_MAX_HEIGHT_TWO_COLUMNS, POSTER_MIN_RATIO_ONE_COLUMN } from "./show.constants";
 import { ShowHeader } from "./ShowHeader";
 import { nameSizing, styles } from "./ShowPage.styles";
 import { ShowPoster } from "./ShowPoster";
@@ -24,6 +24,9 @@ import { ticketOffer } from "./ticket-offer";
 import { TicketActions } from "./TicketActions";
 
 type Props = { show: Show; apiBase: string };
+
+/** Beside the info the poster reaches at least the info's bottom, and grows past the cap only to do so. */
+const posterBesideInfo = (infoHeight: number) => ({ minHeight: infoHeight, maxHeight: Math.max(POSTER_MAX_HEIGHT_TWO_COLUMNS, infoHeight) });
 
 /**
  * The show page (design: .impeccable/surfaces/show-detail.md). Dates are picked here only when each has
@@ -36,6 +39,7 @@ export function ShowPage({ show, apiBase }: Props) {
   const insets = useSafeAreaInsets();
   const [now] = useState(() => new Date());
   const [picked, setPicked] = useState(0);
+  const [infoHeight, setInfoHeight] = useState(0);
 
   const oneColumn = width <= ONE_COLUMN_WIDTH;
   const gutter = width < 600 ? spacing.md : spacing.xl;
@@ -67,9 +71,14 @@ export function ShowPage({ show, apiBase }: Props) {
         <ShowHeader compact={oneColumn} />
         <View role="main" style={[styles.layout, oneColumn && styles.oneColumn]}>
           <View style={oneColumn ? styles.posterOneColumn : styles.posterColumn}>
-            <ShowPoster show={show} apiBase={apiBase} minRatio={oneColumn ? POSTER_MIN_RATIO_ONE_COLUMN : undefined} />
+            <ShowPoster
+              show={show}
+              apiBase={apiBase}
+              minRatio={oneColumn ? POSTER_MIN_RATIO_ONE_COLUMN : undefined}
+              style={oneColumn ? undefined : posterBesideInfo(infoHeight)}
+            />
           </View>
-          <View style={[styles.info, oneColumn && styles.infoOneColumn]}>
+          <View style={[styles.info, oneColumn && styles.infoOneColumn]} onLayout={(event) => setInfoHeight(event.nativeEvent.layout.height)}>
             <View style={styles.titleRow}>
               <Text style={[styles.name, nameSizing(width)]} {...heading(1)}>
                 {show.name}

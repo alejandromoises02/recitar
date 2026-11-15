@@ -20,8 +20,8 @@ export const styles = StyleSheet.create({
   oneColumn: { flexDirection: "column", gap: spacing.lg, flexGrow: 1 },
   posterColumn: { flex: 5 },
   posterOneColumn: { width: "100%" },
-  info: { flex: 7, alignSelf: "stretch" },
-  infoOneColumn: { flex: 0, flexGrow: 1, flexShrink: 0 },
+  info: { flex: 7 },
+  infoOneColumn: { flex: 0, flexGrow: 1, flexShrink: 0, alignSelf: "stretch" },
   // At least this much space above the trust note when it is pushed down.
   trustGap: { height: spacing.xl },
   titleRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
