@@ -347,3 +347,22 @@ def test_an_unknown_time_is_stored_and_read_back(db_engine):
     with db_engine.connect() as conn:
         assert {e.id: e.time_known for e in list_events(conn)} == {undated.id: False, event().id: True}
         assert [d.time_known for d in list_show_dates(conn, "livepass-x", NOW)] == [False]
+
+
+def test_a_ticket_click_is_stored_with_what_the_count_needs_and_nothing_about_the_person(db_engine):
+    from sqlalchemy import select
+
+    from app.domain.ticket_redirect import TicketClick
+    from app.events_repository import record_ticket_click, ticket_clicks
+
+    with db_engine.begin() as conn:
+        record_ticket_click(conn, TicketClick("movistar-a", "movistar-a-20261120T2100", "Livepass", "spotlight", NOW))
+        record_ticket_click(conn, TicketClick("movistar-a", "movistar-a-20261120T2100", None, "show", NOW))
+    with db_engine.connect() as conn:
+        rows = [dict(r) for r in conn.execute(select(ticket_clicks).order_by(ticket_clicks.c.id)).mappings()]
+    assert [(r["show_key"], r["event_id"], r["vendor"], r["source"], r["created_at"]) for r in rows] == [
+        ("movistar-a", "movistar-a-20261120T2100", "Livepass", "spotlight", NOW),
+        ("movistar-a", "movistar-a-20261120T2100", None, "show", NOW),
+    ]
+    assert set(rows[0]) == {"id", "show_key", "event_id", "vendor", "source", "created_at"}
+    assert rows[0]["id"] != rows[1]["id"]

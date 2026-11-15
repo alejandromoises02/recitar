@@ -147,6 +147,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/go/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count a ticket click and send the visitor to the ticket page
+         * @description Every ticket button goes through here. The destination is always a link the scrapers stored for
+         *     this date, never something the request carries, so this cannot redirect to a site of someone's choosing.
+         *
+         *     The click is counted (show, date, ticketer, place in the app, time; nothing about the person), except
+         *     when the caller looks like a crawler or a link preview. Counting never gets in the way: if it fails, the
+         *     visitor is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.
+         */
+        get: operations["go_go__event_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -890,6 +915,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VenueList"];
+                };
+            };
+        };
+    };
+    go_go__event_id__get: {
+        parameters: {
+            query?: {
+                /** @description The ticketer, a `vendor` of the date's ticket links; the first link when left out or unknown */
+                v?: string | null;
+                /** @description Where in the app the click came from: "show" or "spotlight"; anything else is counted as "other" */
+                from?: string | null;
+            };
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description To a ticket link stored for this date (or the show's page at its source), with utm_source=recitar */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description There is no date with this id, or it has no web link to go to */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

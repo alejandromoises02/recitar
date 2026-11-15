@@ -5,12 +5,13 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from sqlalchemy import (
-    Boolean, Column, ColumnElement, Connection, DateTime, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
+    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Identity, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
 )
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
 from app.domain.event import Event, EventCategory, Show, ShowDate
+from app.domain.ticket_redirect import TicketClick
 
 metadata = MetaData()
 
@@ -45,6 +46,19 @@ featured_shows = Table(
     Column("position", Integer, nullable=False),
 )
 
+# One row per ticket click that went through GET /go/{event_id}: no IP, no user agent, no person.
+# `show_key` is not a foreign key: the count outlives the event rows.
+ticket_clicks = Table(
+    "ticket_clicks",
+    metadata,
+    Column("id", BigInteger, Identity(), primary_key=True),
+    Column("show_key", Text, nullable=False),
+    Column("event_id", Text, nullable=False),
+    Column("vendor", Text),
+    Column("source", Text, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+)
+
 # How a list of events is ordered: by start time (soonest first) or by announcement (first_seen_at,
 # newest first). Ties go by id, ascending for starts_at and descending for announced.
 EventSort = Literal["starts_at", "announced"]
@@ -72,6 +86,12 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
         if not c.primary_key and c.name != "first_seen_at"
     }
     connection.execute(statement.on_conflict_do_update(index_elements=[events.c.id], set_=changes))
+
+
+def record_ticket_click(connection: Connection, click: TicketClick) -> None:
+    connection.execute(insert(ticket_clicks).values(
+        show_key=click.show_key, event_id=click.event_id, vendor=click.vendor, source=click.source, created_at=click.at,
+    ))
 
 
 def count_upcoming_by_source(connection: Connection, now: datetime) -> dict[str, int]:

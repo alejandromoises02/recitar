@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from starlette.types import Scope
 
-from app.api import events, featured, shows, venues
+from app.api import events, featured, go, shows, venues
 from app.api.problems import install_problem_handlers
 from app.db import SERVER_DIR
 from app.images.copy import IMAGES_DIR, MEDIA_PREFIX
@@ -41,6 +41,7 @@ def create_app(media_dir: Path = IMAGES_DIR, origins: list[str] | None = None) -
     app.include_router(shows.router)
     app.include_router(featured.router)
     app.include_router(venues.router)
+    app.include_router(go.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

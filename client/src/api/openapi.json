@@ -1056,6 +1056,134 @@
         }
       }
     },
+    "/go/{event_id}": {
+      "get": {
+        "tags": [
+          "tickets"
+        ],
+        "summary": "Count a ticket click and send the visitor to the ticket page",
+        "description": "Every ticket button goes through here. The destination is always a link the scrapers stored for\nthis date, never something the request carries, so this cannot redirect to a site of someone's choosing.\n\nThe click is counted (show, date, ticketer, place in the app, time; nothing about the person), except\nwhen the caller looks like a crawler or a link preview. Counting never gets in the way: if it fails, the\nvisitor is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.",
+        "operationId": "go_go__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "v",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The ticketer, a `vendor` of the date's ticket links; the first link when left out or unknown",
+              "title": "V"
+            },
+            "description": "The ticketer, a `vendor` of the date's ticket links; the first link when left out or unknown"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Where in the app the click came from: \"show\" or \"spotlight\"; anything else is counted as \"other\"",
+              "title": "From"
+            },
+            "description": "Where in the app the click came from: \"show\" or \"spotlight\"; anything else is counted as \"other\""
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "To a ticket link stored for this date (or the show's page at its source), with utm_source=recitar"
+          },
+          "404": {
+            "description": "There is no date with this id, or it has no web link to go to",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "status": {
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Detail"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",

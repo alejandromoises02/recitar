@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
 
+from alembic import command
+from alembic.config import Config
 from sqlalchemy import text
 
-from app.db import migrate
+from app.db import SERVER_DIR, migrate
 
 
 def test_events_stored_before_first_seen_existed_get_the_migration_time(unmigrated_db_engine):
@@ -42,3 +44,19 @@ def test_events_stored_before_time_known_existed_keep_their_time_as_known(unmigr
         )).one()
     assert nullable == "NO"
     assert default is None  # the app always writes it; no silent default for new rows
+
+
+def test_ticket_clicks_are_counted_apart_from_the_events_and_the_migration_can_be_undone(unmigrated_db_engine):
+    from sqlalchemy import inspect
+
+    migrate(unmigrated_db_engine)
+    columns = {c["name"]: c for c in inspect(unmigrated_db_engine).get_columns("ticket_clicks")}
+    assert set(columns) == {"id", "show_key", "event_id", "vendor", "source", "created_at"}
+    assert [name for name, c in columns.items() if c["nullable"]] == ["vendor"]
+    assert inspect(unmigrated_db_engine).get_foreign_keys("ticket_clicks") == []  # the count outlives the event rows
+    config = Config(str(SERVER_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(SERVER_DIR / "migrations"))
+    with unmigrated_db_engine.begin() as connection:
+        config.attributes["connection"] = connection
+        command.downgrade(config, "0005")
+    assert "ticket_clicks" not in inspect(unmigrated_db_engine).get_table_names()
