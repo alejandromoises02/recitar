@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ShowDateTickets } from "../../events/domain/show";
-import { buttonWhen, dateTile, dateTargets, updatedAgo } from "./show-page";
+import { buttonWhen, dateMode, dateTile, dateTargets, ticketPlan, updatedAgo } from "./show-page";
 
 // Saturday 14 November 2026, noon in Buenos Aires.
 const NOW = new Date("2026-11-14T15:00:00Z");
@@ -56,5 +56,44 @@ describe("updatedAgo", () => {
     expect(updatedAgo(at("2026-11-13T14:00:00Z"), NOW, "es")).toBe("actualizado hace 1 día");
     expect(updatedAgo(at("2026-11-13T18:00:00Z"), NOW, "en")).toBe("updated 21 h ago");
     expect(updatedAgo(at("2026-11-13T14:00:00Z"), NOW, "en")).toBe("updated 1 day ago");
+  });
+});
+
+describe("dateMode and ticketPlan", () => {
+  const SOURCE = "https://teatrocolon.org.ar/produccion/x/";
+  const date = (id: string, urls: string[]): ShowDateTickets => ({
+    id,
+    startsAt: NOW,
+    ticketLinks: urls.map((url) => ({ vendor: "Entradas BA", url })),
+  });
+  const SHARED = "https://entradasba.buenosaires.gob.ar/evento/1";
+
+  it("lists the dates when they all share one ticket page: the date is picked on the ticketer's site", () => {
+    const dates = [date("a", [SHARED]), date("b", [SHARED]), date("c", [])];
+    expect(dateMode(dates)).toBe("list");
+    expect(ticketPlan(dates, 0, SOURCE)).toEqual({ kind: "any-date", targets: [{ vendor: "Entradas BA", url: SHARED, domain: "entradasba.buenosaires.gob.ar" }] });
+  });
+
+  it("lets you pick when dates have their own ticket pages, and the plan follows the picked date", () => {
+    const dates = [date("a", ["https://t.example/a"]), date("b", ["https://t.example/b"])];
+    expect(dateMode(dates)).toBe("pick");
+    expect(ticketPlan(dates, 1, SOURCE)).toEqual({ kind: "date", targets: [{ vendor: "Entradas BA", url: "https://t.example/b", domain: "t.example" }] });
+  });
+
+  it("is a single date when there is one", () => {
+    expect(dateMode([date("a", [SHARED])])).toBe("single");
+    expect(ticketPlan([date("a", [SHARED])], 0, SOURCE).kind).toBe("date");
+  });
+
+  it("says a date is not on sale yet and points to the official page", () => {
+    expect(ticketPlan([date("a", [])], 0, SOURCE)).toEqual({ kind: "not-on-sale", source: { url: SOURCE, domain: "teatrocolon.org.ar" } });
+    const picked = [date("a", ["https://t.example/a"]), date("b", ["https://t.example/b"]), date("c", [])];
+    expect(dateMode(picked)).toBe("pick");
+    expect(ticketPlan(picked, 2, SOURCE).kind).toBe("not-on-sale");
+  });
+
+  it("is not on sale when no listed date has a link yet", () => {
+    expect(dateMode([date("a", []), date("b", [])])).toBe("list");
+    expect(ticketPlan([date("a", []), date("b", [])], 0, SOURCE).kind).toBe("not-on-sale");
   });
 });

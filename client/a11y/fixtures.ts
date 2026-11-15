@@ -5,7 +5,8 @@ export const NOW = new Date("2026-11-14T15:00:00Z");
 
 const day = (days: number, hour = 21) => new Date(NOW.getTime() + days * 86_400_000 + (hour - 12) * 3_600_000).toISOString();
 
-function show(id: string, name: string, venue: string, inDays: number[]) {
+/** `pagePerDate`: each date has its own ticket page (most ticketers share one page per show). */
+function show(id: string, name: string, venue: string, inDays: number[], pagePerDate = false) {
   return {
     id,
     category: "concert",
@@ -24,13 +25,13 @@ function show(id: string, name: string, venue: string, inDays: number[]) {
     image_source_url: null,
     first_seen_at: day(-1, 10),
     updated_at: day(0, 9),
-    dates: inDays.map((d, i) => ({ id: `${id}-${i}`, starts_at: day(d), ticket_links: [{ vendor: "Ticketek", url: `https://tickets.example/${id}` }] })),
+    dates: inDays.map((d, i) => ({ id: `${id}-${i}`, starts_at: day(d), ticket_links: [{ vendor: "Ticketek", url: pagePerDate ? `https://tickets.example/${id}/${i}` : `https://tickets.example/${id}` }] })),
   };
 }
 
 const SHOWS = [
   show("s1", "Jazz Quartet", "Centro Cultural Nueva Uriarte", [0]),
-  show("s2", "La tempestad", "Teatro Colón", [1, 8]),
+  show("s2", "La tempestad", "Teatro Colón", [1, 8], true),
   show("s3", "Club 69", "Niceto Club", [1]),
   show("s4", "Die Walküre", "Teatro Colón", [3, 5, 7]),
   show("s5", "María Becerra", "Movistar Arena", [17]),

@@ -10,7 +10,8 @@ import type { Show } from "../../events/domain/show";
 import { imageSource } from "../../home/application/show-labels";
 import { domainOf } from "../../home/application/ticket-target";
 import { heading } from "../../home/ui/a11y";
-import { buttonWhen, dateTargets, updatedAgo } from "../application/show-page";
+import { buttonWhen, dateMode, ticketPlan, updatedAgo } from "../application/show-page";
+import { DateList } from "./DateList";
 import { DateTiles } from "./DateTiles";
 import { PinnedTicketBar } from "./PinnedTicketBar";
 import { ShareButton } from "./ShareButton";
@@ -19,11 +20,15 @@ import { ShowHeader } from "./ShowHeader";
 import { nameSizing, styles } from "./ShowPage.styles";
 import { ShowPoster } from "./ShowPoster";
 import { useShowStrings } from "./strings";
+import { ticketOffer } from "./ticket-offer";
 import { TicketActions } from "./TicketActions";
 
 type Props = { show: Show; apiBase: string };
 
-/** The show page (design: .impeccable/surfaces/show-detail.md): pick a date, then one ticket button. */
+/**
+ * The show page (design: .impeccable/surfaces/show-detail.md). Dates are picked here only when each has
+ * its own ticket page; when they share one (most ticketers) they are listed and the date is picked there.
+ */
 export function ShowPage({ show, apiBase }: Props) {
   const strings = useShowStrings();
   const lang = useLang();
@@ -35,8 +40,9 @@ export function ShowPage({ show, apiBase }: Props) {
   const oneColumn = width <= ONE_COLUMN_WIDTH;
   const gutter = width < 600 ? spacing.md : spacing.xl;
   const date = show.dates[Math.min(picked, show.dates.length - 1)];
-  const targets = dateTargets(date, show.sourceUrl);
+  const mode = dateMode(show.dates);
   const when = buttonWhen(date.startsAt, now, lang);
+  const offer = ticketOffer(ticketPlan(show.dates, picked, show.sourceUrl), when, strings);
   const photo = imageSource(show.imageUrl, apiBase);
   const several = show.dates.length > 1;
   const shareUrl = Platform.OS === "web" ? window.location.href : Linking.createURL(`/show/${show.id}`);
@@ -55,7 +61,7 @@ export function ShowPage({ show, apiBase }: Props) {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingHorizontal: gutter, paddingTop: Platform.OS === "android" ? insets.top : 0, paddingBottom: oneColumn ? PINNED_BAR_HEIGHT + insets.bottom + spacing.lg : spacing.xxl },
+          { paddingHorizontal: gutter, paddingTop: insets.top, paddingBottom: oneColumn ? PINNED_BAR_HEIGHT + insets.bottom + spacing.lg : spacing.xxl },
         ]}
       >
         <ShowHeader compact={oneColumn} />
@@ -63,7 +69,7 @@ export function ShowPage({ show, apiBase }: Props) {
           <View style={oneColumn ? styles.posterOneColumn : styles.posterColumn}>
             <ShowPoster show={show} apiBase={apiBase} minRatio={oneColumn ? POSTER_MIN_RATIO_ONE_COLUMN : undefined} />
           </View>
-          <View style={styles.info}>
+          <View style={[styles.info, oneColumn && styles.infoOneColumn]}>
             <View style={styles.titleRow}>
               <Text style={[styles.name, nameSizing(width)]} {...heading(1)}>
                 {show.name}
@@ -77,26 +83,30 @@ export function ShowPage({ show, apiBase }: Props) {
               {` · ${strings.categories[show.category] ?? strings.categories.other}`}
             </Text>
 
-            {several ? (
+            {mode === "pick" ? (
               <View style={styles.block}>
                 <Text style={styles.h2} {...heading(2)}>
                   {strings.pickDate}
                 </Text>
                 <DateTiles dates={show.dates} picked={picked} onPick={setPicked} now={now} label={strings.pickDate} />
               </View>
+            ) : mode === "list" ? (
+              <View style={styles.block}>
+                <Text style={styles.h2} {...heading(2)}>
+                  {strings.datesTitle}
+                </Text>
+                <DateList dates={show.dates} now={now} />
+              </View>
             ) : (
               <Text style={styles.oneDate}>{when.replace(" · ", "  ")}</Text>
             )}
 
             <View style={styles.block}>
-              {oneColumn && targets.length === 1 ? (
-                <TicketActions targets={targets} when={when} showDomain onlyDomain />
-              ) : (
-                <TicketActions targets={targets} when={when} />
-              )}
+              <TicketActions offer={offer} onlyNote={oneColumn && offer.links.length === 1} />
             </View>
 
-            <Text style={styles.trust}>
+            {oneColumn ? <View style={styles.trustGap} /> : null}
+            <Text style={[styles.trust, oneColumn && styles.trustOneColumn]}>
               {strings.trust}
               {"\n"}
               {`${strings.dataFrom} `}
@@ -106,7 +116,7 @@ export function ShowPage({ show, apiBase }: Props) {
           </View>
         </View>
       </ScrollView>
-      {oneColumn ? <PinnedTicketBar target={targets[0]} when={when} /> : null}
+      {oneColumn ? <PinnedTicketBar link={offer.links[0]} /> : null}
     </View>
   );
 }

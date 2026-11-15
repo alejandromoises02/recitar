@@ -32,6 +32,35 @@ export function dateTargets(date: ShowDateTickets, sourceUrl: string): TicketTar
   return date.ticketLinks.map(({ vendor, url }) => ({ vendor, url, domain: domainOf(url) }));
 }
 
+/**
+ * How the page offers the dates. Most ticketers have one page per show and pick the date there, so
+ * when every date shares its ticket page (or has none yet) the dates are only listed: picking one here
+ * would promise a date the ticket page would not open. Only dates with pages of their own are picked.
+ */
+export type DateMode = "single" | "list" | "pick";
+
+export function dateMode(dates: ShowDateTickets[]): DateMode {
+  if (dates.length === 1) return "single";
+  const pages = new Set(dates.flatMap((date) => date.ticketLinks.map((link) => link.url)));
+  return pages.size > 1 ? "pick" : "list";
+}
+
+export type TicketPlan =
+  | { kind: "date"; targets: TicketTarget[] }
+  | { kind: "any-date"; targets: TicketTarget[] }
+  | { kind: "not-on-sale"; source: { url: string; domain: string } };
+
+/** What the ticket button does: buy the picked date, choose the date on the ticketer's site, or not on sale yet. */
+export function ticketPlan(dates: ShowDateTickets[], picked: number, sourceUrl: string): TicketPlan {
+  const notOnSale: TicketPlan = { kind: "not-on-sale", source: { url: sourceUrl, domain: domainOf(sourceUrl) } };
+  if (dateMode(dates) === "list") {
+    const onSale = dates.find((date) => date.ticketLinks.length > 0);
+    return onSale ? { kind: "any-date", targets: dateTargets(onSale, sourceUrl) } : notOnSale;
+  }
+  const date = dates[Math.min(picked, dates.length - 1)];
+  return date.ticketLinks.length > 0 ? { kind: "date", targets: dateTargets(date, sourceUrl) } : notOnSale;
+}
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;

@@ -11,20 +11,30 @@ async function violations(page: import("@playwright/test").Page): Promise<string
 
 test.beforeEach(async ({ page }) => withFakeApi(page));
 
-test("a show with several dates: no WCAG 2.2 AA violations, tiles pick the date the button buys", async ({ page }) => {
+test("dates that share one ticket page are listed, and the date is picked on the ticketer's site", async ({ page }) => {
   await page.goto("/show/s4");
   await expect(page.getByRole("heading", { level: 1, name: "Die Walküre" })).toBeVisible();
   expect(await violations(page)).toEqual([]);
+  await expect(page.getByRole("radiogroup", { name: "Elegí una fecha" })).toHaveCount(0);
+  await expect(page.getByRole("main").getByRole("listitem")).toHaveCount(3);
+  const ticket = page.getByRole("link", { name: /^Ver fechas y entradas/ }).first();
+  await expect(ticket).toHaveAttribute("href", "https://tickets.example/s4");
+  await expect(ticket).toHaveAttribute("target", "_blank");
+  await expect(page.getByText("La fecha la elegís en tickets.example.").first()).toBeVisible();
+});
+
+test("dates with their own ticket pages are picked here and the button buys the picked one", async ({ page }) => {
+  await page.goto("/show/s2");
+  await expect(page.getByRole("heading", { level: 1, name: "La tempestad" })).toBeVisible();
+  expect(await violations(page)).toEqual([]);
   // Only the date tiles: the ES / EN language switch is a radio group too.
   const tiles = page.getByRole("radiogroup", { name: "Elegí una fecha" }).getByRole("radio");
-  await expect(tiles).toHaveCount(3);
+  await expect(tiles).toHaveCount(2);
   await expect(tiles.first()).toHaveAttribute("aria-checked", "true");
   await tiles.nth(1).focus();
   await page.keyboard.press("Enter");
   await expect(tiles.nth(1)).toHaveAttribute("aria-checked", "true");
-  const ticket = page.getByRole("link", { name: /^Entradas/ }).first();
-  await expect(ticket).toHaveAttribute("href", "https://tickets.example/s4");
-  await expect(ticket).toHaveAttribute("target", "_blank");
+  await expect(page.getByRole("link", { name: /^Entradas/ }).first()).toHaveAttribute("href", "https://tickets.example/s2/1");
 });
 
 test("a show with one date has no tiles and a ticket link", async ({ page }) => {

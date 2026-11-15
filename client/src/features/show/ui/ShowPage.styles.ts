@@ -16,10 +16,14 @@ export const styles = StyleSheet.create({
   tintFade: { ...StyleSheet.absoluteFill, backgroundImage: `linear-gradient(to bottom, transparent 35%, ${colors.background})` },
   content: { flexGrow: 1 },
   layout: { flexDirection: "row", alignItems: "flex-start", gap: spacing.xxl, paddingTop: spacing.md },
-  oneColumn: { flexDirection: "column", gap: spacing.lg },
+  // Phones: the page fills the screen even with little content, so the trust note can sit at the bottom.
+  oneColumn: { flexDirection: "column", gap: spacing.lg, flexGrow: 1 },
   posterColumn: { flex: 5 },
   posterOneColumn: { width: "100%" },
   info: { flex: 7, alignSelf: "stretch" },
+  infoOneColumn: { flex: 0, flexGrow: 1, flexShrink: 0 },
+  // At least this much space above the trust note when it is pushed down.
+  trustGap: { height: spacing.xl },
   titleRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
   name: { flex: 1, fontFamily: typography.display.fontFamily, color: colors.text },
   meta: { marginTop: spacing.sm, fontFamily: fontFamily.body, fontSize: 16, color: colors.textMuted },
@@ -28,6 +32,7 @@ export const styles = StyleSheet.create({
   block: { marginTop: spacing.lg, gap: spacing.sm },
   h2: { fontFamily: typography.headline.fontFamily, fontSize: 18, color: colors.text },
   oneDate: { marginTop: spacing.lg, fontFamily: fontFamily.board, fontSize: 28, letterSpacing: 1.5, textTransform: "uppercase", color: colors.accent },
+  trustOneColumn: { marginTop: "auto" },
   trust: {
     marginTop: spacing.xl,
     paddingTop: spacing.md,
