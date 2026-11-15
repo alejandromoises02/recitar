@@ -29,3 +29,5 @@ export const GROUP_OPEN_MS = motion.duration.slow;
 export const GROUP_FADE_MS = motion.duration.fast;
 /** Rows below a folded or unfolded group slide to their new place. */
 export const ROW_SHIFT_MS = motion.duration.fast;
+/** The phone filter sheet never covers the whole screen, so the list stays in sight behind it. */
+export const SHEET_MAX_HEIGHT = "85%" as const;

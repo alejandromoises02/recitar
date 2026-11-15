@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Show } from "../../events/domain/show";
-import { cardDate, cardRows, daysWithShows, exploreRows, groupShows, pickedDayTile, stripDays, timeLabel, whenRange } from "./explore";
+import { activeFilterCount, cardDate, cardRows, daysWithShows, exploreRows, groupShows, pickedDayTile, stripDays, timeLabel, whenRange } from "./explore";
 
 // Friday 13 November 2026, 12:00 in Buenos Aires.
 const NOW = new Date("2026-11-13T15:00:00Z");
@@ -250,5 +250,19 @@ describe("cardRows", () => {
       "c",
       "# Diciembre 2026 closed",
     ]);
+  });
+});
+
+describe("activeFilterCount", () => {
+  const none = { text: "", venue: null, when: "all" as const };
+
+  it("is zero with no filters", () => {
+    expect(activeFilterCount(none)).toBe(0);
+  });
+
+  it("counts search, venue and date, ignoring blank search", () => {
+    expect(activeFilterCount({ ...none, text: "   " })).toBe(0);
+    expect(activeFilterCount({ text: "jazz", venue: "Niceto Club", when: "weekend" })).toBe(3);
+    expect(activeFilterCount({ ...none, when: "day" })).toBe(1);
   });
 });

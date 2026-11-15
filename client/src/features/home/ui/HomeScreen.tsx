@@ -1,17 +1,20 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Platform, Text, View, useWindowDimensions } from "react-native";
-import Animated, { Easing, LinearTransition } from "react-native-reanimated";
+import Animated, { Easing, FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fluid } from "../../../design/fluid";
 import { motion, spacing, typography } from "../../../design/tokens";
 import { cardRows, exploreRows } from "../application/explore";
 import { homeLayout } from "../application/home-layout";
 import { BrandLogo } from "./BrandLogo";
+import { CompactFilterBar } from "./explore/CompactFilterBar";
 import { ExploreProvider } from "./explore/explore-context";
 import { BLOCK_GAP, BLOCK_MIN_WIDTH, CARD_GAP, CARD_MIN_WIDTH, ROW_SHIFT_MS } from "./explore/explore.constants";
 import { ExploreFooter } from "./explore/ExploreFooter";
 import type { ListRow } from "./explore/ExploreRowView";
 import { ExploreRowView } from "./explore/ExploreRowView";
+import { FiltersSheet } from "./explore/FiltersSheet";
+import { useCompactBar } from "./explore/use-compact-bar";
 import { useExplore } from "./explore/use-explore";
 import { HomeSection } from "./HomeSection";
 import { END_REACHED_THRESHOLD, PHONE_WIDTH } from "./HomeScreen.constants";
@@ -42,6 +45,13 @@ export function HomeScreen() {
     [cards, explore.groups, columns, explore.collapsed],
   );
 
+  // Phones do not pin the whole panel (it would cover half the screen): a compact bar replaces it.
+  const compactBar = useCompactBar(!cards, insets.top, paddingTop);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const openSheet = useCallback(() => setSheetOpen(true), []);
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
+
+  const { onPanelLayout } = compactBar;
   const renderItem = useCallback(
     ({ item }: { item: ListRow }) => (
       <ExploreRowView
@@ -49,13 +59,14 @@ export function HomeScreen() {
         apiBase={explore.apiBase}
         itemWidth={itemWidth}
         fadeIn={item.kind !== "filters" && item.kind !== "group" && item.group === explore.opened}
+        onPanelLayout={item.kind === "filters" ? onPanelLayout : undefined}
       />
     ),
-    [explore.apiBase, itemWidth, explore.opened],
+    [explore.apiBase, itemWidth, explore.opened, onPanelLayout],
   );
 
   const header = (
-    <View style={styles.header}>
+    <View style={styles.header} onLayout={compactBar.onHeaderLayout}>
       <BrandLogo size={fluid(typography.logo.size, width)} />
       <Text accessibilityRole="header" style={[styles.headline, headlineSizing(fluid(typography.display.size, width))]}>
         {homeStrings.headlineLead}
@@ -83,23 +94,36 @@ export function HomeScreen() {
 
   return (
     <ExploreProvider value={explore}>
-      <Animated.FlatList
-        style={styles.screen}
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingTop }]}
-        data={rows}
-        keyExtractor={keyOf}
-        renderItem={renderItem}
-        ItemSeparatorComponent={cards ? CardRowGap : RowGap}
-        ListHeaderComponent={header}
-        // Wide screens pin the filters while the listing scrolls (index 1: the header counts as 0).
-        stickyHeaderIndices={cards ? STICKY_FILTERS : undefined}
-        ListFooterComponent={<ExploreFooter />}
-        onEndReached={explore.fetchMore}
-        onEndReachedThreshold={END_REACHED_THRESHOLD}
-        keyboardShouldPersistTaps="handled"
-        itemLayoutAnimation={ROW_SHIFT}
-      />
+      <View style={styles.root}>
+        <Animated.FlatList
+          style={styles.screen}
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingTop }]}
+          data={rows}
+          keyExtractor={keyOf}
+          renderItem={renderItem}
+          ItemSeparatorComponent={cards ? CardRowGap : RowGap}
+          ListHeaderComponent={header}
+          // Wide screens pin the filters while the listing scrolls (index 1: the header counts as 0).
+          stickyHeaderIndices={cards ? STICKY_FILTERS : undefined}
+          ListFooterComponent={<ExploreFooter />}
+          onEndReached={explore.fetchMore}
+          onEndReachedThreshold={END_REACHED_THRESHOLD}
+          keyboardShouldPersistTaps="handled"
+          itemLayoutAnimation={ROW_SHIFT}
+          onScroll={compactBar.onScroll}
+        />
+        {compactBar.visible ? (
+          <Animated.View
+            entering={FadeIn.duration(motion.duration.fast)}
+            exiting={FadeOut.duration(motion.duration.quick)}
+            style={[styles.compactBar, { top: insets.top, paddingHorizontal: gutter }]}
+          >
+            <CompactFilterBar onOpenFilters={openSheet} />
+          </Animated.View>
+        ) : null}
+      </View>
+      <FiltersSheet visible={sheetOpen} onClose={closeSheet} />
     </ExploreProvider>
   );
 }

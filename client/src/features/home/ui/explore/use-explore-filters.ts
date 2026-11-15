@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import type { GroupBy, When } from "../../application/explore";
+import { activeFilterCount } from "../../application/explore";
 
 export type ExploreFilters = { text: string; venue: string | null; when: When; day: string | null; group: GroupBy };
 
@@ -16,7 +17,7 @@ export function useExploreFilters() {
     [],
   );
   const clear = useCallback(() => setFilters((f) => ({ ...INITIAL, group: f.group })), []);
-  const active = filters.text.trim() !== "" || filters.venue !== null || filters.when !== "all";
+  const activeCount = activeFilterCount(filters);
 
-  return { filters, set, setWhen, pickDay, clear, active };
+  return { filters, set, setWhen, pickDay, clear, active: activeCount > 0, activeCount };
 }

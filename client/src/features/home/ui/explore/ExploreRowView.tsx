@@ -1,4 +1,5 @@
 import { memo } from "react";
+import type { LayoutChangeEvent } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import type { ExploreRow } from "../../application/explore";
 import { DayBlockView } from "./DayBlockView";
@@ -11,14 +12,14 @@ import { styles } from "./ExploreRowView.styles";
 /** A row of the home list: the explore filters, or a listing row. */
 export type ListRow = ExploreRow | { kind: "filters"; key: string };
 
-/** `fadeIn`: the row belongs to the group just unfolded. */
-type Props = { row: ListRow; apiBase: string; itemWidth: number; fadeIn: boolean };
+/** `fadeIn`: the row belongs to the group just unfolded. `onPanelLayout`: measures the filter panel row. */
+type Props = { row: ListRow; apiBase: string; itemWidth: number; fadeIn: boolean; onPanelLayout?: (event: LayoutChangeEvent) => void };
 
 const ENTERING = FadeIn.duration(GROUP_FADE_MS);
 
-export const ExploreRowView = memo(function ExploreRowView({ row, apiBase, itemWidth, fadeIn }: Props) {
+export const ExploreRowView = memo(function ExploreRowView({ row, apiBase, itemWidth, fadeIn, onPanelLayout }: Props) {
   const entering = fadeIn ? ENTERING : undefined;
-  if (row.kind === "filters") return <ExploreFiltersPanel />;
+  if (row.kind === "filters") return <ExploreFiltersPanel onLayout={onPanelLayout} />;
   if (row.kind === "group")
     return <GroupTitle group={row.group} title={row.title} note={row.note} count={row.count} expanded={row.expanded} />;
   if (row.kind === "cards")

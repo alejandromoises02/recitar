@@ -41,6 +41,10 @@ export const homeStrings = {
     groupLabel: (title: string, note: string | null, shows: string) => `${title}${note ? `, ${note}` : ""}, ${shows}`,
     groupOptions: { month: "Mes", week: "Semana", day: "Día" },
     clear: "Limpiar filtros",
+    filters: "Filtros",
+    filtersButton: (count: number) => (count > 0 ? `Filtros · ${count}` : "Filtros"),
+    filtersButtonLabel: (count: number) => (count > 0 ? `Filtros, ${count} ${count === 1 ? "activo" : "activos"}` : "Filtros"),
+    filtersDone: "Listo",
     empty: "No hay shows con esos filtros.",
   },
   featured: {

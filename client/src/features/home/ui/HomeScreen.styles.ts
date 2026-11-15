@@ -10,6 +10,7 @@ export const headlineSizing = (size: number) => ({
 });
 
 export const styles = StyleSheet.create({
+  root: { flex: 1 },
   screen: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: spacing.xxxl },
   header: { gap: spacing.lg },
@@ -17,5 +18,6 @@ export const styles = StyleSheet.create({
   cardRowGap: { height: CARD_GAP },
   headline: { fontFamily: typography.display.fontFamily, color: colors.text, maxWidth: 900 },
   city: { fontFamily: fontFamily.logo, color: colors.accent },
+  compactBar: { position: "absolute", left: 0, right: 0 },
   hero: { flexDirection: "row", gap: spacing.xl, alignItems: "stretch" },
 });

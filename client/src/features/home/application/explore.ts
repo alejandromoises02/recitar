@@ -165,3 +165,8 @@ export function cardRows(groups: ShowGroup[], columns: number, collapsed = NONE_
     return rows;
   });
 }
+
+/** How many filters narrow the listing: search, venue and date ("Ver por" only arranges it). */
+export function activeFilterCount(filters: { text: string; venue: string | null; when: When }): number {
+  return [filters.text.trim() !== "", filters.venue !== null, filters.when !== "all"].filter(Boolean).length;
+}
