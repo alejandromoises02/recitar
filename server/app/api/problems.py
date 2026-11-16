@@ -30,6 +30,14 @@ class AdminDisabledError(RuntimeError):
     """ADMIN_TOKEN is not set (or too weak) on this server, so nothing can be written."""
 
 
+class TooManyRequestsError(RuntimeError):
+    """One caller sent more requests than its limit allows in this window."""
+
+    def __init__(self, retry_after: int):
+        super().__init__(f"retry after {retry_after} s")
+        self.retry_after = retry_after
+
+
 class Problem(BaseModel):
     type: str = "about:blank"
     title: str
@@ -72,6 +80,14 @@ def install_problem_handlers(app: FastAPI) -> None:
             title="Writing is turned off", status=503,
             detail="This server has no admin token configured (ADMIN_TOKEN, at least 32 characters).",
         ))
+
+    @app.exception_handler(TooManyRequestsError)
+    def too_many_requests(request: Request, error: TooManyRequestsError) -> JSONResponse:
+        response = problem_response(Problem(
+            title="Too many requests", status=429, detail=f"Wait {error.retry_after} seconds before sending more.",
+        ))
+        response.headers["Retry-After"] = str(error.retry_after)
+        return response
 
     @app.exception_handler(RequestValidationError)
     def invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:

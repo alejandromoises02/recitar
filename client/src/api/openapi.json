@@ -1062,7 +1062,7 @@
           "tickets"
         ],
         "summary": "Count a ticket click and send the visitor to the ticket page",
-        "description": "Every ticket button goes through here. The destination is always a link the scrapers stored for\nthis date, never something the request carries, so this cannot redirect to a site of someone's choosing.\n\nThe click is counted (show, date, ticketer, place in the app, time; nothing about the person), except\nwhen the caller looks like a crawler or a link preview, and handed to the analytics tool (see\napp/analytics.py) once the visitor is on the way. Neither gets in the way: if either fails, the visitor\nis still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.",
+        "description": "Every ticket button goes through here. The destination is always a link the scrapers stored for\nthis date, never something the request carries, so this cannot redirect to a site of someone's choosing.\n\nThe click is counted (show, date, ticketer, place in the app, time; nothing about the person), except\nwhen the caller looks like a crawler or a link preview, or has sent more than 30 clicks this minute, and handed to the analytics tool (see\napp/analytics.py) once the visitor is on the way. Neither gets in the way: if either fails, the visitor\nis still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.",
         "operationId": "go_go__event_id__get",
         "parameters": [
           {
@@ -1206,8 +1206,14 @@
           "204": {
             "description": "Successful Response"
           },
+          "413": {
+            "description": "The body is over 4096 bytes"
+          },
           "422": {
             "description": "The event is not one we know, or it is incomplete or too long"
+          },
+          "429": {
+            "description": "Too many events from this caller this minute; Retry-After says when to send again"
           }
         }
       }

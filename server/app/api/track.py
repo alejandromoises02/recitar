@@ -4,6 +4,7 @@ from typing import Annotated, Callable
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 
 from app.analytics import forward_track
+from app.api.rate_limit import limit_track
 from app.domain.device import device_of
 from app.domain.ticket_redirect import looks_like_bot
 from app.domain.track_event import TrackEvent
@@ -30,7 +31,12 @@ def _forward_safely(forward: TrackForwarder, event: TrackEvent, device: str) -> 
     "/track",
     status_code=204,
     summary="Tell us a visit began, a show was opened or a filter was used",
-    responses={422: {"description": "The event is not one we know, or it is incomplete or too long"}},
+    dependencies=[Depends(limit_track)],
+    responses={
+        413: {"description": "The body is over 4096 bytes"},
+        422: {"description": "The event is not one we know, or it is incomplete or too long"},
+        429: {"description": "Too many events from this caller this minute; Retry-After says when to send again"},
+    },
 )
 def track(
     event: TrackEvent,

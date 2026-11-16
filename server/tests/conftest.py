@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
 from app.db import migrate, to_sqlalchemy_url
+from app.main import app
 
 RUN_DB_TESTS = os.environ.get("RUN_DB_TESTS") == "1"
 if RUN_DB_TESTS:
@@ -44,3 +45,11 @@ def unmigrated_db_engine():
         with admin.connect() as conn:
             conn.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
         admin.dispose()
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits():
+    """The shared app keeps its counts in memory; every test starts with none."""
+    for limiter in app.state.rate_limits.values():
+        limiter.reset()
+    yield

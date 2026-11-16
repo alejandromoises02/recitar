@@ -9,13 +9,16 @@ from starlette.responses import Response
 from starlette.types import Scope
 
 from app.api import events, featured, go, shows, track, venues
+from app.api.body_limit import BodySizeLimit
 from app.api.problems import install_problem_handlers
+from app.api.rate_limit import RateLimiter, default_rate_limits
 from app.db import SERVER_DIR
 from app.images.copy import IMAGES_DIR, MEDIA_PREFIX
 
 # Expo's web dev server. Deployed clients are listed in CORS_ORIGINS instead.
 DEFAULT_CORS_ORIGINS = ["http://localhost:8081", "http://127.0.0.1:8081"]
 MEDIA_CACHE = "public, max-age=604800"  # a week: a stored image never changes under its name
+MAX_TRACK_BODY_BYTES = 4096  # a full event is well under 1 KiB
 
 
 def cors_origins() -> list[str]:
@@ -34,8 +37,11 @@ class _CachedImages(StaticFiles):
         return response
 
 
-def create_app(media_dir: Path = IMAGES_DIR, origins: list[str] | None = None) -> FastAPI:
+def create_app(
+    media_dir: Path = IMAGES_DIR, origins: list[str] | None = None, rate_limits: dict[str, RateLimiter] | None = None
+) -> FastAPI:
     app = FastAPI(title="recitAR API")
+    app.state.rate_limits = default_rate_limits() if rate_limits is None else rate_limits
     install_problem_handlers(app)
     app.include_router(events.router)
     app.include_router(shows.router)
@@ -51,6 +57,8 @@ def create_app(media_dir: Path = IMAGES_DIR, origins: list[str] | None = None) -
     # The folder is filled by the scraper runner; create it so a fresh checkout serves 404s, not 500s.
     media_dir.mkdir(parents=True, exist_ok=True)
     app.mount(MEDIA_PREFIX.rstrip("/"), _CachedImages(directory=media_dir), name="media")
+    app.add_middleware(BodySizeLimit, paths=frozenset({"/track"}), max_bytes=MAX_TRACK_BODY_BYTES)
+    # Added last, so it wraps the others and refusals (413, 429) keep their CORS headers.
     # Browsers may read (GET) and report what visitors do (POST /track, a JSON body). The admin writes
     # (PUT /featured) come from a tool like Postman with a bearer token, never from a web page, so PUT and
     # the Authorization header are left out of CORS on purpose.

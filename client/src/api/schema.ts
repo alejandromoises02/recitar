@@ -160,7 +160,7 @@ export interface paths {
          *     this date, never something the request carries, so this cannot redirect to a site of someone's choosing.
          *
          *     The click is counted (show, date, ticketer, place in the app, time; nothing about the person), except
-         *     when the caller looks like a crawler or a link preview, and handed to the analytics tool (see
+         *     when the caller looks like a crawler or a link preview, or has sent more than 30 clicks this minute, and handed to the analytics tool (see
          *     app/analytics.py) once the visitor is on the way. Neither gets in the way: if either fails, the visitor
          *     is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.
          */
@@ -1051,8 +1051,22 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description The body is over 4096 bytes */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description The event is not one we know, or it is incomplete or too long */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many events from this caller this minute; Retry-After says when to send again */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
