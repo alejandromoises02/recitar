@@ -6,6 +6,7 @@ import { daysWithShows, groupShows, stripDays, whenRange } from "../../applicati
 import { EXPLORE_PAGE_SIZE, GROUP_OPEN_MS, SEARCH_DEBOUNCE_MS, STRIP_QUERY_LIMIT } from "./explore.constants";
 import { useDebouncedValue } from "./use-debounced-value";
 import { useExploreFilters } from "./use-explore-filters";
+import { useTrackFilters } from "./use-track-filters";
 import { useLang } from "../../../../i18n/lang-context";
 
 const NONE: ReadonlySet<string> = new Set();
@@ -18,6 +19,7 @@ export function useExplore() {
   const days = useMemo(() => stripDays(now, lang), [now, lang]);
   const filterState = useExploreFilters();
   const { filters } = filterState;
+  useTrackFilters(filters);
   const text = useDebouncedValue(filters.text.trim(), SEARCH_DEBOUNCE_MS);
   const range = useMemo(() => whenRange(filters.when, now, filters.day ?? undefined), [filters.when, filters.day, now]);
 

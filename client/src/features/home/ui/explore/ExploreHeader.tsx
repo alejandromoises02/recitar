@@ -6,6 +6,7 @@ import { styles } from "./ExploreHeader.styles";
 import { listingStatus } from "../../application/explore";
 import { heading } from "../a11y";
 import { StatusAnnouncer } from "./StatusAnnouncer";
+import { useTrackNoResults } from "./use-track-no-results";
 
 export function ExploreHeader() {
   const strings = useStrings();
@@ -20,6 +21,7 @@ export function ExploreHeader() {
           ? strings.explore.empty
           : strings.explore.found(strings.shows(status.count, status.more));
   const { text, venue, when, day } = explore.filters;
+  useTrackNoResults(status?.kind === "empty", explore.filters);
   return (
     <View style={styles.section}>
       <View style={styles.header}>

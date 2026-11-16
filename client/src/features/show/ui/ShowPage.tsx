@@ -1,11 +1,12 @@
 import { Image } from "expo-image";
 import * as Linking from "expo-linking";
 import Head from "expo-router/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Platform, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spacing } from "../../../design/tokens";
 import { useLang } from "../../../i18n/lang-context";
+import { tracker } from "../../analytics/tracker";
 import type { Show } from "../../events/domain/show";
 import { imageSource } from "../../home/application/show-labels";
 import { domainOf } from "../../home/application/ticket-target";
@@ -40,6 +41,7 @@ export function ShowPage({ show, apiBase }: Props) {
   const insets = useSafeAreaInsets();
   const [now] = useState(() => new Date());
   const [picked, setPicked] = useState(0);
+  useEffect(() => tracker().showOpened(show.id, show.name, show.venue), [show.id, show.name, show.venue]);
   const [infoHeight, setInfoHeight] = useState(0);
 
   const oneColumn = width <= ONE_COLUMN_WIDTH;
@@ -84,7 +86,7 @@ export function ShowPage({ show, apiBase }: Props) {
               <Text style={[styles.name, nameSizing(width)]} {...heading(1)}>
                 {show.name}
               </Text>
-              <ShareButton title={show.name} url={shareUrl} />
+              <ShareButton title={show.name} url={shareUrl} onShare={() => tracker().showShared(show.id, show.name, show.venue)} />
             </View>
             <Text style={styles.meta}>
               <Text style={styles.venue}>{show.venue}</Text>

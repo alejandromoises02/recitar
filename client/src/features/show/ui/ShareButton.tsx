@@ -4,13 +4,14 @@ import { ShareIcon } from "./ShareIcon";
 import { styles } from "./ShareButton.styles";
 import { useShowStrings } from "./strings";
 
-type Props = { title: string; url: string };
+type Props = { title: string; url: string; onShare?: () => void };
 
 /** The native share sheet on phones; on web the browser's share, else the link copied to the clipboard. */
-export function ShareButton({ title, url }: Props) {
+export function ShareButton({ title, url, onShare }: Props) {
   const strings = useShowStrings();
   const [copied, setCopied] = useState(false);
   const share = async () => {
+    onShare?.();
     if (Platform.OS !== "web") {
       await Share.share({ title, message: `${title} ${url}`, url });
       return;

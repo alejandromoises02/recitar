@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import type { Show } from "../../events/domain/show";
+import { tracker } from "../../analytics/tracker";
 import { useVenueShows } from "../../events/infrastructure/events-queries";
 import { heading } from "../../home/ui/a11y";
 import { Pulse } from "../../home/ui/skeleton/Pulse";
@@ -63,6 +64,7 @@ export function MoreAtVenue({ show, apiBase, fillWidth }: Props) {
                   timeKnown={other.dates[0].timeKnown}
                   apiBase={apiBase}
                   width={cardWidth}
+                  onOpen={() => tracker().moreAtVenueClicked(other.id, other.name, other.venue)}
                 />
               ))}
         </ScrollView>

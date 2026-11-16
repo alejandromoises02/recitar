@@ -4,7 +4,7 @@ import type { GestureResponderEvent, StyleProp, ViewStyle } from "react-native";
 import { Platform, Pressable } from "react-native";
 import { styles } from "./ShowLink.styles";
 
-type Props = { showId: string; label?: string; style?: StyleProp<ViewStyle>; children: ReactNode };
+type Props = { showId: string; label?: string; style?: StyleProp<ViewStyle>; onOpen?: () => void; children: ReactNode };
 
 // What a web click carries; React Native's press event type does not declare it.
 type WebClick = { metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; button?: number; preventDefault?: () => void };
@@ -14,8 +14,9 @@ type WebClick = { metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; butt
  * a plain click navigates inside the app. Not expo-router's <Link asChild>: it drops a Pressable's
  * function style, which broke the layout of every card.
  */
-export function ShowLink({ showId, label, style, children }: Props) {
+export function ShowLink({ showId, label, style, onOpen, children }: Props) {
   const open = (event: GestureResponderEvent) => {
+    onOpen?.();
     if (Platform.OS === "web") {
       const click = event as unknown as WebClick;
       if (click.metaKey || click.ctrlKey || click.shiftKey || click.button === 1) return; // the browser opens a new tab

@@ -8,13 +8,13 @@ import { styles } from "./ExploreCard.styles";
 import { useLang } from "../../../../i18n/lang-context";
 import { ShowLink } from "../controls/ShowLink";
 
-type Props = { show: Show; date: Date; timeKnown: boolean; apiBase: string; width: number };
+type Props = { show: Show; date: Date; timeKnown: boolean; apiBase: string; width: number; onOpen?: () => void };
 
 /**
  * Wide screens: a show as a card with its photo, date block and "+N fechas". The link is named by its own
  * visible text (WCAG 2.5.3), so its spoken name always matches what is on screen.
  */
-export const ExploreCard = memo(function ExploreCard({ show, date, timeKnown, apiBase, width }: Props) {
+export const ExploreCard = memo(function ExploreCard({ show, date, timeKnown, apiBase, width, onOpen }: Props) {
   const lang = useLang();
   const photo = imageSource(show.imageUrl, apiBase);
   const when = cardDate(date, lang);
@@ -22,7 +22,7 @@ export const ExploreCard = memo(function ExploreCard({ show, date, timeKnown, ap
   const place = `${show.venue} · ${timeLabel(date, timeKnown, lang)}`;
   return (
     <View role="listitem" style={{ width }}>
-      <ShowLink showId={show.id} style={styles.card}>
+      <ShowLink showId={show.id} style={styles.card} onOpen={onOpen}>
         <View style={styles.media}>
           {photo ? (
             <FittedImage uri={photo} style={styles.image} />

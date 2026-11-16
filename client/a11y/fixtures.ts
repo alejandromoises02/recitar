@@ -55,6 +55,10 @@ export async function withFakeApi(page: Page) {
     (url) => url.hostname === "a11y-api.test",
     (route) => {
       const { pathname, searchParams } = new URL(route.request().url());
+      if (pathname.endsWith("/track")) {
+        const cors = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST", "access-control-allow-headers": "Content-Type" };
+        return route.fulfill({ status: 204, headers: cors });
+      }
       if (pathname.endsWith("/featured")) return route.fulfill(json({ kind: "picked", items: SHOWS.slice(0, 3) }));
       if (pathname.endsWith("/venues")) return route.fulfill(json({ items: [...new Set(SHOWS.map((s) => s.venue))].map((name) => ({ name, upcoming_events: 1 })) }));
       if (pathname.endsWith("/shows")) {

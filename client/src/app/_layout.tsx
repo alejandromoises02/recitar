@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useRefetchOnAppFocus } from "@/api/app-focus";
 import { createQueryClient } from "@/api/query-client";
+import { tracker } from "@/features/analytics/tracker";
 import { fontAssets } from "@/design/fonts";
 import { colors } from "@/design/tokens";
 import { LangProvider } from "@/i18n/lang-context";
@@ -18,6 +19,7 @@ export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   useRefetchOnAppFocus();
+  useEffect(() => tracker().visitStarted(), []);
 
   const ready = fontsLoaded || fontError !== null; // a font that fails falls back to the system one
   useEffect(() => {
