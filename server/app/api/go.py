@@ -2,12 +2,14 @@ import logging
 from datetime import datetime, timezone
 from typing import Annotated, Callable
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
 from fastapi.responses import RedirectResponse
 
+from app.analytics import forward_ticket_click
 from app.api.events import engine
 from app.api.listing import problem
 from app.api.problems import NotFoundError
+from app.domain.device import device_of
 from app.domain.event import Event, show_key
 from app.domain.ticket_redirect import TicketClick, destination, looks_like_bot, source_of, with_utm_source
 from app.events_repository import get_event, record_ticket_click
@@ -16,6 +18,8 @@ from app.events_repository import get_event, record_ticket_click
 EventLookup = Callable[[str], Event | None]
 # stores one click
 ClickRecorder = Callable[[TicketClick], None]
+# sends one click to the analytics tool
+ClickForwarder = Callable[[TicketClick], None]
 
 router = APIRouter(tags=["tickets"])
 log = logging.getLogger(__name__)
@@ -37,6 +41,17 @@ def click_recorder() -> ClickRecorder:
     return write
 
 
+def click_forwarder() -> ClickForwarder:
+    return forward_ticket_click
+
+
+def _forward_safely(forward: ClickForwarder, click: TicketClick) -> None:
+    try:
+        forward(click)
+    except Exception:  # noqa: BLE001 - analytics never gets in the way, whatever goes wrong
+        log.exception("Could not forward a ticket click for %s", click.event_id)
+
+
 @router.get(
     "/go/{event_id}",
     status_code=302,
@@ -50,8 +65,10 @@ def click_recorder() -> ClickRecorder:
 def go(
     event_id: str,
     request: Request,
+    background: BackgroundTasks,
     lookup: Annotated[EventLookup, Depends(go_event_source)],
     record: Annotated[ClickRecorder, Depends(click_recorder)],
+    forward: Annotated[ClickForwarder, Depends(click_forwarder)],
     v: Annotated[str | None, Query(description="The ticketer, a `vendor` of the date's ticket links; the first link when left out or unknown")] = None,
     from_: Annotated[str | None, Query(alias="from", description='Where in the app the click came from: "show" or "spotlight"; anything else is counted as "other"')] = None,
 ) -> RedirectResponse:
@@ -59,16 +76,21 @@ def go(
     this date, never something the request carries, so this cannot redirect to a site of someone's choosing.
 
     The click is counted (show, date, ticketer, place in the app, time; nothing about the person), except
-    when the caller looks like a crawler or a link preview. Counting never gets in the way: if it fails, the
-    visitor is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason."""
+    when the caller looks like a crawler or a link preview, and handed to the analytics tool (see
+    app/analytics.py) once the visitor is on the way. Neither gets in the way: if either fails, the visitor
+    is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason."""
     event = lookup(event_id)
     where = None if event is None else destination(event, v)
     if event is None or where is None:
         raise NotFoundError("Ticket link not found", f"There is no date with id {event_id} to buy tickets for.")
-    if not looks_like_bot(request.headers.get("user-agent")):
-        click = TicketClick(show_key(event.id), event.id, where.vendor, source_of(from_), datetime.now(timezone.utc))
+    user_agent = request.headers.get("user-agent")
+    if not looks_like_bot(user_agent):
+        click = TicketClick(
+            show_key(event.id), event.id, where.vendor, source_of(from_), datetime.now(timezone.utc), event.name, event.venue, device_of(user_agent)
+        )
         try:
             record(click)
         except Exception:  # noqa: BLE001 - whatever goes wrong while counting, the visitor still gets to the tickets
             log.exception("Could not store a ticket click for %s", event.id)
+        background.add_task(_forward_safely, forward, click)  # after the visitor has been sent on
     return RedirectResponse(with_utm_source(where.url), status_code=302, headers={"Cache-Control": "no-store"})

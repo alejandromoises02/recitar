@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from starlette.types import Scope
 
-from app.api import events, featured, go, shows, venues
+from app.api import events, featured, go, shows, track, venues
 from app.api.problems import install_problem_handlers
 from app.db import SERVER_DIR
 from app.images.copy import IMAGES_DIR, MEDIA_PREFIX
@@ -42,6 +42,7 @@ def create_app(media_dir: Path = IMAGES_DIR, origins: list[str] | None = None) -
     app.include_router(featured.router)
     app.include_router(venues.router)
     app.include_router(go.router)
+    app.include_router(track.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -50,10 +51,14 @@ def create_app(media_dir: Path = IMAGES_DIR, origins: list[str] | None = None) -
     # The folder is filled by the scraper runner; create it so a fresh checkout serves 404s, not 500s.
     media_dir.mkdir(parents=True, exist_ok=True)
     app.mount(MEDIA_PREFIX.rstrip("/"), _CachedImages(directory=media_dir), name="media")
-    # Browsers may only read (GET, no cookies). The admin writes (PUT /featured) come from a tool
-    # like Postman with a bearer token, never from a web page, so they are left out of CORS on purpose.
+    # Browsers may read (GET) and report what visitors do (POST /track, a JSON body). The admin writes
+    # (PUT /featured) come from a tool like Postman with a bearer token, never from a web page, so PUT and
+    # the Authorization header are left out of CORS on purpose.
     app.add_middleware(
-        CORSMiddleware, allow_origins=cors_origins() if origins is None else origins, allow_methods=["GET"]
+        CORSMiddleware,
+        allow_origins=cors_origins() if origins is None else origins,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
     )
     return app
 

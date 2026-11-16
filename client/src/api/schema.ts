@@ -160,12 +160,35 @@ export interface paths {
          *     this date, never something the request carries, so this cannot redirect to a site of someone's choosing.
          *
          *     The click is counted (show, date, ticketer, place in the app, time; nothing about the person), except
-         *     when the caller looks like a crawler or a link preview. Counting never gets in the way: if it fails, the
-         *     visitor is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.
+         *     when the caller looks like a crawler or a link preview, and handed to the analytics tool (see
+         *     app/analytics.py) once the visitor is on the way. Neither gets in the way: if either fails, the visitor
+         *     is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.
          */
         get: operations["go_go__event_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/track": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tell us a visit began, a show was opened or a filter was used
+         * @description The app reports what visitors do, so the owner can see it in the analytics tool. Nothing is stored here
+         *     and nothing about the person travels: the session id is random and lives only while the app is open.
+         *     Only a coarse device class (ios, android, desktop) is derived from the browser and sent; its text is not. Crawlers are answered and ignored. The answer never depends on the analytics tool.
+         */
+        post: operations["track_track_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -455,6 +478,36 @@ export interface components {
             vendor: string;
             /** Url */
             url: string;
+        };
+        /**
+         * TrackEvent
+         * @description One thing the app tells us happened: a visit began, a show was opened, a filter was used.
+         *
+         *     Nothing about the person: the session id is a random value the app makes when it starts and keeps only
+         *     in memory. Everything is bounded because anyone can call the endpoint.
+         */
+        TrackEvent: {
+            /**
+             * Event
+             * @enum {string}
+             */
+            event: "visit started" | "show opened" | "filter used" | "no results" | "show shared" | "more at venue clicked";
+            /** Session Id */
+            session_id: string;
+            /** Show Key */
+            show_key?: string | null;
+            /** Show Name */
+            show_name?: string | null;
+            /** Venue */
+            venue?: string | null;
+            /** Filter */
+            filter?: ("search" | "venue" | "when" | "day" | "group") | null;
+            /** Filters */
+            filters?: ("search" | "venue" | "when" | "day" | "group")[] | null;
+            /** When */
+            when?: string | null;
+            /** Value */
+            value?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -975,6 +1028,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    track_track_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackEvent"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The event is not one we know, or it is incomplete or too long */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

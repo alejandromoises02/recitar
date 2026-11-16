@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.go import click_recorder, go_event_source
+from app.api.go import click_forwarder, click_recorder, go_event_source
 from app.domain.event import Event, TicketLink
 from app.main import app
 
@@ -31,12 +31,16 @@ class Recorder:
 
 @pytest.fixture
 def go():
-    def make(stored: list[Event], recorder: Recorder | None = None):
+    def make(stored: list[Event], recorder: Recorder | None = None, forwarder: Recorder | None = None):
         by_id = {e.id: e for e in stored}
         recorder = recorder or Recorder()
+        forwarder = forwarder if forwarder is not None else Recorder()
         app.dependency_overrides[go_event_source] = lambda: by_id.get
         app.dependency_overrides[click_recorder] = lambda: recorder
-        return TestClient(app, follow_redirects=False, headers={"user-agent": BROWSER}), recorder
+        app.dependency_overrides[click_forwarder] = lambda: forwarder
+        client = TestClient(app, follow_redirects=False, headers={"user-agent": BROWSER})
+        client.forwarder = forwarder
+        return client, recorder
 
     yield make
     app.dependency_overrides.clear()
@@ -129,3 +133,44 @@ def test_the_visitor_is_still_redirected_when_the_click_cannot_be_stored(go):
 def test_the_route_is_in_the_api_schema_as_a_redirect_with_a_not_found():
     operation = app.openapi()["paths"]["/go/{event_id}"]["get"]
     assert {"302", "404"} <= set(operation["responses"])
+
+
+def test_the_counted_click_is_also_handed_to_the_analytics_forwarder(go):
+    client, recorder = go([event()])
+    client.get("/go/movistar-becerra-20261120T2100", params={"v": "Livepass", "from": "spotlight"})
+    assert client.forwarder.clicks == recorder.clicks and len(recorder.clicks) == 1
+
+
+def test_a_crawler_or_an_unknown_date_is_not_forwarded(go):
+    client, _ = go([event()])
+    client.get("/go/movistar-becerra-20261120T2100", headers={"user-agent": "Slackbot-LinkExpanding 1.0"})
+    client.get("/go/movistar-nope-20261120T2100")
+    assert client.forwarder.clicks == []
+
+
+def test_the_click_is_forwarded_even_when_it_could_not_be_stored_and_the_visitor_still_gets_through(go):
+    client, _ = go([event()], Recorder(fail=True))
+    response = client.get("/go/movistar-becerra-20261120T2100")
+    assert response.status_code == 302
+    assert len(client.forwarder.clicks) == 1
+
+
+def test_a_forwarder_that_fails_does_not_change_the_redirect(go):
+    client, _ = go([event()], forwarder=Recorder(fail=True))
+    response = client.get("/go/movistar-becerra-20261120T2100")
+    assert response.status_code == 302
+    assert response.headers["location"] == "https://venti.live/x?utm_source=recitar"
+
+
+
+def test_the_forwarded_click_carries_the_readable_show_name(go):
+    client, _ = go([event()])
+    client.get("/go/movistar-becerra-20261120T2100")
+    assert client.forwarder.clicks[0].show_name == event().name
+
+
+def test_the_forwarded_click_carries_the_venue_and_the_device_class_of_the_visitor(go):
+    client, _ = go([event()])
+    client.get("/go/movistar-becerra-20261120T2100", headers={"user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1"})
+    click = client.forwarder.clicks[0]
+    assert (click.venue, click.device) == ("Movistar Arena", "ios")

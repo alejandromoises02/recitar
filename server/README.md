@@ -140,6 +140,38 @@ licence, source), even if it already happened, plus `other_dates`: the upcoming 
 show (`[{"id", "starts_at"}]`, without the event itself). An unknown id is a 404. Event ids are
 `<source>-<show>-<YYYYMMDDTHHMM>`; the part before the date names the show.
 
+`GET /go/{event_id}?v=<vendor>&from=<place>` is where every "Entradas" button points. It answers `302`
+to a ticket link stored for that date (the one of `v`, else the first, else the show's page at its
+source) with `utm_source=recitar`, and counts the click in `ticket_clicks` (show, date, vendor, place,
+time: no IP, no user agent, no person). The destination always comes from the database, never from the
+request, and only `http(s)` links without a backslash or user name are used (otherwise 404). `from` is
+`show` or `spotlight` (anything else is stored as `other`); a wrong `v` or `from` is ignored, never
+refused, because nothing may get between a visitor and the tickets. Crawlers and link previews are sent
+on but not counted. If storing the click fails, the visitor is still sent on (it is logged).
+
+Analytics: with `POSTHOG_API_KEY` set (the PostHog project's public token, in `server/.env`), each
+counted click is also sent to PostHog as `ticket link clicked` (`show_key`, `show_name`, `event_id`,
+`vendor`, `source`, `environment`), after the visitor has been sent on. `APP_ENV` (`dev` by default,
+`test` or `prod`; anything else is reported as `unknown`) fills `environment`, so one dashboard can be
+filtered per stage. `POSTHOG_HOST` picks the region: `https://us.i.posthog.com`
+(default), `https://eu.i.posthog.com` or a self-hosted address. Events are anonymous (a random id each,
+no person profile, nothing about the visitor is sent). PostHog still records the IP of the request that
+reaches it, which is this server's: switch on "Discard client IP data" in the PostHog project settings.
+Without the key nothing is sent. PostHog answers `200` to any key, valid or
+not, so look for the events in its dashboard to know the key works. Sending waits at most 3 seconds and
+a failure is only logged as a short warning (never with the key): PostHog being down never reaches a visitor.
+
+`POST /track` is where the app reports what visitors do, for the analytics tool: a JSON body with `event`
+(`visit started`, `show opened` or `filter used`), `session_id` (random, made by the app when it starts and
+kept only in memory: 8 to 64 letters, digits or dashes), and, depending on the event, `show_key` and
+`show_name` (a show opening needs `show_key`) or `filter` (`search`, `venue`, `when`, `day`, `group`) and
+`value` (a filter event needs `filter`; for `search` the value is always dropped, so what people type is
+never kept). Anything else is refused with `422`, and unknown fields too. It answers `204` and sends the
+event to PostHog after answering (same settings, same failure rules as the ticket clicks); crawlers are
+answered and ignored. Nothing is stored in our database. Web pages from `CORS_ORIGINS` may call it (`POST`,
+`Content-Type` header only). The session id is the event's only identity: no person profile, no IP sent.
+The endpoint is public, so anyone can send events; a rate limit is still to do.
+
 `GET /media/<name>.webp` serves the image copies (`image_url` of events) from `server/data/images`,
 with `Cache-Control: public, max-age=604800`. A copy never changes under its name. The folder is
 local disk, so this works for development; a host without a persistent disk needs object storage

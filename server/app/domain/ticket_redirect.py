@@ -24,6 +24,9 @@ class TicketClick:
     vendor: str | None  # the ticketer used; None when the date has no link and the visitor went to the source page
     source: str
     at: datetime
+    show_name: str | None = None  # readable title, venue and device class: for the analytics tool only, not part of what the count stores
+    venue: str | None = None
+    device: str | None = None
 
 
 class Destination(NamedTuple):

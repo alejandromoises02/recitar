@@ -1062,7 +1062,7 @@
           "tickets"
         ],
         "summary": "Count a ticket click and send the visitor to the ticket page",
-        "description": "Every ticket button goes through here. The destination is always a link the scrapers stored for\nthis date, never something the request carries, so this cannot redirect to a site of someone's choosing.\n\nThe click is counted (show, date, ticketer, place in the app, time; nothing about the person), except\nwhen the caller looks like a crawler or a link preview. Counting never gets in the way: if it fails, the\nvisitor is still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.",
+        "description": "Every ticket button goes through here. The destination is always a link the scrapers stored for\nthis date, never something the request carries, so this cannot redirect to a site of someone's choosing.\n\nThe click is counted (show, date, ticketer, place in the app, time; nothing about the person), except\nwhen the caller looks like a crawler or a link preview, and handed to the analytics tool (see\napp/analytics.py) once the visitor is on the way. Neither gets in the way: if either fails, the visitor\nis still sent on. Parameters that are wrong are ignored rather than refused, for the same reason.",
         "operationId": "go_go__event_id__get",
         "parameters": [
           {
@@ -1180,6 +1180,34 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/track": {
+      "post": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Tell us a visit began, a show was opened or a filter was used",
+        "description": "The app reports what visitors do, so the owner can see it in the analytics tool. Nothing is stored here\nand nothing about the person travels: the session id is random and lives only while the app is open.\nOnly a coarse device class (ios, android, desktop) is derived from the browser and sent; its text is not. Crawlers are answered and ignored. The answer never depends on the analytics tool.",
+        "operationId": "track_track_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "The event is not one we know, or it is incomplete or too long"
           }
         }
       }
@@ -1970,6 +1998,135 @@
           "url"
         ],
         "title": "TicketLink"
+      },
+      "TrackEvent": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": [
+              "visit started",
+              "show opened",
+              "filter used",
+              "no results",
+              "show shared",
+              "more at venue clicked"
+            ],
+            "title": "Event"
+          },
+          "session_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-]{8,64}$",
+            "title": "Session Id"
+          },
+          "show_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9-]{1,200}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Key"
+          },
+          "show_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Name"
+          },
+          "venue": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Venue"
+          },
+          "filter": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "search",
+                  "venue",
+                  "when",
+                  "day",
+                  "group"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filter"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "search",
+                    "venue",
+                    "when",
+                    "day",
+                    "group"
+                  ]
+                },
+                "type": "array",
+                "maxItems": 5
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filters"
+          },
+          "when": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9-]{1,20}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "When"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event",
+          "session_id"
+        ],
+        "title": "TrackEvent",
+        "description": "One thing the app tells us happened: a visit began, a show was opened, a filter was used.\n\nNothing about the person: the session id is a random value the app makes when it starts and keeps only\nin memory. Everything is bounded because anyone can call the endpoint."
       },
       "ValidationError": {
         "properties": {
