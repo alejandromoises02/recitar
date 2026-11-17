@@ -25,3 +25,17 @@ def test_a_name_that_only_contains_an_alias_is_not_renamed():
 @pytest.mark.parametrize("name", ["Argentina", "A confirmar", "Lugar a confirmar", "A definir", "Por confirmar", "TBA"])
 def test_a_placeholder_venue_is_a_venue_to_be_confirmed(name):
     assert canonical_venue(name) == VENUE_TO_BE_CONFIRMED == "Lugar a confirmar"  # Quilmes Rock's venue is "Argentina"
+
+
+@pytest.mark.parametrize("name, city", [
+    ("Vorterix", "Mar del Plata"),  # Articket
+    ("Teatro Vorterix Mar del Plata", "Mar del Plata"),  # All Access
+    ("Teatro Vorterix Mar del Plata", None),
+])
+def test_vorterix_in_mar_del_plata_is_told_apart_from_the_one_in_the_city(name, city):
+    assert canonical_venue(name, city) == "Teatro Vorterix (Mar del Plata)"
+
+
+@pytest.mark.parametrize("name, city", [("Teatro Vorterix", "Buenos Aires"), ("Vorterix", "Buenos Aires"), ("Vorterix", None)])
+def test_vorterix_elsewhere_is_the_one_in_the_city(name, city):
+    assert canonical_venue(name, city) == "Teatro Vorterix"

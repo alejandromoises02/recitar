@@ -127,3 +127,11 @@ def test_without_new_sources_every_new_event_is_first_seen_now():
     rec = Recorder()
     run({"a": lambda: many("a", 2)}, rec.enrich, rec.save)
     assert {e.first_seen_at for e in rec.saved} == {NOW}
+
+
+def test_venue_names_are_made_canonical_with_their_city():
+    rec = Recorder()
+    mdp = event("a-1").model_copy(update={"venue": "Vorterix", "city": "Mar del Plata"})
+    city = event("a-2").model_copy(update={"venue": "Vorterix", "city": "Buenos Aires"})
+    run({"a": lambda: [mdp, city]}, rec.enrich, rec.save)
+    assert {e.id: e.venue for e in rec.saved} == {"a-1": "Teatro Vorterix (Mar del Plata)", "a-2": "Teatro Vorterix"}

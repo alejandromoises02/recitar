@@ -96,7 +96,7 @@ def run(
                 "the site may have loaded only part of its listing, run it again"
             )
             log(f"[{name}] WARNING: {report.warnings[name]}")
-        found = [event.model_copy(update={"venue": canonical_venue(event.venue)}) for event in found]
+        found = [event.model_copy(update={"venue": canonical_venue(event.venue, event.city)}) for event in found]
         if name in new_sources:
             log(f"[{name}] first run: its shows are not counted as just announced")
             found = [event.model_copy(update={"first_seen_at": SEEN_BEFORE_WATCHING}) for event in found]
