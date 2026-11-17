@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Show, ShowDateTickets } from "../../events/domain/show";
-import { buttonWhen, dateMode, dateTile, dateTargets, moreAtVenue, ticketPlan, updatedAgo } from "./show-page";
+import { buttonWhen, dateMode, dateTile, dateTargets, hasVenueToExplore, moreAtVenue, ticketPlan, updatedAgo } from "./show-page";
 
 // Saturday 14 November 2026, noon in Buenos Aires.
 const NOW = new Date("2026-11-14T15:00:00Z");
@@ -128,5 +128,15 @@ describe("moreAtVenue", () => {
 
   it("is empty when the current show is the only one there", () => {
     expect(moreAtVenue(shows("x"), "x")).toEqual([]);
+  });
+});
+
+describe("hasVenueToExplore", () => {
+  it("is a real venue", () => {
+    expect(hasVenueToExplore("Niceto Club")).toBe(true);
+  });
+
+  it("is not a venue still to be confirmed, whose other shows have nothing in common", () => {
+    expect(hasVenueToExplore("Lugar a confirmar")).toBe(false);
   });
 });

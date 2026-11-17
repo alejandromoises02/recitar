@@ -6,6 +6,9 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, computed_field, field
 from app.domain.local_time import BUENOS_AIRES
 from app.domain.titles import tidy_title
 
+# What a show is stored at while its venue is not confirmed yet (see scrapers.venues).
+VENUE_TO_BE_CONFIRMED = "Lugar a confirmar"
+
 EventCategory = Literal["concert", "tribute", "theatre", "party", "other"]
 
 # Where an image comes from. Only "source" is unlicensed: it is the image the ticket seller

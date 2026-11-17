@@ -11,7 +11,7 @@ import type { Show } from "../../events/domain/show";
 import { imageSource } from "../../home/application/show-labels";
 import { domainOf } from "../../home/application/ticket-target";
 import { heading } from "../../home/ui/a11y";
-import { buttonWhen, dateMode, ticketPlan, updatedAgo } from "../application/show-page";
+import { buttonWhen, dateMode, hasVenueToExplore, ticketPlan, updatedAgo } from "../application/show-page";
 import { DateList } from "./DateList";
 import { DateTiles } from "./DateTiles";
 import { MoreAtVenue } from "./MoreAtVenue";
@@ -125,10 +125,10 @@ export function ShowPage({ show, apiBase }: Props) {
               <Text style={styles.strong}>{domainOf(show.sourceUrl)}</Text>
               {` · ${updatedAgo(show.updatedAt, now, lang)}`}
             </Text>
-            {oneColumn ? null : <MoreAtVenue show={show} apiBase={apiBase} fillWidth />}
+            {oneColumn || !hasVenueToExplore(show.venue) ? null : <MoreAtVenue show={show} apiBase={apiBase} fillWidth />}
           </View>
         </View>
-        {oneColumn ? <MoreAtVenue show={show} apiBase={apiBase} fillWidth={false} /> : null}
+        {oneColumn && hasVenueToExplore(show.venue) ? <MoreAtVenue show={show} apiBase={apiBase} fillWidth={false} /> : null}
       </ScrollView>
       {oneColumn ? <PinnedTicketBar link={offer.links[0]} /> : null}
     </View>

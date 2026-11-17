@@ -3,6 +3,7 @@ import type { Show, ShowDateTickets } from "../../events/domain/show";
 import { calendarDay } from "../../home/application/calendar";
 import { DATE_WORDS } from "../../home/application/date-words";
 import { startTime } from "../../home/application/show-labels";
+import { VENUE_TO_BE_CONFIRMED } from "../../events/domain/venue";
 import { domainOf } from "../../home/application/ticket-target";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -83,6 +84,11 @@ export function updatedAgo(updatedAt: Date, now: Date, lang: Lang): string {
   if (hours < 1) return `actualizado hace ${minutes} min`;
   if (days < 1) return `actualizado hace ${hours} h`;
   return `actualizado hace ${days} ${days === 1 ? "día" : "días"}`;
+}
+
+/** Whether the page offers other shows at the venue: a venue still to be confirmed is not a place. */
+export function hasVenueToExplore(venue: string): boolean {
+  return venue !== VENUE_TO_BE_CONFIRMED;
 }
 
 /** How many other shows the page offers at the same venue. */

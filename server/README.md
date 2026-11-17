@@ -53,7 +53,9 @@ Arena (`playwright install chromium`). Image copies go to `server/data/images` (
 
 Venue names are normalized before saving, so one place has one name whatever the source calls
 it (for example Venti's "Niceto Bar" and "Humboldt | Niceto Club" are stored as "Niceto Club").
-The mapping lives in `app/scrapers/venues.py`; add new variants there.
+The mapping lives in `app/scrapers/venues.py`; add new variants there. A source that does not know the venue yet
+writes a placeholder ("A confirmar", or a whole country: Enigma lists Quilmes Rock 2027 at "Argentina");
+those are stored as "Lugar a confirmar", which `/venues` leaves out and the show page offers no "more at".
 
 Sources that do not say what kind of event a show is, and the music categories of those that do, go
 through one provisional rule (`app/scrapers/category.py`) until LLM classification replaces it: an

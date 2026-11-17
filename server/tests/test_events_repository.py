@@ -376,6 +376,12 @@ def test_a_ticket_click_is_stored_with_what_the_count_needs_and_nothing_about_th
     assert rows[0]["id"] != rows[1]["id"]
 
 
+def test_a_venue_to_be_confirmed_is_not_listed_as_a_venue(db_engine):
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event("movistar-a-20261120T2100"), event("enigma-q-20270416T0000", venue="Lugar a confirmar")])
+        assert list_upcoming_venues(conn, NOW) == [VenueCount(name="Movistar Arena", upcoming_events=1)]
+
+
 def test_venues_can_count_one_kind_of_event_only(db_engine):
     with db_engine.begin() as conn:
         upsert_events(conn, [

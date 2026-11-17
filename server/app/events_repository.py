@@ -10,7 +10,7 @@ from sqlalchemy import (
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
-from app.domain.event import Event, EventCategory, Show, ShowDate
+from app.domain.event import VENUE_TO_BE_CONFIRMED, Event, EventCategory, Show, ShowDate
 from app.domain.ticket_redirect import TicketClick
 
 metadata = MetaData()
@@ -203,8 +203,9 @@ class VenueCount(BaseModel):
 
 
 def list_upcoming_venues(connection: Connection, now: datetime, category: EventCategory | None = None) -> list[VenueCount]:
-    """Venues with at least one event from `now` on (of `category`, when given), by name, with how many they have."""
-    conditions = [events.c.starts_at >= now]
+    """Venues with at least one event from `now` on (of `category`, when given), by name, with how many they have.
+    A venue to be confirmed is not a place to filter by."""
+    conditions = [events.c.starts_at >= now, events.c.venue != VENUE_TO_BE_CONFIRMED]
     if category is not None:
         conditions.append(events.c.category == category)
     query = (
