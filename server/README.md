@@ -125,7 +125,8 @@ shows go by their next date, then id. Paging and cursor rules are the same.
 `GET /featured` returns `{"kind": "picked" | "just_announced", "items": [...]}`: up to 10 shows in
 the `GET /shows` format, all with an image. `picked` are the shows chosen by hand, in their order;
 when none of them can be shown, it falls back to `just_announced`: shows first seen in the last 14
-days that have an image, newest first.
+days that have an image, newest first. `?category=concert` keeps only shows of that kind in both
+lists (the app sends it: it shows concerts only for now, while the database keeps every kind).
 
 `PUT /featured` (admin only) replaces the picked list: body `{"show_ids": ["venti-mila", ...]}`,
 ids from `GET /shows`, up to 20, no repeats; `[]` clears it. Every id must be a stored show, or
@@ -140,7 +141,8 @@ nothing is written (422 naming the unknown ones). It needs `Authorization: Beare
 
 `GET /venues` returns the venues that have upcoming events, by name, with how many each has:
 `{"items": [{"name": "Niceto Club", "upcoming_events": 12}]}`. It is not paged (a few dozen venues);
-`items` leaves room to add paging later without breaking clients.
+`items` leaves room to add paging later without breaking clients. `?category=concert` counts only
+events of that kind and leaves out venues with none; an unknown category is a 422.
 
 `GET /events/{id}` returns one event with every field (ticket links, image with its credit and
 licence, source), even if it already happened, plus `other_dates`: the upcoming dates of the same

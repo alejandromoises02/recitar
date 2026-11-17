@@ -11,9 +11,9 @@ NOW = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
 TOKEN = "s3cret-" + "x" * 40
 
 
-def show(id_: str) -> Show:
+def show(id_: str, category: str = "concert") -> Show:
     return Show(
-        id=id_, category="concert", title=f"Show {id_}", name=f"Show {id_}", venue="Niceto Club", source_url="https://venti.live/x",
+        id=id_, category=category, title=f"Show {id_}", name=f"Show {id_}", venue="Niceto Club", source_url="https://venti.live/x",
         image_url=f"/media/{id_}.webp", image_origin="licensed", first_seen_at=NOW, updated_at=NOW,
         dates=[ShowDateTickets(id=f"{id_}-20261120T2100", starts_at=NOW + timedelta(days=11),
                                ticket_links=[TicketLink(vendor="Venti", url="https://venti.live/x")])],
@@ -31,11 +31,13 @@ class FakeStore:
     def replace(self, ids):
         self.replaced.append(list(ids))
 
-    def picked(self, limit):
-        return self.picked_items[:limit]
+    def picked(self, limit, category=None):
+        self.category = category
+        return [s for s in self.picked_items if category is None or s.category == category][:limit]
 
-    def just_announced(self, limit):
-        return self.announced_items[:limit]
+    def just_announced(self, limit, category=None):
+        self.category = category
+        return [s for s in self.announced_items if category is None or s.category == category][:limit]
 
 
 @pytest.fixture
@@ -187,3 +189,32 @@ def test_unknown_fields_in_the_body_are_rejected(client_with):
     )
     assert response.status_code == 422
     assert store.replaced == []
+
+
+# --- by kind of event ------------------------------------------------------------------------------
+
+
+def test_featured_can_be_asked_for_one_kind_of_event_only(client_with):
+    store = FakeStore(picked=[show("venti-a"), show("ticketek-play", "theatre")])
+    client = client_with(store)
+    body = client.get("/featured", params={"category": "concert"}).json()
+    assert (body["kind"], [s["id"] for s in body["items"]]) == ("picked", ["venti-a"])
+    assert store.category == "concert"
+
+
+def test_when_no_picked_show_is_of_that_kind_the_just_announced_ones_of_that_kind_are_featured(client_with):
+    store = FakeStore(picked=[show("ticketek-play", "theatre")], announced=[show("ticketek-kids", "theatre"), show("venti-b")])
+    body = client_with(store).get("/featured", params={"category": "concert"}).json()
+    assert (body["kind"], [s["id"] for s in body["items"]]) == ("just_announced", ["venti-b"])
+
+
+def test_without_a_category_every_kind_is_featured_as_before(client_with):
+    store = FakeStore(picked=[show("venti-a"), show("ticketek-play", "theatre")])
+    body = client_with(store).get("/featured").json()
+    assert [s["id"] for s in body["items"]] == ["venti-a", "ticketek-play"]
+    assert store.category is None
+
+
+def test_an_unknown_category_is_refused(client_with):
+    response = client_with(FakeStore()).get("/featured", params={"category": "opera"})
+    assert response.status_code == 422

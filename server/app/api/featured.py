@@ -8,9 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.admin_auth import require_admin
 from app.api.events import engine
-from app.api.listing import problem
+from app.api.listing import Category, problem
 from app.api.problems import InvalidParameterError
-from app.domain.event import Show
+from app.domain.event import EventCategory, Show
 from app.events_repository import (
     known_show_keys, list_featured_shows, list_just_announced_with_image, replace_featured,
 )
@@ -24,8 +24,8 @@ router = APIRouter(tags=["featured"])
 class FeaturedStore(Protocol):
     def known_show_ids(self, ids: list[str]) -> set[str]: ...
     def replace(self, ids: list[str]) -> None: ...
-    def picked(self, limit: int) -> list[Show]: ...
-    def just_announced(self, limit: int) -> list[Show]: ...
+    def picked(self, limit: int, category: EventCategory | None = None) -> list[Show]: ...
+    def just_announced(self, limit: int, category: EventCategory | None = None) -> list[Show]: ...
 
 
 class _DatabaseStore:
@@ -39,13 +39,13 @@ class _DatabaseStore:
         with engine().begin() as connection:  # one transaction: the old list or the new one, never half
             replace_featured(connection, ids)
 
-    def picked(self, limit: int) -> list[Show]:
+    def picked(self, limit: int, category: EventCategory | None = None) -> list[Show]:
         with engine().connect() as connection:
-            return list_featured_shows(connection, datetime.now(timezone.utc), limit)
+            return list_featured_shows(connection, datetime.now(timezone.utc), limit, category)
 
-    def just_announced(self, limit: int) -> list[Show]:
+    def just_announced(self, limit: int, category: EventCategory | None = None) -> list[Show]:
         with engine().connect() as connection:
-            return list_just_announced_with_image(connection, datetime.now(timezone.utc), limit)
+            return list_just_announced_with_image(connection, datetime.now(timezone.utc), limit, category)
 
 
 def featured_store() -> FeaturedStore:
@@ -79,15 +79,19 @@ class Featured(BaseModel):
     items: list[Show]
 
 
-@router.get("/featured", response_model=Featured, summary="The shows the home features")
-def get_featured(store: Annotated[FeaturedStore, Depends(featured_store)]) -> Featured:
+@router.get(
+    "/featured", response_model=Featured, summary="The shows the home features",
+    responses={422: problem("category is not a known kind of event")},
+)
+def get_featured(store: Annotated[FeaturedStore, Depends(featured_store)], category: Category = None) -> Featured:
     """Up to 10 shows, each with all its upcoming dates (as in GET /shows) and an image. The ones
     picked by hand, in their order; when none of them can be shown (none picked, all past, or
-    without an image), the shows first seen in the last 14 days that have an image, newest first."""
-    picked = store.picked(FEATURED_LIMIT)
+    without an image), the shows first seen in the last 14 days that have an image, newest first.
+    With `category`, only shows of that kind, in both lists."""
+    picked = store.picked(FEATURED_LIMIT, category)
     if picked:
         return Featured(kind="picked", items=picked[:FEATURED_LIMIT])
-    return Featured(kind="just_announced", items=store.just_announced(FEATURED_LIMIT)[:FEATURED_LIMIT])
+    return Featured(kind="just_announced", items=store.just_announced(FEATURED_LIMIT, category)[:FEATURED_LIMIT])
 
 
 @router.put(

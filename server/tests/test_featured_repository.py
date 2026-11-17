@@ -10,9 +10,9 @@ from app.events_repository import (
 NOW = datetime(2026, 11, 8, 12, 0, tzinfo=timezone.utc)
 
 
-def event(id_: str, days: float, image: bool = True, seen_days_ago: float = 0) -> Event:
+def event(id_: str, days: float, image: bool = True, seen_days_ago: float = 0, category: str = "concert") -> Event:
     return Event(
-        id=id_, category="concert", title=id_, venue="Niceto Club", starts_at=NOW + timedelta(days=days),
+        id=id_, category=category, title=id_, venue="Niceto Club", starts_at=NOW + timedelta(days=days),
         ticket_links=[TicketLink(vendor="Venti", url="https://venti.live/x")], source_url="https://venti.live/x",
         updated_at=NOW, first_seen_at=NOW - timedelta(days=seen_days_ago),
         **({"image_url": f"/media/{id_}.webp", "image_origin": "licensed"} if image else {}),
@@ -76,3 +76,12 @@ def test_just_announced_with_image_is_newest_first_within_14_days(db_engine):
         ])
         found = list_just_announced_with_image(conn, NOW, 10)
     assert [s.id for s in found] == ["venti-new", "venti-mid"]
+
+
+def test_featured_and_just_announced_shows_can_be_of_one_kind_only(db_engine):
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event("venti-a-20261120T2100", 12), event("ticketek-play-20261121T2100", 13, category="theatre")])
+        replace_featured(conn, ["ticketek-play", "venti-a"])
+        assert [s.id for s in list_featured_shows(conn, NOW, 10, "concert")] == ["venti-a"]
+        assert [s.id for s in list_featured_shows(conn, NOW, 10)] == ["ticketek-play", "venti-a"]
+        assert [s.id for s in list_just_announced_with_image(conn, NOW, 10, "theatre")] == ["ticketek-play"]

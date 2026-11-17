@@ -197,11 +197,14 @@ class VenueCount(BaseModel):
     upcoming_events: int
 
 
-def list_upcoming_venues(connection: Connection, now: datetime) -> list[VenueCount]:
-    """Venues with at least one event from `now` on, by name, with how many they have."""
+def list_upcoming_venues(connection: Connection, now: datetime, category: EventCategory | None = None) -> list[VenueCount]:
+    """Venues with at least one event from `now` on (of `category`, when given), by name, with how many they have."""
+    conditions = [events.c.starts_at >= now]
+    if category is not None:
+        conditions.append(events.c.category == category)
     query = (
         select(events.c.venue, func.count())
-        .where(events.c.starts_at >= now)
+        .where(*conditions)
         .group_by(events.c.venue)
         .order_by(events.c.venue)
     )
@@ -298,8 +301,9 @@ def _with_image(shows: list[Show]) -> list[Show]:
     return [show for show in shows if show.image_url is not None]
 
 
-def list_featured_shows(connection: Connection, now: datetime, limit: int) -> list[Show]:
-    """Picked shows in their order, only those with an upcoming date and an image (of the next date)."""
+def list_featured_shows(connection: Connection, now: datetime, limit: int, category: EventCategory | None = None) -> list[Show]:
+    """Picked shows in their order, only those with an upcoming date and an image (of the next date),
+    and of `category` when given."""
     per_show = _per_show(now)
     query = (
         select(per_show)
@@ -307,12 +311,13 @@ def list_featured_shows(connection: Connection, now: datetime, limit: int) -> li
         .where(per_show.c.next_starts_at.is_not(None))
         .order_by(featured_shows.c.position)
     )
-    return _with_image(_shows_for(connection, now, connection.execute(query).all()))[:limit]
+    shows = _with_image(_shows_for(connection, now, connection.execute(query).all()))
+    return [show for show in shows if category is None or show.category == category][:limit]
 
 
-def list_just_announced_with_image(connection: Connection, now: datetime, limit: int) -> list[Show]:
+def list_just_announced_with_image(connection: Connection, now: datetime, limit: int, category: EventCategory | None = None) -> list[Show]:
     """Shows first seen in the last JUST_ANNOUNCED_DAYS days that have an image, newest first: what
     the home features when nothing is picked. Reads a few times `limit` because some have no image."""
-    filters = EventFilters(announced_from=now - timedelta(days=JUST_ANNOUNCED_DAYS))
+    filters = EventFilters(announced_from=now - timedelta(days=JUST_ANNOUNCED_DAYS), category=category)
     found = list_upcoming_shows(connection, now, limit * 5, None, filters, "announced")
     return _with_image(found)[:limit]

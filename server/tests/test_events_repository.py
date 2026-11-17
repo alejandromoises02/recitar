@@ -366,3 +366,16 @@ def test_a_ticket_click_is_stored_with_what_the_count_needs_and_nothing_about_th
     ]
     assert set(rows[0]) == {"id", "show_key", "event_id", "vendor", "source", "created_at"}
     assert rows[0]["id"] != rows[1]["id"]
+
+
+def test_venues_can_count_one_kind_of_event_only(db_engine):
+    with db_engine.begin() as conn:
+        upsert_events(conn, [
+            event("movistar-a-20261120T2100"),
+            event("ticketek-play-20261121T2100", category="theatre", venue="Teatro Coliseo"),
+            event("ticketek-gig-20261122T2100", venue="Teatro Coliseo"),
+        ])
+        assert list_upcoming_venues(conn, NOW, "concert") == [
+            VenueCount(name="Movistar Arena", upcoming_events=1), VenueCount(name="Teatro Coliseo", upcoming_events=1),
+        ]
+        assert list_upcoming_venues(conn, NOW, "theatre") == [VenueCount(name="Teatro Coliseo", upcoming_events=1)]
