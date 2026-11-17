@@ -1,5 +1,6 @@
 """Scraper for the Teatro Colon monthly calendar (server-rendered HTML, no API)."""
 
+import logging
 import re
 import time
 from datetime import datetime
@@ -22,23 +23,41 @@ USER_AGENT = "recitAR-research/0.1"
 _HOUR = re.compile(r"(\d{1,2})\.(\d{2})")
 _DAY = re.compile(r"\d{1,2}")
 
-# The site's own program labels. Anything not listed falls back to "other".
+# The site's own program labels, as seen from November 2026 to January 2027. A label not listed
+# falls back to "other" and is logged, so a new one is noticed. Children's shows are theatre, as
+# family shows are in the other sources; CETC (the experimental centre) and the season's guided
+# visits are "other".
 _CATEGORIES: dict[str, EventCategory] = {
     "Ópera": "theatre",
     "Ballet": "theatre",
+    "Colón para niños": "theatre",
     "Filarmónica de Buenos Aires": "concert",
     "Música de Cámara": "concert",
     "Clásica Joven": "concert",
     "Corales": "concert",
     "Conciertos extraordinarios": "concert",
     "Salón Dorado": "concert",
+    "Fuera de Ciclo": "concert",
+    "Grandes Intérpretes": "concert",
+    "Contemporáneo": "concert",
+    "Orquesta Académica del Teatro Colón": "concert",
+    "CETC": "other",
+    "Temporada 2026": "other",
 }
+_log = logging.getLogger(__name__)
+
+
+def _category(label: str | None, unknown: set[str]) -> EventCategory:
+    if label is not None and label not in _CATEGORIES:
+        unknown.add(label)
+    return _CATEGORIES.get(label or "", "other")
 
 
 def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Event]:
     """Events of one calendar page. The page shows only day and hour, so the caller gives year/month."""
     soup = BeautifulSoup(html, "html.parser")
     events: list[Event] = []
+    unknown: set[str] = set()
     for item in soup.select("div.calendar-item"):
         day = item.select_one(".day-number")
         hour = item.select_one(".day-hour")
@@ -59,7 +78,7 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
         events.append(
             Event(
                 id=f"colon-{slug}-{starts_at:%Y%m%dT%H%M}",
-                category=_CATEGORIES.get(category.get_text(strip=True), "other") if category else "other",
+                category=_category(category.get_text(strip=True) if category else None, unknown),
                 title=clean_text(title.get_text(" ", strip=True)),
                 venue=VENUE,
                 city="Buenos Aires",
@@ -72,6 +91,8 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
                 updated_at=now,
             )
         )
+    for label in sorted(unknown):
+        _log.warning('Teatro Colón program label not mapped: "%s"', label)
     return events
 
 

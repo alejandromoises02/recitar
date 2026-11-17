@@ -1,6 +1,10 @@
+import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import pytest
 
 from app.scrapers.colon import parse_calendar
 
@@ -74,3 +78,33 @@ def test_image_comes_from_the_site_and_is_marked_as_source():
     manon = calendar(11)[0]
     assert manon.image_url == "https://teatrocolon.org.ar/wp-content/uploads/2025/12/Manon_tapa-redes_web-1.png"
     assert manon.image_origin == "source"
+
+
+def relabelled(label: str) -> list:
+    """The November calendar with every performance under one program label."""
+    html = (FIXTURES / "colon_calendar_2026_11.html").read_text(encoding="utf-8")
+    html, count = re.subn(r'class="category">[^<]*<', f'class="category">{label}<', html)
+    assert count > 0
+    return parse_calendar(html, 2026, 11, NOW)
+
+
+@pytest.mark.parametrize("label, category", [
+    ("Fuera de Ciclo", "concert"),  # Bach: Tres Conciertos de Brandeburgo
+    ("Grandes Intérpretes", "concert"),
+    ("Contemporáneo", "concert"),
+    ("Orquesta Académica del Teatro Colón", "concert"),
+    ("Colón para niños", "theatre"),  # family shows, as in the other sources
+    ("CETC", "other"),
+    ("Temporada 2026", "other"),  # guided visits
+    ("Ópera", "theatre"),
+    ("Música de Cámara", "concert"),
+])
+def test_each_program_label_maps_to_a_category(label, category, caplog):
+    assert {e.category for e in relabelled(label)} == {category}
+    assert caplog.records == []  # every one of these is known
+
+
+def test_an_unknown_program_label_is_other_and_logged(caplog):
+    with caplog.at_level(logging.WARNING):
+        assert {e.category for e in relabelled("Ciclo Nuevo")} == {"other"}
+    assert [r.getMessage() for r in caplog.records] == ['Teatro Colón program label not mapped: "Ciclo Nuevo"']
