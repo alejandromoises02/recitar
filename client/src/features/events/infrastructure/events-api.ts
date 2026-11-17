@@ -10,6 +10,10 @@ export type EventsQuery = NonNullable<operations["list_events_events_get"]["para
 /** Filters, sort and cursor of GET /shows: the same as GET /events. */
 export type ShowsQuery = NonNullable<operations["list_shows_shows_get"]["parameters"]["query"]>;
 
+/** GET /venues and GET /featured take only a category. */
+export type VenuesQuery = NonNullable<operations["list_venues_venues_get"]["parameters"]["query"]>;
+export type FeaturedQuery = NonNullable<operations["get_featured_featured_get"]["parameters"]["query"]>;
+
 export type ShowsPage = {
   items: Show[];
   nextCursor: string | null;
@@ -25,12 +29,12 @@ export type EventsApi = {
   listEvents(query: EventsQuery): Promise<EventsPage>;
   /** null when there is no event with that id. */
   getEvent(id: string): Promise<EventDetail | null>;
-  listVenues(): Promise<Venue[]>;
+  listVenues(query?: VenuesQuery): Promise<Venue[]>;
   /** Each show once, with all of its upcoming dates. */
   listShows(query: ShowsQuery): Promise<ShowsPage>;
   /** One show with all of its upcoming dates; null when it does not exist or has none left. */
   getShow(id: string): Promise<Show | null>;
-  getFeatured(): Promise<Featured>;
+  getFeatured(query?: FeaturedQuery): Promise<Featured>;
 };
 
 /** The API answered with an error. `title` and `detail` come from its problem+json body. */
@@ -104,8 +108,8 @@ export function createEventsApi({ baseUrl, fetch }: { baseUrl: string; fetch: ty
         throw error;
       }
     },
-    async listVenues() {
-      const list = await get<components["schemas"]["VenueList"]>("/venues");
+    async listVenues(query = {}) {
+      const list = await get<components["schemas"]["VenueList"]>("/venues", query);
       return list.items.map(venueFromApi);
     },
     async listShows(query) {
@@ -120,8 +124,8 @@ export function createEventsApi({ baseUrl, fetch }: { baseUrl: string; fetch: ty
         throw error;
       }
     },
-    async getFeatured() {
-      return featuredFromApi(await get<components["schemas"]["Featured"]>("/featured"));
+    async getFeatured(query = {}) {
+      return featuredFromApi(await get<components["schemas"]["Featured"]>("/featured", query));
     },
   };
 }

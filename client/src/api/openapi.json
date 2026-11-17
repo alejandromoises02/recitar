@@ -815,8 +815,34 @@
           "featured"
         ],
         "summary": "The shows the home features",
-        "description": "Up to 10 shows, each with all its upcoming dates (as in GET /shows) and an image. The ones\npicked by hand, in their order; when none of them can be shown (none picked, all past, or\nwithout an image), the shows first seen in the last 14 days that have an image, newest first.",
+        "description": "Up to 10 shows, each with all its upcoming dates (as in GET /shows) and an image. The ones\npicked by hand, in their order; when none of them can be shown (none picked, all past, or\nwithout an image), the shows first seen in the last 14 days that have an image, newest first.\nWith `category`, only shows of that kind, in both lists.",
         "operationId": "get_featured_featured_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "concert",
+                    "theatre",
+                    "party",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this kind of event",
+              "title": "Category"
+            },
+            "description": "Only this kind of event"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -824,6 +850,62 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Featured"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "category is not a known kind of event",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "status": {
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Detail"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
                 }
               }
             }
@@ -837,15 +919,20 @@
         "summary": "Pick the featured shows (admin only)",
         "description": "Replaces the whole list. Every id must be a stored show; nothing is written otherwise.",
         "operationId": "put_featured_featured_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/FeaturedIds"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -865,17 +952,17 @@
                 "schema": {
                   "properties": {
                     "type": {
-                      "type": "string",
+                      "default": "about:blank",
                       "title": "Type",
-                      "default": "about:blank"
+                      "type": "string"
                     },
                     "title": {
-                      "type": "string",
-                      "title": "Title"
+                      "title": "Title",
+                      "type": "string"
                     },
                     "status": {
-                      "type": "integer",
-                      "title": "Status"
+                      "title": "Status",
+                      "type": "integer"
                     },
                     "detail": {
                       "anyOf": [
@@ -904,12 +991,12 @@
                       "title": "Errors"
                     }
                   },
-                  "type": "object",
                   "required": [
                     "title",
                     "status"
                   ],
-                  "title": "Problem"
+                  "title": "Problem",
+                  "type": "object"
                 }
               }
             }
@@ -921,17 +1008,17 @@
                 "schema": {
                   "properties": {
                     "type": {
-                      "type": "string",
+                      "default": "about:blank",
                       "title": "Type",
-                      "default": "about:blank"
+                      "type": "string"
                     },
                     "title": {
-                      "type": "string",
-                      "title": "Title"
+                      "title": "Title",
+                      "type": "string"
                     },
                     "status": {
-                      "type": "integer",
-                      "title": "Status"
+                      "title": "Status",
+                      "type": "integer"
                     },
                     "detail": {
                       "anyOf": [
@@ -960,12 +1047,12 @@
                       "title": "Errors"
                     }
                   },
-                  "type": "object",
                   "required": [
                     "title",
                     "status"
                   ],
-                  "title": "Problem"
+                  "title": "Problem",
+                  "type": "object"
                 }
               }
             }
@@ -977,17 +1064,17 @@
                 "schema": {
                   "properties": {
                     "type": {
-                      "type": "string",
+                      "default": "about:blank",
                       "title": "Type",
-                      "default": "about:blank"
+                      "type": "string"
                     },
                     "title": {
-                      "type": "string",
-                      "title": "Title"
+                      "title": "Title",
+                      "type": "string"
                     },
                     "status": {
-                      "type": "integer",
-                      "title": "Status"
+                      "title": "Status",
+                      "type": "integer"
                     },
                     "detail": {
                       "anyOf": [
@@ -1016,22 +1103,17 @@
                       "title": "Errors"
                     }
                   },
-                  "type": "object",
                   "required": [
                     "title",
                     "status"
                   ],
-                  "title": "Problem"
+                  "title": "Problem",
+                  "type": "object"
                 }
               }
             }
           }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
+        }
       }
     },
     "/venues": {
@@ -1040,8 +1122,34 @@
           "venues"
         ],
         "summary": "Venues with upcoming events",
-        "description": "Every venue with at least one upcoming event, by name, with how many it has. Send a `name`\nas `venue` to GET /events to see that venue's events.",
+        "description": "Every venue with at least one upcoming event, by name, with how many it has. With `category`,\nonly events of that kind are counted, and venues with none are left out. Send a `name` as `venue`\nto GET /events to see that venue's events.",
         "operationId": "list_venues_venues_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "concert",
+                    "theatre",
+                    "party",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this kind of event",
+              "title": "Category"
+            },
+            "description": "Only this kind of event"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1049,6 +1157,62 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/VenueList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "category is not a known kind of event",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "status": {
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "detail": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Detail"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": true,
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
                 }
               }
             }

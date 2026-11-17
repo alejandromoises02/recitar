@@ -127,6 +127,12 @@ describe("listVenues", () => {
     expect(urls).toEqual(["https://api.example/venues"]);
     expect(venues).toEqual([{ name: "Niceto Club", upcomingEvents: 96 }]);
   });
+
+  it("sends the category when given", async () => {
+    const { fetch, urls } = fakeFetch(() => json({ items: [] }));
+    await createEventsApi({ baseUrl: "https://api.example", fetch }).listVenues({ category: "concert" });
+    expect(urls).toEqual(["https://api.example/venues?category=concert"]);
+  });
 });
 
 describe("errors", () => {
@@ -186,5 +192,11 @@ describe("getFeatured", () => {
     const featured = await createEventsApi({ baseUrl: "https://api.example", fetch }).getFeatured();
     expect(new URL(urls[0]).pathname).toBe("/featured");
     expect(featured).toMatchObject({ kind: "picked", items: [{ id: "venti-b" }] });
+  });
+
+  it("sends the category when given", async () => {
+    const { fetch, urls } = fakeFetch(() => json({ kind: "picked", items: [] }));
+    await createEventsApi({ baseUrl: "https://api.example", fetch }).getFeatured({ category: "concert" });
+    expect(urls).toEqual(["https://api.example/featured?category=concert"]);
   });
 });

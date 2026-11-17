@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { EventsApi, EventsQuery, ShowsQuery } from "./events-api";
 import { eventsApi } from "./events-api";
+import { VISIBLE_CATEGORY } from "../application/visible-category";
 
 /** What GET /events can filter by; the cursor is handled by the query. */
 export type EventFilters = Omit<EventsQuery, "cursor" | "limit">;
@@ -18,11 +19,11 @@ export const eventKeys = {
   all: ["events"] as const,
   list: (filters: EventFilters) => ["events", "list", withoutEmpty(filters)] as const,
   detail: (id: string) => ["events", "detail", id] as const,
-  venues: ["venues"] as const,
-  shows: (filters: ShowFilters) => ["shows", "list", withoutEmpty(filters)] as const,
-  featured: ["featured"] as const,
+  venues: ["venues", VISIBLE_CATEGORY] as const,
+  shows: (filters: ShowFilters) => ["shows", "list", VISIBLE_CATEGORY, withoutEmpty(filters)] as const,
+  featured: ["featured", VISIBLE_CATEGORY] as const,
   show: (id: string) => ["shows", "detail", id] as const,
-  venueShows: (venue: string) => ["shows", "venue", venue] as const,
+  venueShows: (venue: string) => ["shows", "venue", VISIBLE_CATEGORY, venue] as const,
 };
 
 /** Upcoming events, a page at a time: each next page is asked for with the previous next_cursor. */
@@ -40,14 +41,14 @@ export function eventQueryOptions(api: EventsApi, id: string) {
 }
 
 export function venuesQueryOptions(api: EventsApi) {
-  return queryOptions({ queryKey: eventKeys.venues, queryFn: () => api.listVenues() });
+  return queryOptions({ queryKey: eventKeys.venues, queryFn: () => api.listVenues({ category: VISIBLE_CATEGORY }) });
 }
 
-/** Upcoming shows, a page at a time, like eventsQueryOptions. */
+/** Upcoming shows of the kind the app shows (VISIBLE_CATEGORY), a page at a time, like eventsQueryOptions. */
 export function showsQueryOptions(api: EventsApi, filters: ShowFilters = {}) {
   return infiniteQueryOptions({
     queryKey: eventKeys.shows(filters),
-    queryFn: ({ pageParam }) => api.listShows({ ...filters, cursor: pageParam }),
+    queryFn: ({ pageParam }) => api.listShows({ ...filters, category: VISIBLE_CATEGORY, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
@@ -60,7 +61,7 @@ const VENUE_SHOWS_LIMIT = 5;
 export function venueShowsQueryOptions(api: EventsApi, venue: string) {
   return queryOptions({
     queryKey: eventKeys.venueShows(venue),
-    queryFn: async () => (await api.listShows({ venue, limit: VENUE_SHOWS_LIMIT })).items,
+    queryFn: async () => (await api.listShows({ venue, limit: VENUE_SHOWS_LIMIT, category: VISIBLE_CATEGORY })).items,
   });
 }
 
@@ -70,7 +71,7 @@ export function showQueryOptions(api: EventsApi, id: string) {
 }
 
 export function featuredQueryOptions(api: EventsApi) {
-  return queryOptions({ queryKey: eventKeys.featured, queryFn: () => api.getFeatured() });
+  return queryOptions({ queryKey: eventKeys.featured, queryFn: () => api.getFeatured({ category: VISIBLE_CATEGORY }) });
 }
 
 export const useEvents = (filters: EventFilters = {}) => useInfiniteQuery(eventsQueryOptions(eventsApi(), filters));

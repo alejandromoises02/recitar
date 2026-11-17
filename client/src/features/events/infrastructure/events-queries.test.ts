@@ -2,7 +2,8 @@ import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 import type { Event } from "../domain/event";
 import type { Show } from "../domain/show";
-import type { EventsApi, EventsPage, EventsQuery, ShowsPage, ShowsQuery } from "./events-api";
+import type { EventsApi, EventsPage, EventsQuery, FeaturedQuery, ShowsPage, ShowsQuery, VenuesQuery } from "./events-api";
+import { VISIBLE_CATEGORY } from "../application/visible-category";
 import { eventQueryOptions, eventsQueryOptions, featuredQueryOptions, showQueryOptions, showsQueryOptions, venueShowsQueryOptions, venuesQueryOptions } from "./events-queries";
 
 const event = (id: string) => ({ id }) as Event;
@@ -12,6 +13,8 @@ const show = (id: string) => ({ id }) as Show;
 function fakeApi(pages: EventsPage[], showPages: ShowsPage[] = []) {
   const requests: EventsQuery[] = [];
   const showRequests: ShowsQuery[] = [];
+  const venueRequests: VenuesQuery[] = [];
+  const featuredRequests: FeaturedQuery[] = [];
   const api: EventsApi = {
     async listEvents(query) {
       requests.push(query);
@@ -20,21 +23,23 @@ function fakeApi(pages: EventsPage[], showPages: ShowsPage[] = []) {
     async getEvent(id) {
       return id === "known" ? { ...event("known"), otherDates: [] } : null;
     },
-    async listVenues() {
+    async listVenues(query) {
+      venueRequests.push(query ?? {});
       return [{ name: "Niceto Club", upcomingEvents: 96 }];
     },
     async listShows(query) {
       showRequests.push(query);
       return showPages[query.cursor ? Number(query.cursor) : 0];
     },
-    async getFeatured() {
+    async getFeatured(query) {
+      featuredRequests.push(query ?? {});
       return { kind: "picked" as const, items: [show("f")] };
     },
     async getShow(id) {
       return id === "known" ? show("known") : null;
     },
   };
-  return { api, requests, showRequests };
+  return { api, requests, showRequests, venueRequests, featuredRequests };
 }
 
 describe("eventsQueryOptions", () => {
@@ -105,6 +110,15 @@ describe("showsQueryOptions", () => {
     ]);
   });
 
+  it("asks only for the kind of event the app shows, on every page", async () => {
+    const { api, showRequests } = fakeApi([], [
+      { items: [show("a")], nextCursor: "1" },
+      { items: [show("b")], nextCursor: null },
+    ]);
+    await new QueryClient().fetchInfiniteQuery({ ...showsQueryOptions(api, { q: "rock" }), pages: 2 });
+    expect(showRequests.map((r) => r.category)).toEqual(["concert", "concert"]);
+  });
+
   it("does not share its cache with the event list", () => {
     const { api } = fakeApi([]);
     expect(showsQueryOptions(api, {}).queryKey).not.toEqual(eventsQueryOptions(api, {}).queryKey);
@@ -127,6 +141,26 @@ describe("featuredQueryOptions", () => {
     const featured = await new QueryClient().fetchQuery(featuredQueryOptions(api));
     expect(featured.kind).toBe("picked");
   });
+
+  it("asks only for the kind of event the app shows", async () => {
+    const { api, featuredRequests } = fakeApi([]);
+    await new QueryClient().fetchQuery(featuredQueryOptions(api));
+    expect(featuredRequests).toEqual([{ category: "concert" }]);
+  });
+});
+
+describe("venuesQueryOptions", () => {
+  it("counts only the kind of event the app shows", async () => {
+    const { api, venueRequests } = fakeApi([]);
+    await new QueryClient().fetchQuery(venuesQueryOptions(api));
+    expect(venueRequests).toEqual([{ category: "concert" }]);
+  });
+});
+
+describe("VISIBLE_CATEGORY", () => {
+  it("is concerts only in this first phase", () => {
+    expect(VISIBLE_CATEGORY).toBe("concert");
+  });
 });
 
 describe("venueShowsQueryOptions", () => {
@@ -134,7 +168,7 @@ describe("venueShowsQueryOptions", () => {
     const { api, showRequests } = fakeApi([], [{ items: [show("a"), show("b")], nextCursor: "1" }]);
     const shows = await new QueryClient().fetchQuery(venueShowsQueryOptions(api, "Niceto Club"));
     expect(shows.map((s) => s.id)).toEqual(["a", "b"]);
-    expect(showRequests).toEqual([{ venue: "Niceto Club", limit: 5 }]);
+    expect(showRequests).toEqual([{ venue: "Niceto Club", limit: 5, category: "concert" }]);
   });
 
   it("caches each venue apart from the paged listing", () => {

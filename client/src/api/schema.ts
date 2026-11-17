@@ -112,6 +112,7 @@ export interface paths {
          * @description Up to 10 shows, each with all its upcoming dates (as in GET /shows) and an image. The ones
          *     picked by hand, in their order; when none of them can be shown (none picked, all past, or
          *     without an image), the shows first seen in the last 14 days that have an image, newest first.
+         *     With `category`, only shows of that kind, in both lists.
          */
         get: operations["get_featured_featured_get"];
         /**
@@ -135,8 +136,9 @@ export interface paths {
         };
         /**
          * Venues with upcoming events
-         * @description Every venue with at least one upcoming event, by name, with how many it has. Send a `name`
-         *     as `venue` to GET /events to see that venue's events.
+         * @description Every venue with at least one upcoming event, by name, with how many it has. With `category`,
+         *     only events of that kind are counted, and venues with none are left out. Send a `name` as `venue`
+         *     to GET /events to see that venue's events.
          */
         get: operations["list_venues_venues_get"];
         put?: never;
@@ -835,7 +837,10 @@ export interface operations {
     };
     get_featured_featured_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only this kind of event */
+                category?: ("concert" | "theatre" | "party" | "other") | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -849,6 +854,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Featured"];
+                };
+            };
+            /** @description category is not a known kind of event */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
                 };
             };
         };
@@ -954,7 +984,10 @@ export interface operations {
     };
     list_venues_venues_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only this kind of event */
+                category?: ("concert" | "theatre" | "party" | "other") | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -968,6 +1001,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VenueList"];
+                };
+            };
+            /** @description category is not a known kind of event */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                        /** Title */
+                        title: string;
+                        /** Status */
+                        status: number;
+                        /** Detail */
+                        detail?: string | null;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: unknown;
+                        }[] | null;
+                    };
                 };
             };
         };
