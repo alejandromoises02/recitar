@@ -41,7 +41,7 @@ alembic upgrade head                # create/update the tables in the database o
 
 ```bash
 python -m app.run                    # scrape every source, choose images, store the events
-python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek)
+python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada)
 ```
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
@@ -59,6 +59,16 @@ Música and Internacionales are stored as concerts, Teatro, Especiales and Famil
 sports events are left out, and city venues that Ticketek files under the province "Buenos Aires"
 are recognised by their barrio (see `app/scrapers/ticketek.py`). It reads the whole country (about
 130 entries) and keeps Buenos Aires, so a run takes about six minutes at one request every two seconds.
+
+TuEntrada is read from the pages its own site renders. Its search refuses an empty query, so the
+listing is a date range from today on, page by page; then each category is listed on its own, since a
+show's page does not say its category. Música, Jazz/Blues and Festivales de Música are stored as
+concerts, Teatro and Familia as theatre, sports are left out, and anything else is "other". Sessions
+give a city but no province, so the province comes from Georef (apis.datos.gob.ar), the government's
+geography API: from the venue's coordinates when the page has them (a venue without them gets a map
+pinned on the Obelisco, which is ignored), else from the city's name when only one province has a
+locality by that name. Ambiguous names stay unknown and are not shown. Passes ("Abono") are not
+performances. A run reads about 165 pages, so it takes about six minutes (see `app/scrapers/tuentrada.py`).
 
 ## API
 
