@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from app.domain.event import Event, TicketLink
-from app.run import main, run
+from app.run import SEEN_BEFORE_WATCHING, main, run
 
 NOW = datetime(2026, 11, 8, tzinfo=timezone.utc)
 
@@ -113,3 +113,17 @@ def test_venue_names_are_normalized_before_saving():
     niceto_bar = event("venti-a").model_copy(update={"venue": "Niceto Bar"})
     run({"venti": lambda: [niceto_bar, event("venti-b")]}, recorder.enrich, recorder.save)
     assert [e.venue for e in recorder.saved] == ["Niceto Club", "V"]
+
+
+def test_a_source_scraped_for_the_first_time_is_not_just_announced():
+    rec = Recorder()
+    run({"a": lambda: many("a", 2), "b": lambda: many("b", 1)}, rec.enrich, rec.save, new_sources={"a"})
+    first_seen = {e.id.split("-")[0]: e.first_seen_at for e in rec.saved}
+    assert first_seen["a"] == SEEN_BEFORE_WATCHING  # its shows were on sale before we looked
+    assert first_seen["b"] == NOW  # a source we already read: its new shows are news
+
+
+def test_without_new_sources_every_new_event_is_first_seen_now():
+    rec = Recorder()
+    run({"a": lambda: many("a", 2)}, rec.enrich, rec.save)
+    assert {e.first_seen_at for e in rec.saved} == {NOW}

@@ -4,18 +4,20 @@
     python -m app.run --only colon,venti
 
 A source that fails is reported and skipped; the others still run. Events already stored are
-updated, not duplicated. Events that a site stops listing are not removed (yet).
+updated, not duplicated. Events that a site stops listing are not removed (yet). The first time a
+source is read, its shows were already on sale: they are stored as seen before we started watching,
+so they do not flood "just announced".
 """
 
 import argparse
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Callable, Mapping
+from typing import Callable, Collection, Mapping
 
 from app.db import make_engine, migrate
 from app.domain.event import Event
-from app.events_repository import count_upcoming_by_source, upsert_events
+from app.events_repository import count_upcoming_by_source, stored_sources, upsert_events
 from app.images.copy import IMAGES_DIR, LocalImageStore
 from app.images.wikimedia import MissingContactError, user_agent
 from app.pipeline import add_artists, enrich_images
@@ -52,6 +54,10 @@ class Report:
     saved: int = 0
 
 
+# first_seen_at of the shows found on a source's first run: older than any "just announced" window.
+SEEN_BEFORE_WATCHING = datetime(2000, 1, 1, tzinfo=timezone.utc)
+
+
 def run(
     scrapers: dict[str, Callable[[], list[Event]]],
     enrich: Callable[[list[Event]], list[Event]],
@@ -59,9 +65,11 @@ def run(
     only: list[str] | None = None,
     log: Callable[[str], None] = lambda _: None,
     known: dict[str, int] | None = None,
+    new_sources: Collection[str] = (),
 ) -> Report:
     """`known` is how many upcoming events of each source are already stored: a source that now
-    returns far fewer is flagged, because Movistar Arena has been seen loading only part of its listing."""
+    returns far fewer is flagged, because Movistar Arena has been seen loading only part of its listing.
+    `new_sources` have nothing stored yet: what they list now is not news (see SEEN_BEFORE_WATCHING)."""
     check_sources(only, scrapers)
     report = Report()
     scraped: dict[str, Event] = {}
@@ -85,6 +93,9 @@ def run(
             )
             log(f"[{name}] WARNING: {report.warnings[name]}")
         found = [event.model_copy(update={"venue": canonical_venue(event.venue)}) for event in found]
+        if name in new_sources:
+            log(f"[{name}] first run: its shows are not counted as just announced")
+            found = [event.model_copy(update={"first_seen_at": SEEN_BEFORE_WATCHING}) for event in found]
         scraped.update({event.id: event for event in found})  # same id twice: the last one wins
     if not scraped:
         return report
@@ -116,6 +127,7 @@ def main(argv: list[str] | None = None) -> int:
     migrate(engine)
     with engine.connect() as connection:
         known = count_upcoming_by_source(connection, datetime.now(timezone.utc))
+        new_sources = set(SCRAPERS) - stored_sources(connection)
     store = LocalImageStore(IMAGES_DIR)
 
     def save(events: list[Event]) -> None:
@@ -123,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
             upsert_events(connection, events)
 
     try:
-        report = run(SCRAPERS, lambda events: enrich_images(add_artists(events), store), save, only, log=print, known=known)
+        report = run(SCRAPERS, lambda events: enrich_images(add_artists(events), store), save, only, log=print, known=known, new_sources=new_sources)
     finally:
         engine.dispose()
     print(f"\nsaved {report.saved} events; scraped per source: {report.counts or 'none'}")

@@ -12,6 +12,7 @@ from app.events_repository import (
     VenueCount,
     list_upcoming,
     list_upcoming_venues,
+    stored_sources,
     upsert_events,
 )
 
@@ -71,6 +72,13 @@ def test_upcoming_events_are_counted_per_source(db_engine):
     with db_engine.begin() as conn:
         upsert_events(conn, items)
         assert count_upcoming_by_source(conn, NOW) == {"movistar": 2, "venti": 1}
+
+
+def test_stored_sources_include_those_with_only_past_events(db_engine):
+    items = [event("movistar-a-20261201T2100"), event("venti-b-20261101T2100", starts_at=NOW - timedelta(days=7))]
+    with db_engine.begin() as conn:
+        upsert_events(conn, items)
+        assert stored_sources(conn) == {"movistar", "venti"}
 
 
 def test_events_are_listed_by_start_date(db_engine):

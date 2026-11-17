@@ -46,7 +46,9 @@ python -m app.run --only colon,venti # only some sources (colon, livepass, venti
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
 run. If a source returns less than 70% of the upcoming events already stored for it, the run
-prints a `WARNING` (Movistar Arena has been seen loading only part of its listing): run it again. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
+prints a `WARNING` (Movistar Arena has been seen loading only part of its listing): run it again. The
+first run of a source stores its shows as seen before we started watching (2000-01-01), since they
+were already on sale: otherwise all of them would show as "just announced" for 14 days. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
 Arena (`playwright install chromium`). Image copies go to `server/data/images` (ignored by git).
 
 Venue names are normalized before saving, so one place has one name whatever the source calls

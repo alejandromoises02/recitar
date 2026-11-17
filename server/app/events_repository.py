@@ -101,6 +101,11 @@ def count_upcoming_by_source(connection: Connection, now: datetime) -> dict[str,
     return {name: count for name, count in rows}
 
 
+def stored_sources(connection: Connection) -> set[str]:
+    """Sources with any event stored, past ones included (the first part of the id)."""
+    return set(connection.execute(select(func.split_part(events.c.id, "-", 1)).distinct()).scalars())
+
+
 def list_events(connection: Connection) -> list[Event]:
     rows = connection.execute(select(events).order_by(events.c.starts_at, events.c.id)).mappings()
     return [Event.model_validate(dict(row)) for row in rows]
