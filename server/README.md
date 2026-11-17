@@ -41,7 +41,7 @@ alembic upgrade head                # create/update the tables in the database o
 
 ```bash
 python -m app.run                    # scrape every source, choose images, store the events
-python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada, allaccess)
+python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada, allaccess, enigma, coolco, articket, pulso)
 ```
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
@@ -86,6 +86,33 @@ gives no category, so every show goes through the provisional rule; parking and 
 under a show's name are left out, passes ("Abono") have no date, and a show listed twice (a VIP
 package) is kept once. The province comes from Georef by the venue's coordinates, else from the
 address. A run reads about 150 pages, so it takes about five minutes (see `app/scrapers/allaccess.py`).
+
+Enigma Tickets is read from the data its own pages render (a Remix app). The home and the site's search
+list the same shows; the search gives 21 at a time and later pages are asked for the way the site's own
+script does, and each tour's page lists its shows. A show's page has one schedule per date, with the time
+only in its label; a festival can write its real days in the label instead ("16, 17 y 18 DE ABRIL"), and
+passes ("Abonos") have no date. The site gives no category, so every show goes through the provisional
+rule. Venues have no address, only a Google Maps short link: its redirect carries the place's coordinates,
+and Georef gives the province. A run reads about 40 pages, so it takes under two minutes (see
+`app/scrapers/enigma.py`).
+
+Coolco is read from the ticket shop it runs on Palco4 (ticketing.coolco.io), which sells shows at Estadio
+Obras Sanitarias. The main page has one card per show; each show's page carries its performances as JSON in
+the sessions widget (local date and time with offset, title without the venue) and its venue in
+`dataLayerP4` (Palco4 writes the city as "CABA"). robots.txt allows everything with `Content-Signal:
+search=yes, ai-train=no`; a listing that links to the official page is search use (see `app/scrapers/coolco.py`).
+
+Articket, a Mar del Plata ticketer, is read from the pages its own site renders. A search lists every show
+as a card in one page ("Ver más" only reveals cards already there), but an empty search gives the home, so
+the listing is one search per vowel; then each category is listed on its own. Recitales go through the
+provisional rule, Teatros and Infantiles are theatre, sports are left out, and anything else (or no
+category) is "other". Venue, city and province come from the card; each show's page gives its dates. A run
+reads about 80 pages, so it takes about three minutes (see `app/scrapers/articket.py`).
+
+Pulso Tickets has no events index or API: its home redirects to the only public event, or links each when
+there are several. Each event's tickets page (`/evento/<slug>/tickets`) gives one card per performance with
+its time, the venue with its address and map coordinates (Georef gives the region), and the site's category.
+The event page itself (~2.3 MB) is never downloaded; ticket links point to it (see `app/scrapers/pulso.py`).
 
 ## API
 
