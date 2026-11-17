@@ -39,7 +39,7 @@ export function useExplore() {
   const groups = useMemo(() => groupShows(shows, filters.group, now, lang, range, horizon), [shows, filters.group, now, lang, range, horizon]);
   const visible = useMemo(() => groups.reduce((sum, group) => sum + group.count, 0), [groups]);
   const marked = useMemo(() => daysWithShows(strip.data?.pages[0].items ?? []), [strip.data]);
-  const venueNames = useMemo(() => venues.data?.map((venue) => venue.name) ?? [], [venues.data]);
+  const venueList = useMemo(() => venues.data ?? [], [venues.data]);
 
   // Collapsed groups belong to one "Ver por" choice: another choice makes other groups, all open.
   const [collapsedBy, setCollapsedBy] = useState<{ by: GroupBy; keys: ReadonlySet<string> }>(() => ({ by: filters.group, keys: new Set() }));
@@ -81,7 +81,7 @@ export function useExplore() {
     now,
     days,
     marked,
-    venueNames,
+    venues: venueList,
     groups,
     collapsed,
     opened,

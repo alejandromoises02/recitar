@@ -5,13 +5,20 @@ import { verticalSlop } from "./hit-slop";
 
 const CHIP_SLOP = verticalSlop(CHIP_HEIGHT);
 
-type Props = { label: string; selected: boolean; onPress: () => void; accessibilityLabel?: string };
+type Props = {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  accessibilityLabel?: string;
+  /** A chip that opens something instead of being one of the choices. */
+  action?: boolean;
+};
 
-export function Chip({ label, selected, onPress, accessibilityLabel }: Props) {
+export function Chip({ label, selected, onPress, accessibilityLabel, action = false }: Props) {
   return (
     <Pressable
-      role="radio"
-      aria-checked={selected}
+      role={action ? "button" : "radio"}
+      aria-checked={action ? undefined : selected}
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       hitSlop={CHIP_SLOP}

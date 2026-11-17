@@ -1,4 +1,4 @@
-import type { TextStyle, ViewStyle } from "react-native";
+import { Platform, type TextStyle, type ViewStyle } from "react-native";
 import { colors, focusRing, fontFamily, radius, spacing, touchTarget, typography } from "../../../design/tokens";
 
 /** Style pieces shared by the home components; spread them into each component's styles. */
@@ -40,3 +40,10 @@ export const mutedSmallText: TextStyle = {
 /** Sideways scroll rows clip what overflows: leave room for the focus ring and pull the row back so nothing shifts. */
 export const focusRoomScroll: ViewStyle = { margin: -focusRing.room };
 export const focusRoomContent: ViewStyle = { padding: focusRing.room };
+
+/**
+ * A thin scrollbar in the palette instead of the browser's white one (web only; native shows its own
+ * indicator). React Native's types lack these CSS properties, which react-native-web passes through.
+ */
+export const quietScrollbar: ViewStyle =
+  Platform.OS === "web" ? ({ scrollbarWidth: "thin", scrollbarColor: `${colors.fieldBorder} transparent` } as ViewStyle) : {};

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import type { Venue } from "../../../events/domain/venue";
 import type { GroupBy, StripDay, When } from "../../application/explore";
+import { venueChips } from "../../application/venue-filter";
 import { Chip } from "../controls/Chip";
 import { Segmented } from "../controls/Segmented";
 import { useStrings } from "../strings";
@@ -9,12 +11,14 @@ import { ChipRow } from "./ChipRow";
 import { DayStrip } from "./DayStrip";
 import { styles } from "./ExploreFilters.styles";
 import { SearchField } from "./SearchField";
+import { VENUE_CHIPS } from "./explore.constants";
+import { VenuePicker } from "./VenuePicker";
 import type { ExploreFilters as Filters } from "./use-explore-filters";
 
 type Props = {
   now: Date;
   filters: Filters;
-  venues: string[];
+  venues: Venue[];
   days: StripDay[];
   daysWithShows: Set<string>;
   active: boolean;
@@ -33,15 +37,31 @@ export function ExploreFilters(props: Props) {
   const { explore } = useStrings();
   const { filters } = props;
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [venuesOpen, setVenuesOpen] = useState(false);
+  const chips = venueChips(props.venues, filters.venue, VENUE_CHIPS);
   return (
     <View style={styles.panel} accessibilityRole="search">
       <SearchField value={filters.text} onChange={props.onText} />
       <ChipRow label={explore.venues}>
         <Chip label={explore.allVenues} selected={filters.venue === null} onPress={() => props.onVenue(null)} />
-        {props.venues.map((venue) => (
+        {chips.map((venue) => (
           <Chip key={venue} label={venue} selected={filters.venue === venue} onPress={() => props.onVenue(venue)} />
         ))}
+        {props.venues.length > VENUE_CHIPS ? (
+          <Chip label={explore.moreVenues(props.venues.length)} selected={false} action onPress={() => setVenuesOpen(true)} />
+        ) : null}
       </ChipRow>
+      {venuesOpen ? (
+        <VenuePicker
+          venues={props.venues}
+          selected={filters.venue}
+          onPick={(venue) => {
+            setVenuesOpen(false);
+            if (venue !== filters.venue) props.onVenue(venue);
+          }}
+          onClose={() => setVenuesOpen(false)}
+        />
+      ) : null}
       <View style={styles.row}>
         <Text style={styles.label}>{explore.when}</Text>
         <ChipRow label={explore.when}>

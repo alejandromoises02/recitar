@@ -22,6 +22,15 @@ export const en: HomeStrings = {
     searchLabel: "Artist, show or venue",
     allVenues: "All venues",
     venues: "Venue",
+    moreVenues: (count: number) => `More venues (${count})`,
+    venuePicker: {
+      title: "Pick a venue",
+      searchPlaceholder: "Search a venue",
+      searchLabel: "Venue name",
+      empty: "No venue has that name",
+      close: "Close",
+      dates: (count: number) => (count === 1 ? "1 date" : `${count} dates`),
+    },
     when: "When",
     whenOptions: {
       all: "Any date",

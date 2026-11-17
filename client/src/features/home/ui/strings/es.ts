@@ -21,6 +21,15 @@ export const es = {
     searchLabel: "Artista, show o lugar",
     allVenues: "Todos los lugares",
     venues: "Lugar",
+    moreVenues: (count: number) => `Más lugares (${count})`,
+    venuePicker: {
+      title: "Elegí un lugar",
+      searchPlaceholder: "Buscá un lugar",
+      searchLabel: "Nombre del lugar",
+      empty: "No hay lugares con ese nombre",
+      close: "Cerrar",
+      dates: (count: number) => (count === 1 ? "1 fecha" : `${count} fechas`),
+    },
     when: "Cuándo",
     whenOptions: {
       all: "Cualquier fecha",

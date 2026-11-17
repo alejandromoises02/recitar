@@ -3,9 +3,17 @@ import { colors } from "../../../../design/tokens";
 import { useStrings } from "../strings";
 import { styles } from "./SearchField.styles";
 
-type Props = { value: string; onChange: (text: string) => void };
+type Props = {
+  value: string;
+  onChange: (text: string) => void;
+  /** The listing's search by default; the venue picker gives its own. */
+  placeholder?: string;
+  label?: string;
+  autoFocus?: boolean;
+  onSubmit?: () => void;
+};
 
-export function SearchField({ value, onChange }: Props) {
+export function SearchField({ value, onChange, placeholder, label, autoFocus, onSubmit }: Props) {
   const strings = useStrings();
   return (
     <View style={styles.field}>
@@ -15,9 +23,11 @@ export function SearchField({ value, onChange }: Props) {
       <TextInput
         value={value}
         onChangeText={onChange}
-        placeholder={strings.explore.searchPlaceholder}
+        placeholder={placeholder ?? strings.explore.searchPlaceholder}
         placeholderTextColor={colors.textMuted}
-        accessibilityLabel={strings.explore.searchLabel}
+        accessibilityLabel={label ?? strings.explore.searchLabel}
+        autoFocus={autoFocus}
+        onSubmitEditing={onSubmit}
         returnKeyType="search"
         autoCorrect={false}
         clearButtonMode="while-editing"

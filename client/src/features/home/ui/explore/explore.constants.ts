@@ -20,6 +20,11 @@ export const CARD_IMAGE_RATIO = 4 / 3;
 export const CALENDAR_CELL = touchTarget;
 export const CALENDAR_MAX_WIDTH = 380;
 export const CLOSE_SIZE = 36;
+/** Venues offered as chips; the rest are one search away in the venue picker. */
+export const VENUE_CHIPS = 8;
+export const VENUE_PICKER_MAX_WIDTH = 460;
+/** The picker leaves the page in sight above and below it. */
+export const VENUE_PICKER_MAX_HEIGHT = "80%" as const;
 export const MIN_TARGET = touchTarget;
 /** A collapsed group's chevron points right. */
 export const CHEVRON_TURN = { collapsed: -90, timing: { duration: motion.duration.fast, easing: Easing.bezier(...motion.easing.smoothOut) } };

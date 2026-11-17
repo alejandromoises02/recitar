@@ -8,7 +8,7 @@ export function BoundExploreFilters() {
     <ExploreFilters
       now={explore.now}
       filters={explore.filters}
-      venues={explore.venueNames}
+      venues={explore.venues}
       days={explore.days}
       daysWithShows={explore.marked}
       active={explore.active}
