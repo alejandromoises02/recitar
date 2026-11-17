@@ -41,7 +41,7 @@ alembic upgrade head                # create/update the tables in the database o
 
 ```bash
 python -m app.run                    # scrape every source, choose images, store the events
-python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar)
+python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek)
 ```
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
@@ -52,6 +52,13 @@ Arena (`playwright install chromium`). Image copies go to `server/data/images` (
 Venue names are normalized before saving, so one place has one name whatever the source calls
 it (for example Venti's "Niceto Bar" and "Humboldt | Niceto Club" are stored as "Niceto Club").
 The mapping lives in `app/scrapers/venues.py`; add new variants there.
+
+Ticketek is read through the JSON APIs its own site uses: the search with an empty query, page by
+page, then one answer per show. Filtering that search by province misses shows, so it is not used.
+Música and Internacionales are stored as concerts, Teatro, Especiales and Familia as theatre;
+sports events are left out, and city venues that Ticketek files under the province "Buenos Aires"
+are recognised by their barrio (see `app/scrapers/ticketek.py`). It reads the whole country (about
+130 entries) and keeps Buenos Aires, so a run takes about six minutes at one request every two seconds.
 
 ## API
 

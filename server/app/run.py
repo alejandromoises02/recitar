@@ -19,7 +19,7 @@ from app.events_repository import count_upcoming_by_source, upsert_events
 from app.images.copy import IMAGES_DIR, LocalImageStore
 from app.images.wikimedia import MissingContactError, user_agent
 from app.pipeline import add_artists, enrich_images
-from app.scrapers import colon, livepass, movistar, venti
+from app.scrapers import colon, livepass, movistar, ticketek, venti
 from app.scrapers.venues import canonical_venue
 
 SCRAPERS: dict[str, Callable[[], list[Event]]] = {
@@ -27,6 +27,7 @@ SCRAPERS: dict[str, Callable[[], list[Event]]] = {
     "livepass": livepass.scrape,
     "venti": venti.scrape,
     "movistar": movistar.scrape,
+    "ticketek": ticketek.scrape,
 }
 PARTIAL_RATIO = 0.7  # fewer events than this share of what is stored raises a warning
 
