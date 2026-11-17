@@ -53,6 +53,12 @@ Venue names are normalized before saving, so one place has one name whatever the
 it (for example Venti's "Niceto Bar" and "Humboldt | Niceto Club" are stored as "Niceto Club").
 The mapping lives in `app/scrapers/venues.py`; add new variants there.
 
+Sources that do not say what kind of event a show is, and the music categories of those that do, go
+through one provisional rule (`app/scrapers/category.py`) until LLM classification replaces it: an
+all-night start (23:59) or a party word in the title is "other", a title naming another act ("tributo",
+"homenaje", "experience", "covers"...) is a `tribute`, and anything else is a concert. The client only
+shows concerts for now, so tributes are stored but not shown.
+
 Ticketek is read through the JSON APIs its own site uses: the search with an empty query, page by
 page, then one answer per show. Filtering that search by province misses shows, so it is not used.
 Música and Internacionales are stored as concerts, Teatro, Especiales and Familia as theatre;
@@ -109,7 +115,7 @@ time and then id:
   stored while a user scrolls never make one repeat or go missing.
 - `venue`: only that venue, compared exactly (send a `name` from `GET /venues` as is), up to 100
   characters. Venue names are normalized when stored (see `app/scrapers/venues.py`).
-- `category`: only that kind of event: `concert`, `theatre`, `party` or `other`; anything else is a 422.
+- `category`: only that kind of event: `concert`, `tribute`, `theatre`, `party` or `other`; anything else is a 422.
 - `sort`: `starts_at` (default, soonest first) or `announced` (newest `first_seen_at` first, ties by
   id descending). Every event carries `first_seen_at`: the first time a scraper read it, stored
   once and never overwritten (events stored before migration 0003 got the migration time). A

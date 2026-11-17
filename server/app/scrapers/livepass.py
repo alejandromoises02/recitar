@@ -10,6 +10,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from app.domain.event import Event, TicketLink
+from app.scrapers.category import is_tribute
 from app.scrapers.dates import time_given
 from app.scrapers.images import first_image_url, source_image
 from app.scrapers.geo import city_name, region_code
@@ -59,7 +60,7 @@ def parse_event(html: str, now: datetime) -> Event | None:
     region = region_code(address.get("addressLocality") or "", address.get("addressRegion") or "")
     return Event(
         id=f"livepass-{slug}-{starts_at:%Y%m%dT%H%M}",
-        category="concert",  # everything under /t/show
+        category="tribute" if is_tribute(data["name"]) else "concert",  # everything under /t/show is music
         title=clean_text(data["name"]),
         venue=place.get("name") or "",
         city=city_name(address.get("addressLocality"), region),

@@ -6,7 +6,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, computed_field, field
 from app.domain.local_time import BUENOS_AIRES
 from app.domain.titles import tidy_title
 
-EventCategory = Literal["concert", "theatre", "party", "other"]
+EventCategory = Literal["concert", "tribute", "theatre", "party", "other"]
 
 # Where an image comes from. Only "source" is unlicensed: it is the image the ticket seller
 # publishes, shown straight from there. Before a public launch every "source" image must be

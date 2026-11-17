@@ -230,7 +230,7 @@ export interface components {
              * Category
              * @enum {string}
              */
-            category: "concert" | "theatre" | "party" | "other";
+            category: "concert" | "tribute" | "theatre" | "party" | "other";
             /** Title */
             title: string;
             /** Artist */
@@ -292,7 +292,7 @@ export interface components {
              * Category
              * @enum {string}
              */
-            category: "concert" | "theatre" | "party" | "other";
+            category: "concert" | "tribute" | "theatre" | "party" | "other";
             /** Title */
             title: string;
             /** Artist */
@@ -389,7 +389,7 @@ export interface components {
              * Category
              * @enum {string}
              */
-            category: "concert" | "theatre" | "party" | "other";
+            category: "concert" | "tribute" | "theatre" | "party" | "other";
             /** Title */
             title: string;
             /** Name */
@@ -561,7 +561,7 @@ export interface operations {
                 /** @description Only this venue: a `name` from GET /venues, exactly */
                 venue?: string | null;
                 /** @description Only this kind of event */
-                category?: ("concert" | "theatre" | "party" | "other") | null;
+                category?: ("concert" | "tribute" | "theatre" | "party" | "other") | null;
                 /** @description `starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first */
                 sort?: "starts_at" | "announced";
                 /** @description Only events first seen on or after this day, YYYY-MM-DD, in Buenos Aires time */
@@ -706,7 +706,7 @@ export interface operations {
                 /** @description Only this venue: a `name` from GET /venues, exactly */
                 venue?: string | null;
                 /** @description Only this kind of event */
-                category?: ("concert" | "theatre" | "party" | "other") | null;
+                category?: ("concert" | "tribute" | "theatre" | "party" | "other") | null;
                 /** @description `starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first */
                 sort?: "starts_at" | "announced";
                 /** @description Only shows first seen (any of their dates, past ones included) on or after this day, YYYY-MM-DD, in Buenos Aires time */
@@ -839,7 +839,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Only this kind of event */
-                category?: ("concert" | "theatre" | "party" | "other") | null;
+                category?: ("concert" | "tribute" | "theatre" | "party" | "other") | null;
             };
             header?: never;
             path?: never;
@@ -986,7 +986,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Only this kind of event */
-                category?: ("concert" | "theatre" | "party" | "other") | null;
+                category?: ("concert" | "tribute" | "theatre" | "party" | "other") | null;
             };
             header?: never;
             path?: never;

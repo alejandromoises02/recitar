@@ -96,6 +96,10 @@ def test_a_party_listed_under_music_is_other():
     assert category_of({"música"}, "Fiesta Bresh", datetime(2026, 11, 28, 23, 59, tzinfo=BA)) == "other"
 
 
+def test_a_tribute_listed_under_music_is_a_tribute():
+    assert category_of({"música"}, "Dm Experience", datetime(2026, 11, 28, 21, tzinfo=BA)) == "tribute"
+
+
 def test_sports_are_left_out():
     assert show("virus", "virus-tgi", listed_under={"deportes"}) == []
 

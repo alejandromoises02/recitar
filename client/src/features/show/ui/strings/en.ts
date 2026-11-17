@@ -4,7 +4,7 @@ export const en: ShowStrings = {
   back: "All shows",
   backLabel: "Back to all shows",
   dates: (count) => (count === 1 ? "1 date" : `${count} dates`),
-  categories: { concert: "Concert", theatre: "Theatre", party: "Party", other: "Show" },
+  categories: { concert: "Concert", tribute: "Tribute", theatre: "Theatre", party: "Party", other: "Show" },
   pickDate: "Pick a date",
   datesTitle: "Dates",
   moreAt: (venue: string) => `More at ${venue}`,

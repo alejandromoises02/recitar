@@ -92,6 +92,13 @@ def test_image_comes_from_the_site_and_is_marked_as_source():
     assert e.image_origin == "source"
 
 
+def test_a_tribute_show_is_filed_as_a_tribute():
+    original = (FIXTURES / "livepass_caba_malvinas.html").read_text(encoding="utf-8")
+    html = original.replace("A PERFECT CIRCLE", "TRIBUTO A A PERFECT CIRCLE")
+    assert html != original
+    assert parse_event(html, NOW).category == "tribute"
+
+
 def test_stray_whitespace_in_the_title_is_collapsed():
     original = (FIXTURES / "livepass_caba_malvinas.html").read_text(encoding="utf-8")
     html = original.replace("A PERFECT CIRCLE", " A  PERFECT CIRCLE")

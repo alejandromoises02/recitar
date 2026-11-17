@@ -1,4 +1,4 @@
-export type EventCategory = "concert" | "theatre" | "party" | "other";
+export type EventCategory = "concert" | "tribute" | "theatre" | "party" | "other";
 
 /**
  * Where an image comes from. Only "source" is unlicensed: the image the ticket seller publishes,

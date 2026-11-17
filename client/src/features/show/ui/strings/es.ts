@@ -3,7 +3,7 @@ export const es = {
   back: "Toda la cartelera",
   backLabel: "Volver a toda la cartelera",
   dates: (count: number) => (count === 1 ? "1 fecha" : `${count} fechas`),
-  categories: { concert: "Concierto", theatre: "Teatro", party: "Fiesta", other: "Show" } as Record<string, string>,
+  categories: { concert: "Concierto", tribute: "Tributo", theatre: "Teatro", party: "Fiesta", other: "Show" } as Record<string, string>,
   pickDate: "Elegí una fecha",
   datesTitle: "Fechas",
   moreAt: (venue: string) => `Más en ${venue}`,

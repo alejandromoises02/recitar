@@ -74,6 +74,12 @@ def test_a_party_listed_under_music_is_other():
     assert party.category == "other"  # "Fiesta Fa!" is listed under Música
 
 
+def test_a_tribute_listed_under_music_is_a_tribute():
+    node = fixture("tarja") | {"title": "Katseye: The tribute experience"}
+    [e] = parse_show(node, "tarja/teatro-coliseo", NOW)
+    assert (e.category, e.artist) == ("tribute", None)
+
+
 def test_sports_are_left_out():
     assert show("polo", "triple-corona/campo-argentino-de-polo") == []
 
