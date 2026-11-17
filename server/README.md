@@ -56,7 +56,8 @@ The mapping lives in `app/scrapers/venues.py`; add new variants there.
 Sources that do not say what kind of event a show is, and the music categories of those that do, go
 through one provisional rule (`app/scrapers/category.py`) until LLM classification replaces it: an
 all-night start (23:59) or a party word in the title is "other", a title naming another act ("tributo",
-"homenaje", "experience", "covers"...) is a `tribute`, and anything else is a concert. The client only
+"homenaje", "experience", "covers"...) is a `tribute` unless it is orchestral ("sinfónico", "orquesta":
+an homage show, kept as a concert), and anything else is a concert. The client only
 shows concerts for now, so tributes are stored but not shown.
 
 Ticketek is read through the JSON APIs its own site uses: the search with an empty query, page by

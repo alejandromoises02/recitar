@@ -52,3 +52,12 @@ def test_original_acts_stay_concerts(title):
 def test_a_tribute_party_is_still_a_party():
     assert provisional_category("Fiesta tributo a los 90s", at(21)) == "other"
     assert provisional_category("Tributo a Ricky Martin", at(23, 59)) == "other"
+
+
+@pytest.mark.parametrize("title", [
+    "Homenaje Sinfónico Ennio Morricone",
+    "María Elena Walsh Sinfónico",
+    "Tributo a Queen con orquesta",
+])
+def test_an_orchestral_homage_is_a_concert(title):
+    assert provisional_category(title, at(21)) == "concert"
