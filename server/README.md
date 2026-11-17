@@ -41,7 +41,7 @@ alembic upgrade head                # create/update the tables in the database o
 
 ```bash
 python -m app.run                    # scrape every source, choose images, store the events
-python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada)
+python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada, allaccess)
 ```
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
@@ -76,6 +76,14 @@ geography API: from the venue's coordinates when the page has them (a venue with
 pinned on the Obelisco, which is ignored), else from the city's name when only one province has a
 locality by that name. Ambiguous names stay unknown and are not shown. Passes ("Abono") are not
 performances. A run reads about 165 pages, so it takes about six minutes (see `app/scrapers/tuentrada.py`).
+
+All Access is read from the pages its own site renders; its JSON API asks for an AWS WAF token and is
+not used. Its search shows at most 50 results, so the listing is the home, one search per letter and
+digit, and the page of every venue met along the way (which lists all of that venue's shows). The site
+gives no category, so every show goes through the provisional rule; parking and other extras sold
+under a show's name are left out, passes ("Abono") have no date, and a show listed twice (a VIP
+package) is kept once. The province comes from Georef by the venue's coordinates, else from the
+address. A run reads about 150 pages, so it takes about five minutes (see `app/scrapers/allaccess.py`).
 
 ## API
 

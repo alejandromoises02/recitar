@@ -32,11 +32,11 @@ import httpx
 from app.domain.event import Event, EventCategory, TicketLink
 from app.scrapers.category import provisional_category
 from app.scrapers.geo import city_name, plain, region_code
+from app.scrapers.georef import province_at, province_named
 from app.scrapers.images import source_image
 from app.scrapers.text import clean_text
 
 SITE = "https://www.tuentrada.com"
-GEOREF = "https://apis.datos.gob.ar/georef/api"
 USER_AGENT = "recitAR-research/0.1"
 VENDOR = "TuEntrada"
 BA = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -158,30 +158,6 @@ def parse_show(
             updated_at=now,
         ))
     return events
-
-
-def _georef(client: httpx.Client, path: str, params: dict) -> dict | None:
-    try:
-        response = client.get(f"{GEOREF}/{path}", params=params)
-        data = response.json()
-    except (httpx.HTTPError, ValueError):
-        return None
-    return data if response.status_code == 200 and isinstance(data, dict) else None
-
-
-def province_at(client: httpx.Client, point: tuple[float, float]) -> str | None:
-    """The province Georef places these coordinates in; None when it cannot say."""
-    data = _georef(client, "ubicacion", {"lat": point[0], "lon": point[1]}) or {}
-    name = ((data.get("ubicacion") or {}).get("provincia") or {}).get("nombre")
-    return name if isinstance(name, str) else None
-
-
-def province_named(client: httpx.Client, city: str) -> str | None:
-    """The province of every Argentine locality called `city`; None when there are several, or none."""
-    data = _georef(client, "localidades", {"nombre": city, "campos": "provincia.nombre", "max": 100}) or {}
-    localities = data.get("localidades")
-    names = {((l.get("provincia") or {}).get("nombre")) for l in localities if isinstance(l, dict)} if isinstance(localities, list) else set()
-    return names.pop() if len(names) == 1 and None not in names else None
 
 
 def session_city(page: str) -> str:
