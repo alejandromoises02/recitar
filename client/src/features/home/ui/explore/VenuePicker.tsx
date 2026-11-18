@@ -7,10 +7,13 @@ import { useStrings } from "../strings";
 import { SearchField } from "./SearchField";
 import { styles } from "./VenuePicker.styles";
 
-type Props = { venues: Venue[]; selected: string | null; onPick: (venue: string) => void; onClose: () => void };
+type Props = { venues: Venue[]; selected: string[]; onToggle: (venue: string) => void; onClose: () => void };
 
-/** Every venue, found by typing part of its name; Enter picks the first match. Mounted only while open. */
-export function VenuePicker({ venues, selected, onPick, onClose }: Props) {
+/**
+ * Every venue, found by typing part of its name. Each row turns its venue on or off, so several can be picked
+ * before "Listo"; Enter toggles the first match. Mounted only while open.
+ */
+export function VenuePicker({ venues, selected, onToggle, onClose }: Props) {
   const { venuePicker } = useStrings().explore;
   const [query, setQuery] = useState("");
   const found = useMemo(() => matchingVenues(venues, query), [venues, query]);
@@ -43,23 +46,23 @@ export function VenuePicker({ venues, selected, onPick, onClose }: Props) {
             placeholder={venuePicker.searchPlaceholder}
             label={venuePicker.searchLabel}
             autoFocus
-            onSubmit={() => found[0] && onPick(found[0].name)}
+            onSubmit={() => found[0] && onToggle(found[0].name)}
           />
-          <ScrollView style={styles.list} keyboardShouldPersistTaps="handled" role="radiogroup" aria-label={venuePicker.title}>
+          <ScrollView style={styles.list} keyboardShouldPersistTaps="handled" role="group" aria-label={venuePicker.title}>
             {found.length === 0 ? (
               <Text style={styles.empty} role="status">
                 {venuePicker.empty}
               </Text>
             ) : (
               found.map((venue) => {
-                const chosen = venue.name === selected;
+                const chosen = selected.includes(venue.name);
                 return (
                   <Pressable
                     key={venue.name}
-                    role="radio"
+                    role="checkbox"
                     aria-checked={chosen}
                     aria-label={`${venue.name}, ${venuePicker.dates(venue.upcomingEvents)}`}
-                    onPress={() => onPick(venue.name)}
+                    onPress={() => onToggle(venue.name)}
                     style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
                       styles.row,
                       (pressed || hovered) && styles.rowActive,
@@ -77,6 +80,13 @@ export function VenuePicker({ venues, selected, onPick, onClose }: Props) {
               })
             )}
           </ScrollView>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onClose}
+            style={({ pressed }) => [styles.done, pressed && styles.donePressed]}
+          >
+            <Text style={styles.doneText}>{venuePicker.done}</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>

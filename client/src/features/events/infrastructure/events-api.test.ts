@@ -46,7 +46,7 @@ describe("listEvents", () => {
     const { fetch, urls } = fakeFetch(() => json({ items: [apiEvent("e1")], next_cursor: "abc" }));
     const api = createEventsApi({ baseUrl: "https://api.example/", fetch });
 
-    const page = await api.listEvents({ q: "maria becerra", venue: "Teatro Colón", category: "theatre", cursor: "xyz" });
+    const page = await api.listEvents({ q: "maria becerra", venue: ["Teatro Colón"], category: "theatre", cursor: "xyz" });
 
     const url = new URL(urls[0]);
     expect(url.origin + url.pathname).toBe("https://api.example/events");
@@ -183,6 +183,26 @@ describe("listShows", () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({ sort: "announced", announced_from: "2026-10-30", limit: "8" });
     expect(page.items.map((s) => s.id)).toEqual(["venti-a"]);
     expect(page.nextCursor).toBeNull();
+  });
+});
+
+describe("several venues", () => {
+  it("repeat the venue parameter, one per venue", async () => {
+    const { fetch, urls } = fakeFetch(() => json({ items: [], next_cursor: null }));
+    const api = createEventsApi({ baseUrl: "https://api.example", fetch });
+
+    await api.listShows({ venue: ["River Plate", "Estadio Huracán"], limit: 8 });
+
+    expect(new URL(urls[0]).searchParams.getAll("venue")).toEqual(["River Plate", "Estadio Huracán"]);
+  });
+
+  it("send no venue when the list is empty", async () => {
+    const { fetch, urls } = fakeFetch(() => json({ items: [], next_cursor: null }));
+    const api = createEventsApi({ baseUrl: "https://api.example", fetch });
+
+    await api.listShows({ venue: [], limit: 8 });
+
+    expect(new URL(urls[0]).searchParams.has("venue")).toBe(false);
   });
 });
 

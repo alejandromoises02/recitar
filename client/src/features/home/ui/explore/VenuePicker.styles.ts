@@ -38,5 +38,8 @@ export const styles = StyleSheet.create({
   nameSelected: { fontFamily: fontFamily.bodyStrong, color: colors.onAccent },
   count: { fontFamily: fontFamily.body, fontSize: typography.bodySmall.size.min, color: colors.textMuted, fontVariant: ["tabular-nums"] },
   countSelected: { color: colors.onAccent },
+  done: { minHeight: MIN_TARGET, alignItems: "center", justifyContent: "center", borderRadius: radius.pill, backgroundColor: colors.accent },
+  donePressed: { opacity: 0.85 },
+  doneText: { fontFamily: fontFamily.bodyStrong, fontSize: typography.body.size.min, color: colors.onAccent },
   empty: { paddingVertical: spacing.md, textAlign: "center", fontFamily: fontFamily.body, fontSize: typography.body.size.min, color: colors.textMuted },
 });

@@ -1,4 +1,4 @@
-import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { infiniteQueryOptions, keepPreviousData, queryOptions, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { EventsApi, EventsQuery, ShowsQuery } from "./events-api";
 import { eventsApi } from "./events-api";
 import { VISIBLE_CATEGORY } from "../application/visible-category";
@@ -9,7 +9,7 @@ export type EventFilters = Omit<EventsQuery, "cursor" | "limit">;
 /** Empty filters ask for the same events as no filter, so they share its cache entry. Key order
  * needs no care: TanStack Query hashes object keys sorted. */
 function withoutEmpty<T extends object>(value: T): T {
-  return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined && v !== null && v !== "")) as T;
+  return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && v.length === 0))) as T;
 }
 
 /** What GET /shows can filter and sort by; the cursor is handled by the query. */
@@ -45,8 +45,10 @@ export function venuesQueryOptions(api: EventsApi) {
 }
 
 /** Upcoming shows of the kind the app shows (VISIBLE_CATEGORY), a page at a time, like eventsQueryOptions. */
-export function showsQueryOptions(api: EventsApi, filters: ShowFilters = {}) {
+/** `keepPrevious`: while other filters load, the previous results stay on screen instead of an empty list. */
+export function showsQueryOptions(api: EventsApi, filters: ShowFilters = {}, { keepPrevious = false } = {}) {
   return infiniteQueryOptions({
+    placeholderData: keepPrevious ? keepPreviousData : undefined,
     queryKey: eventKeys.shows(filters),
     queryFn: ({ pageParam }) => api.listShows({ ...filters, category: VISIBLE_CATEGORY, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
@@ -61,7 +63,7 @@ const VENUE_SHOWS_LIMIT = 5;
 export function venueShowsQueryOptions(api: EventsApi, venue: string) {
   return queryOptions({
     queryKey: eventKeys.venueShows(venue),
-    queryFn: async () => (await api.listShows({ venue, limit: VENUE_SHOWS_LIMIT, category: VISIBLE_CATEGORY })).items,
+    queryFn: async () => (await api.listShows({ venue: [venue], limit: VENUE_SHOWS_LIMIT, category: VISIBLE_CATEGORY })).items,
   });
 }
 
@@ -77,7 +79,8 @@ export function featuredQueryOptions(api: EventsApi) {
 export const useEvents = (filters: EventFilters = {}) => useInfiniteQuery(eventsQueryOptions(eventsApi(), filters));
 export const useEvent = (id: string) => useQuery(eventQueryOptions(eventsApi(), id));
 export const useVenues = () => useQuery(venuesQueryOptions(eventsApi()));
-export const useShows = (filters: ShowFilters = {}) => useInfiniteQuery(showsQueryOptions(eventsApi(), filters));
+export const useShows = (filters: ShowFilters = {}, options: { keepPrevious?: boolean } = {}) =>
+  useInfiniteQuery(showsQueryOptions(eventsApi(), filters, options));
 export const useFeatured = () => useQuery(featuredQueryOptions(eventsApi()));
 export const useShow = (id: string) => useQuery(showQueryOptions(eventsApi(), id));
 export const useVenueShows = (venue: string) => useQuery(venueShowsQueryOptions(eventsApi(), venue));

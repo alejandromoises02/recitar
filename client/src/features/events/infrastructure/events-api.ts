@@ -82,10 +82,13 @@ async function errorFrom(response: Response): Promise<ApiError> {
 export function createEventsApi({ baseUrl, fetch }: { baseUrl: string; fetch: typeof globalThis.fetch }): EventsApi {
   const root = baseUrl.replace(/\/+$/, "");
 
-  async function get<T>(path: string, params: Record<string, string | number | null | undefined> = {}): Promise<T> {
+  async function get<T>(path: string, params: Record<string, string | number | string[] | null | undefined> = {}): Promise<T> {
     const search = new URLSearchParams();
     for (const [name, value] of Object.entries(params)) {
-      if (value !== undefined && value !== null && value !== "") search.set(name, String(value));
+      // A list goes as the same parameter once per item (venue=A&venue=B).
+      for (const item of Array.isArray(value) ? value : [value]) {
+        if (item !== undefined && item !== null && item !== "") search.append(name, String(item));
+      }
     }
     const query = search.toString();
     const response = await fetch(`${root}${path}${query ? `?${query}` : ""}`, {

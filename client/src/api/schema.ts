@@ -558,8 +558,8 @@ export interface operations {
                 from?: string | null;
                 /** @description Last day, YYYY-MM-DD, in Buenos Aires time (included) */
                 to?: string | null;
-                /** @description Only this venue: a `name` from GET /venues, exactly */
-                venue?: string | null;
+                /** @description Only these venues: each a `name` from GET /venues, exactly. Repeat it (up to 20) to list the events of any of them */
+                venue?: string[] | null;
                 /** @description Only this kind of event */
                 category?: ("concert" | "tribute" | "theatre" | "party" | "other") | null;
                 /** @description `starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first */
@@ -703,8 +703,8 @@ export interface operations {
                 from?: string | null;
                 /** @description Last day, YYYY-MM-DD, in Buenos Aires time (included) */
                 to?: string | null;
-                /** @description Only this venue: a `name` from GET /venues, exactly */
-                venue?: string | null;
+                /** @description Only these venues: each a `name` from GET /venues, exactly. Repeat it (up to 20) to list the events of any of them */
+                venue?: string[] | null;
                 /** @description Only this kind of event */
                 category?: ("concert" | "tribute" | "theatre" | "party" | "other") | null;
                 /** @description `starts_at`: soonest first. `announced`: most recently announced (`first_seen_at`) first */

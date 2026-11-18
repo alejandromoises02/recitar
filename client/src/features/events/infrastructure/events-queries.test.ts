@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 import type { Event } from "../domain/event";
 import type { Show } from "../domain/show";
@@ -49,7 +49,7 @@ describe("eventsQueryOptions", () => {
       { items: [event("c")], nextCursor: null },
     ]);
     const client = new QueryClient();
-    const options = eventsQueryOptions(api, { venue: "Niceto Club" });
+    const options = eventsQueryOptions(api, { venue: ["Niceto Club"] });
 
     // Ask for up to 3 pages: only 2 exist, so it must stop when next_cursor is null.
     await client.fetchInfiniteQuery({ ...options, pages: 3 });
@@ -57,16 +57,16 @@ describe("eventsQueryOptions", () => {
     const data = client.getQueryData(options.queryKey);
     expect(data?.pages.flatMap((p) => p.items.map((e) => e.id))).toEqual(["a", "b", "c"]);
     expect(requests).toEqual([
-      { venue: "Niceto Club", cursor: undefined },
-      { venue: "Niceto Club", cursor: "1" },
+      { venue: ["Niceto Club"], cursor: undefined },
+      { venue: ["Niceto Club"], cursor: "1" },
     ]);
   });
 
   it("keeps each set of filters in its own cache entry and shares one between equal filters", () => {
     const { api } = fakeApi([]);
-    const niceto = eventsQueryOptions(api, { venue: "Niceto Club", q: "mila" }).queryKey;
-    const sameAgain = eventsQueryOptions(api, { q: "mila", venue: "Niceto Club" }).queryKey;
-    const colon = eventsQueryOptions(api, { venue: "Teatro Colón", q: "mila" }).queryKey;
+    const niceto = eventsQueryOptions(api, { venue: ["Niceto Club"], q: "mila" }).queryKey;
+    const sameAgain = eventsQueryOptions(api, { q: "mila", venue: ["Niceto Club"] }).queryKey;
+    const colon = eventsQueryOptions(api, { venue: ["Teatro Colón"], q: "mila" }).queryKey;
     const client = new QueryClient();
     client.setQueryData(niceto, { pages: [], pageParams: [] });
     expect(client.getQueryData(sameAgain)).toEqual({ pages: [], pageParams: [] });
@@ -123,6 +123,17 @@ describe("showsQueryOptions", () => {
     const { api } = fakeApi([]);
     expect(showsQueryOptions(api, {}).queryKey).not.toEqual(eventsQueryOptions(api, {}).queryKey);
   });
+
+  it("shares the cache of no venue filter when the venue list is empty", () => {
+    const { api } = fakeApi([]);
+    expect(showsQueryOptions(api, { venue: [] }).queryKey).toEqual(showsQueryOptions(api, {}).queryKey);
+  });
+
+  it("keeps the previous results on screen while new filters load, only when asked", () => {
+    const { api } = fakeApi([]);
+    expect(showsQueryOptions(api, {}, { keepPrevious: true }).placeholderData).toBe(keepPreviousData);
+    expect(showsQueryOptions(api, {}).placeholderData).toBeUndefined();
+  });
 });
 
 describe("showQueryOptions", () => {
@@ -168,12 +179,12 @@ describe("venueShowsQueryOptions", () => {
     const { api, showRequests } = fakeApi([], [{ items: [show("a"), show("b")], nextCursor: "1" }]);
     const shows = await new QueryClient().fetchQuery(venueShowsQueryOptions(api, "Niceto Club"));
     expect(shows.map((s) => s.id)).toEqual(["a", "b"]);
-    expect(showRequests).toEqual([{ venue: "Niceto Club", limit: 5, category: "concert" }]);
+    expect(showRequests).toEqual([{ venue: ["Niceto Club"], limit: 5, category: "concert" }]);
   });
 
   it("caches each venue apart from the paged listing", () => {
     const { api } = fakeApi([]);
     expect(venueShowsQueryOptions(api, "A").queryKey).not.toEqual(venueShowsQueryOptions(api, "B").queryKey);
-    expect(venueShowsQueryOptions(api, "A").queryKey).not.toEqual(showsQueryOptions(api, { venue: "A" }).queryKey);
+    expect(venueShowsQueryOptions(api, "A").queryKey).not.toEqual(showsQueryOptions(api, { venue: ["A"] }).queryKey);
   });
 });

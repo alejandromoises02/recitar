@@ -20,7 +20,7 @@ export function ExploreHeader() {
         : status.kind === "empty"
           ? strings.explore.empty
           : strings.explore.found(strings.shows(status.count, status.more));
-  const { text, venue, when, day } = explore.filters;
+  const { text, venues, when, day } = explore.filters;
   useTrackNoResults(status?.kind === "empty", explore.filters);
   return (
     <View style={styles.section}>
@@ -30,7 +30,7 @@ export function ExploreHeader() {
         </Text>
         {explore.loaded ? <SectionAside>{strings.shows(explore.count, explore.hasNextPage)}</SectionAside> : null}
       </View>
-      <StatusAnnouncer message={message} filtersKey={[text.trim(), venue, when, day].join("|")} urgent={status?.kind === "error"} />
+      <StatusAnnouncer message={message} filtersKey={[text.trim(), venues.join(","), when, day].join("|")} urgent={status?.kind === "error"} />
     </View>
   );
 }

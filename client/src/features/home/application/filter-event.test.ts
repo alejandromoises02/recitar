@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { filterUsed, noResults, type FilterState } from "./filter-event";
 
-const NONE: FilterState = { text: "", venue: null, when: "all", day: null, group: "day" };
+const NONE: FilterState = { text: "", venues: [], when: "all", day: null, group: "day" };
 
 describe("filterUsed", () => {
   it("is the venue picked", () => {
-    expect(filterUsed(NONE, { ...NONE, venue: "Niceto Club" })).toEqual({ filter: "venue", value: "Niceto Club" });
+    expect(filterUsed(NONE, { ...NONE, venues: ["Niceto Club"] })).toEqual({ filter: "venue", value: "Niceto Club" });
+  });
+
+  it("is the venue added to the ones already picked", () => {
+    const one = { ...NONE, venues: ["Niceto Club"] };
+    expect(filterUsed(one, { ...one, venues: ["Niceto Club", "Teatro Colón"] })).toEqual({ filter: "venue", value: "Teatro Colón" });
   });
 
   it("is the quick date range picked", () => {
@@ -31,7 +36,8 @@ describe("filterUsed", () => {
   });
 
   it("is nothing when a filter is cleared, or when nothing changed", () => {
-    expect(filterUsed({ ...NONE, venue: "Niceto Club" }, NONE)).toBeNull();
+    expect(filterUsed({ ...NONE, venues: ["Niceto Club"] }, NONE)).toBeNull();
+    expect(filterUsed({ ...NONE, venues: ["Niceto Club", "Teatro Colón"] }, { ...NONE, venues: ["Niceto Club"] })).toBeNull();
     expect(filterUsed({ ...NONE, when: "week" }, NONE)).toBeNull();
     expect(filterUsed({ ...NONE, text: "ni" }, NONE)).toBeNull();
     expect(filterUsed(NONE, NONE)).toBeNull();
@@ -46,7 +52,12 @@ describe("noResults", () => {
   });
 
   it("names the filters that were on, the venue and the date asked for", () => {
-    expect(noResults({ ...NONE, venue: "Niceto Club", when: "weekend" })).toEqual({ filters: ["venue", "when"], venue: "Niceto Club", when: "weekend" });
+    expect(noResults({ ...NONE, venues: ["Niceto Club"], when: "weekend" })).toEqual({ filters: ["venue", "when"], venue: "Niceto Club", when: "weekend" });
+  });
+
+  it("names several venues together, within what the API keeps", () => {
+    expect(noResults({ ...NONE, venues: ["River Plate", "Estadio Huracán"] })).toEqual({ filters: ["venue"], venue: "River Plate, Estadio Huracán" });
+    expect(noResults({ ...NONE, venues: Array.from({ length: 20 }, (_, n) => `Venue number ${n}`) })?.venue).toHaveLength(120);
   });
 
   it("gives a picked day by its date", () => {

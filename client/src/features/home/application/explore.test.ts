@@ -301,7 +301,7 @@ describe("cardRows", () => {
 });
 
 describe("activeFilterCount", () => {
-  const none = { text: "", venue: null, when: "all" as const };
+  const none = { text: "", venues: [] as string[], when: "all" as const };
 
   it("is zero with no filters", () => {
     expect(activeFilterCount(none)).toBe(0);
@@ -309,7 +309,8 @@ describe("activeFilterCount", () => {
 
   it("counts search, venue and date, ignoring blank search", () => {
     expect(activeFilterCount({ ...none, text: "   " })).toBe(0);
-    expect(activeFilterCount({ text: "jazz", venue: "Niceto Club", when: "weekend" })).toBe(3);
+    expect(activeFilterCount({ text: "jazz", venues: ["Niceto Club"], when: "weekend" })).toBe(3);
+    expect(activeFilterCount({ ...none, venues: ["Niceto Club", "Teatro Colón"] })).toBe(1);  // the venues are one filter
     expect(activeFilterCount({ ...none, when: "day" })).toBe(1);
   });
 });

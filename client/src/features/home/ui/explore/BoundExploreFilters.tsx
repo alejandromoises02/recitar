@@ -13,7 +13,8 @@ export function BoundExploreFilters() {
       daysWithShows={explore.marked}
       active={explore.active}
       onText={(value) => explore.set("text", value)}
-      onVenue={(value) => explore.set("venue", value)}
+      onVenue={explore.toggleVenue}
+      onAllVenues={() => explore.set("venues", [])}
       onWhen={explore.setWhen}
       onDay={explore.pickDay}
       onGroup={(value) => explore.set("group", value)}

@@ -63,10 +63,11 @@ export function HomeScreen() {
         apiBase={explore.apiBase}
         itemWidth={itemWidth}
         fadeIn={item.kind !== "filters" && item.kind !== "group" && item.group === explore.opened}
+        updating={explore.updating}
         onPanelLayout={item.kind === "filters" ? onPanelLayout : undefined}
       />
     ),
-    [explore.apiBase, itemWidth, explore.opened, onPanelLayout],
+    [explore.apiBase, itemWidth, explore.opened, explore.updating, onPanelLayout],
   );
 
   const header = (

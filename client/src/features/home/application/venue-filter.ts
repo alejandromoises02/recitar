@@ -9,14 +9,19 @@ const fold = (text: string) =>
 
 /**
  * The venues offered as chips: the `limit` with the most upcoming dates (ties by name), with the chosen
- * venue first when it is not among them, so the filter in use is always in sight.
+ * venues that are not among them first, so the filter in use is always in sight.
  */
-export function venueChips(venues: Venue[], chosen: string | null, limit: number): string[] {
+export function venueChips(venues: Venue[], chosen: string[], limit: number): string[] {
   const top = [...venues]
     .sort((a, b) => b.upcomingEvents - a.upcomingEvents || a.name.localeCompare(b.name))
     .slice(0, limit)
     .map((venue) => venue.name);
-  return chosen !== null && !top.includes(chosen) ? [chosen, ...top] : top;
+  return [...chosen.filter((name) => !top.includes(name)), ...top];
+}
+
+/** The chosen venues with `venue` added (after the others) or, when it was chosen, removed. */
+export function toggleVenue(chosen: string[], venue: string): string[] {
+  return chosen.includes(venue) ? chosen.filter((name) => name !== venue) : [...chosen, venue];
 }
 
 /** Venues whose name holds `query`, ignoring case and accents, by name. */

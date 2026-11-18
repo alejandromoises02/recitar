@@ -110,17 +110,21 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "maxLength": 100
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "maxItems": 20
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Only this venue: a `name` from GET /venues, exactly",
+              "description": "Only these venues: each a `name` from GET /venues, exactly. Repeat it (up to 20) to list the events of any of them",
               "title": "Venue"
             },
-            "description": "Only this venue: a `name` from GET /venues, exactly"
+            "description": "Only these venues: each a `name` from GET /venues, exactly. Repeat it (up to 20) to list the events of any of them"
           },
           {
             "name": "category",
@@ -513,17 +517,21 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "maxLength": 100
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "maxItems": 20
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Only this venue: a `name` from GET /venues, exactly",
+              "description": "Only these venues: each a `name` from GET /venues, exactly. Repeat it (up to 20) to list the events of any of them",
               "title": "Venue"
             },
-            "description": "Only this venue: a `name` from GET /venues, exactly"
+            "description": "Only these venues: each a `name` from GET /venues, exactly. Repeat it (up to 20) to list the events of any of them"
           },
           {
             "name": "category",

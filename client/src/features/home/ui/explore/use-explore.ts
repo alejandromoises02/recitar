@@ -24,10 +24,11 @@ export function useExplore() {
   const range = useMemo(() => whenRange(filters.when, now, filters.day ?? undefined), [filters.when, filters.day, now]);
 
   const query = useMemo(
-    () => ({ limit: EXPLORE_PAGE_SIZE, q: text, venue: filters.venue, from: range.from, to: range.to }),
-    [text, filters.venue, range],
+    () => ({ limit: EXPLORE_PAGE_SIZE, q: text, venue: filters.venues, from: range.from, to: range.to }),
+    [text, filters.venues, range],
   );
-  const listing = useShows(query);
+  // A new filter keeps the shown results until its own arrive, so the list never collapses to a skeleton.
+  const listing = useShows(query, { keepPrevious: true });
   const [stripQuery] = useState(() => ({ from: days[0].iso, to: days[days.length - 1].iso, limit: STRIP_QUERY_LIMIT }));
   const strip = useShows(stripQuery);
   const venues = useVenues();
@@ -91,6 +92,8 @@ export function useExplore() {
     loaded: listing.data !== undefined,
     hasNextPage,
     isPending: listing.isPending,
+    /** The results on screen are the previous filter's while the new ones load. */
+    updating: listing.isPlaceholderData,
     isError: listing.isError,
     isFetchingNextPage,
     fetchMore,

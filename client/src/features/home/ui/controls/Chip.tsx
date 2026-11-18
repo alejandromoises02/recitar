@@ -10,15 +10,15 @@ type Props = {
   selected: boolean;
   onPress: () => void;
   accessibilityLabel?: string;
-  /** A chip that opens something instead of being one of the choices. */
-  action?: boolean;
+  /** One choice among many (radio), one of several that can be on together (checkbox), or a button that opens something. */
+  kind?: "radio" | "checkbox" | "action";
 };
 
-export function Chip({ label, selected, onPress, accessibilityLabel, action = false }: Props) {
+export function Chip({ label, selected, onPress, accessibilityLabel, kind = "radio" }: Props) {
   return (
     <Pressable
-      role={action ? "button" : "radio"}
-      aria-checked={action ? undefined : selected}
+      role={kind === "action" ? "button" : kind}
+      aria-checked={kind === "action" ? undefined : selected}
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       hitSlop={CHIP_SLOP}

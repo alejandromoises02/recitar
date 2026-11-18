@@ -62,8 +62,8 @@ export async function withFakeApi(page: Page) {
       if (pathname.endsWith("/featured")) return route.fulfill(json({ kind: "picked", items: SHOWS.slice(0, 3) }));
       if (pathname.endsWith("/venues")) return route.fulfill(json({ items: [...new Set(SHOWS.map((s) => s.venue))].map((name) => ({ name, upcoming_events: 1 })) }));
       if (pathname.endsWith("/shows")) {
-        const venue = searchParams.get("venue");
-        return route.fulfill(json({ items: venue ? SHOWS.filter((show) => show.venue === venue) : SHOWS, next_cursor: null }));
+        const venues = searchParams.getAll("venue");
+        return route.fulfill(json({ items: venues.length > 0 ? SHOWS.filter((show) => venues.includes(show.venue)) : SHOWS, next_cursor: null }));
       }
       const one = /\/shows\/([^/]+)$/.exec(pathname);
       if (one) {

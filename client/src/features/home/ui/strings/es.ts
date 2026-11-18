@@ -28,6 +28,7 @@ export const es = {
       searchLabel: "Nombre del lugar",
       empty: "No hay lugares con ese nombre",
       close: "Cerrar",
+      done: "Listo",
       dates: (count: number) => (count === 1 ? "1 fecha" : `${count} fechas`),
     },
     when: "Cuándo",

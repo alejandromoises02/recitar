@@ -29,6 +29,7 @@ export const en: HomeStrings = {
       searchLabel: "Venue name",
       empty: "No venue has that name",
       close: "Close",
+      done: "Done",
       dates: (count: number) => (count === 1 ? "1 date" : `${count} dates`),
     },
     when: "When",

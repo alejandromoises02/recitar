@@ -20,6 +20,8 @@ export const CARD_IMAGE_RATIO = 4 / 3;
 export const CALENDAR_CELL = touchTarget;
 export const CALENDAR_MAX_WIDTH = 380;
 export const CLOSE_SIZE = 36;
+/** The previous results, faded while the new filter's load. */
+export const UPDATING_OPACITY = 0.5;
 /** Venues offered as chips; the rest are one search away in the venue picker. */
 export const VENUE_CHIPS = 8;
 export const VENUE_PICKER_MAX_WIDTH = 460;
