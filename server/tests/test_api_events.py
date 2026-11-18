@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.events import upcoming_events_source
+from app.api.listing import MAX_VENUES
 from app.domain.event import Event, TicketLink
 from app.events_repository import EventFilters
 from app.main import app
@@ -40,7 +41,7 @@ class FakeEvents:
             and (filters.announced_from is None or e.first_seen_at >= filters.announced_from)
             and (filters.starts_from is None or e.starts_at >= filters.starts_from)
             and (filters.starts_before is None or e.starts_at < filters.starts_before)
-            and (filters.venue is None or e.venue == filters.venue)
+            and (not filters.venues or e.venue in filters.venues)
             and (filters.category is None or e.category == filters.category)
         ]
         return rest[:limit]
@@ -265,14 +266,29 @@ def placed(id_: str, venue: str, hours: int = 0, **extra) -> Event:
 def test_venue_and_category_are_passed_to_the_filters(client_with):
     client, fake = client_with([event("e0", 0)])
     assert client.get("/events", params={"venue": " Niceto Club ", "category": "concert"}).status_code == 200
-    assert fake.calls[-1]["filters"] == EventFilters(venue="Niceto Club", category="concert")
+    assert fake.calls[-1]["filters"] == EventFilters(venues=("Niceto Club",), category="concert")
 
 
 @pytest.mark.parametrize("params", [{}, {"venue": ""}, {"venue": "   "}])
 def test_without_a_venue_or_category_there_is_no_such_filter(client_with, params):
     client, fake = client_with([event("e0", 0)])
     client.get("/events", params=params)
-    assert (fake.calls[-1]["filters"].venue, fake.calls[-1]["filters"].category) == (None, None)
+    assert (fake.calls[-1]["filters"].venues, fake.calls[-1]["filters"].category) == ((), None)
+
+
+def test_venue_can_be_given_several_times_and_lists_any_of_them(client_with):
+    stored = [placed("a", "Niceto Club", 1), placed("b", "Teatro Colón", 2), placed("c", "Movistar Arena", 3)]
+    client, fake = client_with(stored)
+    response = client.get("/events", params=[("venue", "Niceto Club"), ("venue", "Movistar Arena"), ("venue", "Niceto Club")])
+    assert ids(response) == ["a", "c"]
+    assert fake.calls[-1]["filters"].venues == ("Niceto Club", "Movistar Arena")  # once each, in the order given
+
+
+def test_too_many_venues_is_an_error(client_with):
+    client, _ = client_with([])
+    response = client.get("/events", params=[("venue", f"Venue {n}") for n in range(MAX_VENUES + 1)])
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/problem+json")
 
 
 def test_the_venue_combines_with_the_search_the_dates_and_the_cursor(client_with):
@@ -289,7 +305,7 @@ def test_the_venue_combines_with_the_search_the_dates_and_the_cursor(client_with
     assert ids(first) + ids(second) == ["sat-niceto-a", "sat-niceto-b"]
     assert second.json()["next_cursor"] is None
     filters = fake.calls[-1]["filters"]
-    assert (filters.q, filters.venue, filters.category) == ("show", "Niceto Club", None)
+    assert (filters.q, filters.venues, filters.category) == ("show", ("Niceto Club",), None)
     assert (filters.starts_from, filters.starts_before) == (
         datetime(2026, 11, 14, 3, 0, tzinfo=UTC), datetime(2026, 11, 15, 3, 0, tzinfo=UTC),
     )
@@ -312,7 +328,7 @@ def test_a_venue_longer_than_100_characters_is_rejected(client_with):
     client, fake = client_with([event("e0", 0)])
     response = client.get("/events", params={"venue": "a" * 101})
     assert response.status_code == 422
-    assert response.json()["errors"][0]["loc"] == ["query", "venue"]
+    assert response.json()["errors"][0]["loc"] == ["query", "venue", 0]  # which of the venues given
     assert fake.calls == []
     assert client.get("/events", params={"venue": "a" * 100}).status_code == 200
 

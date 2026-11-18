@@ -154,7 +154,8 @@ time and then id:
   first page. `next_cursor` is `null` on the last page. Paging is by key, not offset, so events
   stored while a user scrolls never make one repeat or go missing.
 - `venue`: only that venue, compared exactly (send a `name` from `GET /venues` as is), up to 100
-  characters. Venue names are normalized when stored (see `app/scrapers/venues.py`).
+  characters. Repeat it for several venues (`venue=A&venue=B`, up to 20): the events of any of them.
+  Venue names are normalized when stored (see `app/scrapers/venues.py`).
 - `category`: only that kind of event: `concert`, `tribute`, `theatre`, `party` or `other`; anything else is a 422.
 - `sort`: `starts_at` (default, soonest first) or `announced` (newest `first_seen_at` first, ties by
   id descending). Every event carries `first_seen_at`: the first time a scraper read it, stored

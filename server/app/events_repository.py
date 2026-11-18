@@ -116,7 +116,7 @@ class EventFilters:
     q: str | None = None  # words that must all appear in the title, artist or venue, ignoring case and accents
     starts_from: datetime | None = None  # included
     starts_before: datetime | None = None  # excluded
-    venue: str | None = None  # exact name, as GET /venues lists it
+    venues: tuple[str, ...] = ()  # exact names, as GET /venues lists them: events at any of them
     category: EventCategory | None = None
     announced_from: datetime | None = None  # first seen at or after this instant
 
@@ -145,8 +145,8 @@ def _date_matches(filters: EventFilters, now: datetime) -> list[ColumnElement[bo
         conditions.append(events.c.starts_at >= filters.starts_from)
     if filters.starts_before is not None:
         conditions.append(events.c.starts_at < filters.starts_before)
-    if filters.venue is not None:
-        conditions.append(events.c.venue == filters.venue)
+    if filters.venues:
+        conditions.append(events.c.venue.in_(filters.venues))
     if filters.category is not None:
         conditions.append(events.c.category == filters.category)
     return conditions

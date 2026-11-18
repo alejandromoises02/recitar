@@ -98,7 +98,7 @@ def test_the_filters_reach_the_source_like_in_events(client_with):
               "category": "party", "announced_from": "2026-11-01"}
     assert client.get("/shows", params=params).status_code == 200
     filters = fake.calls[-1]["filters"]
-    assert (filters.q, filters.venue, filters.category) == ("mila", "Niceto Club", "party")
+    assert (filters.q, filters.venues, filters.category) == ("mila", ("Niceto Club",), "party")
     assert filters.starts_from == datetime(2026, 11, 14, 3, 0, tzinfo=timezone.utc)
     assert filters.starts_before == datetime(2026, 11, 16, 3, 0, tzinfo=timezone.utc)
     assert filters.announced_from == datetime(2026, 11, 1, 3, 0, tzinfo=timezone.utc)

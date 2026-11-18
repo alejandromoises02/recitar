@@ -225,7 +225,17 @@ def test_the_venue_filter_takes_that_exact_venue_only(db_engine):
         event("venti-b-20261120T2100", venue="Niceto Club Bar"),
         event("colon-c-20261120T2100", venue="Teatro Colón"),
     ]
-    assert listed(db_engine, stored, EventFilters(venue="Niceto Club")) == ["venti-a-20261120T2100"]
+    assert listed(db_engine, stored, EventFilters(venues=("Niceto Club",))) == ["venti-a-20261120T2100"]
+
+
+def test_several_venues_list_the_events_of_any_of_them(db_engine):
+    stored = [
+        event("venti-a-20261120T2100", venue="Niceto Club"),
+        event("colon-c-20261121T2100", venue="Teatro Colón"),
+        event("movistar-m-20261122T2100", venue="Movistar Arena"),
+    ]
+    picked = EventFilters(venues=("Niceto Club", "Movistar Arena"))
+    assert sorted(listed(db_engine, stored, picked)) == ["movistar-m-20261122T2100", "venti-a-20261120T2100"]
 
 
 def test_the_venue_filter_combines_with_the_search_and_the_time_window(db_engine):
@@ -236,7 +246,7 @@ def test_the_venue_filter_combines_with_the_search_and_the_time_window(db_engine
         event("venti-other-20261109T1300", title="Otra", venue="Niceto Club", starts_at=start + timedelta(hours=1)),
         event("colon-mila-20261109T1300", title="Mila", venue="Teatro Colón", starts_at=start + timedelta(hours=1)),
     ]
-    filters = EventFilters(q="mila", venue="Niceto Club", starts_from=start, starts_before=start + timedelta(days=1))
+    filters = EventFilters(q="mila", venues=("Niceto Club",), starts_from=start, starts_before=start + timedelta(days=1))
     assert listed(db_engine, stored, filters) == ["venti-in-20261109T1300"]
 
 

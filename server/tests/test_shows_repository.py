@@ -80,7 +80,7 @@ def test_search_venue_and_category_also_pick_shows_by_their_dates(db_engine):
         event("colon-aida-20261120T2000", 12, title="Aida", venue="Teatro Colón", category="theatre"),
     ]
     assert [s.id for s in shows(db_engine, stored, q="mila")] == ["venti-mila"]
-    assert [s.id for s in shows(db_engine, [], venue="Teatro Colón")] == ["colon-aida"]
+    assert [s.id for s in shows(db_engine, [], venues=("Teatro Colón",))] == ["colon-aida"]
     assert [s.id for s in shows(db_engine, [], category="party")] == ["venti-mila"]
 
 
