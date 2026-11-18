@@ -403,3 +403,28 @@ def test_venues_can_count_one_kind_of_event_only(db_engine):
             VenueCount(name="Movistar Arena", upcoming_events=1), VenueCount(name="Teatro Coliseo", upcoming_events=1),
         ]
         assert list_upcoming_venues(conn, NOW, "theatre") == [VenueCount(name="Teatro Coliseo", upcoming_events=1)]
+
+
+def test_saving_events_adds_a_venue_row_for_each_new_venue(db_engine):
+    from sqlalchemy import text
+
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event(), event("venti-a-20261120T2100", venue="Niceto Club")])
+        names = conn.execute(text("SELECT name FROM venues ORDER BY name")).scalars().all()
+    assert names == ["Movistar Arena", "Niceto Club"]
+
+
+def test_saving_events_again_keeps_the_venue_coordinates(db_engine):
+    from sqlalchemy import text
+
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event()])
+        conn.execute(text(
+            "UPDATE venues SET address = 'Humboldt 450', latitude = -34.59, longitude = -58.45, coords_source = 'manual' "
+            "WHERE name = 'Movistar Arena'"
+        ))
+        upsert_events(conn, [event(), event("movistar-b-20261121T2100")])
+        row = conn.execute(text(
+            "SELECT address, latitude, longitude, coords_source FROM venues WHERE name = 'Movistar Arena'"
+        )).one()
+    assert tuple(row) == ("Humboldt 450", -34.59, -58.45, "manual")

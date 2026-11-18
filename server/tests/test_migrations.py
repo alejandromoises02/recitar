@@ -60,3 +60,54 @@ def test_ticket_clicks_are_counted_apart_from_the_events_and_the_migration_can_b
         config.attributes["connection"] = connection
         command.downgrade(config, "0005")
     assert "ticket_clicks" not in inspect(unmigrated_db_engine).get_table_names()
+
+
+def _insert_event(conn, id_: str, venue: str) -> None:
+    conn.execute(text(
+        "INSERT INTO events (id, category, title, venue, starts_at, time_known, ticket_links, source_url, updated_at, first_seen_at) "
+        "VALUES (:id, 'concert', 'A', :venue, now(), true, '[]', 'https://x', now(), now())"
+    ), {"id": id_, "venue": venue})
+
+
+def test_venues_already_stored_get_one_row_each_and_events_point_to_them(unmigrated_db_engine):
+    from sqlalchemy import inspect
+
+    migrate(unmigrated_db_engine, "0006")
+    with unmigrated_db_engine.begin() as conn:
+        _insert_event(conn, "venti-a-20261120T2100", "Niceto Club")
+        _insert_event(conn, "venti-b-20261121T2100", "Niceto Club")
+        _insert_event(conn, "movistar-c-20261122T2100", "Movistar Arena")
+    migrate(unmigrated_db_engine)
+    with unmigrated_db_engine.connect() as conn:
+        rows = conn.execute(text(
+            "SELECT name, address, latitude, longitude, coords_source FROM venues ORDER BY name"
+        )).all()
+        events_left = conn.execute(text("SELECT id, venue FROM events ORDER BY id")).all()
+    assert [tuple(r) for r in rows] == [
+        ("Movistar Arena", None, None, None, None),
+        ("Niceto Club", None, None, None, None),
+    ]
+    assert [tuple(r) for r in events_left] == [
+        ("movistar-c-20261122T2100", "Movistar Arena"),
+        ("venti-a-20261120T2100", "Niceto Club"),
+        ("venti-b-20261121T2100", "Niceto Club"),
+    ]
+    [fk] = inspect(unmigrated_db_engine).get_foreign_keys("events")
+    assert (fk["constrained_columns"], fk["referred_table"], fk["referred_columns"]) == (["venue"], "venues", ["name"])
+
+
+def test_the_venues_migration_can_be_undone_without_losing_events(unmigrated_db_engine):
+    from sqlalchemy import inspect
+
+    migrate(unmigrated_db_engine)
+    with unmigrated_db_engine.begin() as conn:
+        conn.execute(text("INSERT INTO venues (name, updated_at) VALUES ('Niceto Club', now())"))
+        _insert_event(conn, "venti-a-20261120T2100", "Niceto Club")
+    config = Config(str(SERVER_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(SERVER_DIR / "migrations"))
+    with unmigrated_db_engine.begin() as connection:
+        config.attributes["connection"] = connection
+        command.downgrade(config, "0006")
+    assert "venues" not in inspect(unmigrated_db_engine).get_table_names()
+    with unmigrated_db_engine.connect() as conn:
+        assert conn.execute(text("SELECT venue FROM events")).scalar_one() == "Niceto Club"

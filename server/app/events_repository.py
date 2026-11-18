@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from sqlalchemy import (
-    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Identity, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
+    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Float, Identity, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
 )
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
@@ -37,6 +37,19 @@ events = Table(
     Column("image_source_url", Text),
     Column("updated_at", DateTime(timezone=True), nullable=False),
     Column("first_seen_at", DateTime(timezone=True), nullable=False),
+)
+
+# One row per venue (its canonical name), with where it is. events.venue points here.
+# coords_source: 'ticketer', 'osm' (geocoded) or 'manual'; a manual row is never overwritten.
+venues = Table(
+    "venues",
+    metadata,
+    Column("name", Text, primary_key=True),
+    Column("address", Text),
+    Column("latitude", Float),
+    Column("longitude", Float),
+    Column("coords_source", Text),
+    Column("updated_at", DateTime(timezone=True), nullable=False),
 )
 
 featured_shows = Table(
@@ -78,6 +91,11 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
     if not items:
         return
     rows = [item.model_dump(mode="json", exclude=set(Event.model_computed_fields)) for item in items]
+    # Every event points to its venue row; one already stored keeps its address and coordinates.
+    names = sorted({row["venue"] for row in rows})
+    connection.execute(
+        insert(venues).values([{"name": name, "updated_at": func.now()} for name in names]).on_conflict_do_nothing()
+    )
     statement = insert(events).values(rows)
     # first_seen_at is kept from the first time the event was stored, so it is never updated.
     changes = {
