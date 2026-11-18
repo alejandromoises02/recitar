@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from sqlalchemy import (
-    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Float, Identity, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_,
+    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Float, Identity, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_, update,
 )
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
@@ -96,6 +96,7 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
     connection.execute(
         insert(venues).values([{"name": name, "updated_at": func.now()} for name in names]).on_conflict_do_nothing()
     )
+    _store_ticketer_points(connection, items)
     statement = insert(events).values(rows)
     # first_seen_at is kept from the first time the event was stored, so it is never updated.
     changes = {
@@ -104,6 +105,21 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
         if not c.primary_key and c.name != "first_seen_at"
     }
     connection.execute(statement.on_conflict_do_update(index_elements=[events.c.id], set_=changes))
+
+
+def _store_ticketer_points(connection: Connection, items: list[Event]) -> None:
+    """A ticketer's coordinates replace missing, geocoded or older ticketer ones, never manual ones.
+    A placeholder venue is not a place. Several events of one venue: the first by id wins."""
+    points: dict[str, tuple[float, float]] = {}
+    for item in sorted(items, key=lambda item: item.id):
+        if item.venue_point is not None and item.venue != VENUE_TO_BE_CONFIRMED:
+            points.setdefault(item.venue, item.venue_point)
+    for name, (latitude, longitude) in points.items():
+        connection.execute(
+            update(venues)
+            .where(venues.c.name == name, venues.c.coords_source.is_distinct_from("manual"))
+            .values(latitude=latitude, longitude=longitude, coords_source="ticketer", updated_at=func.now())
+        )
 
 
 def record_ticket_click(connection: Connection, click: TicketClick) -> None:

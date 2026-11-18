@@ -123,7 +123,9 @@ def _clock(schedule: dict) -> tuple[int, int] | None:
     return None
 
 
-def parse_event(data: dict | None, *, province: str | None, now: datetime) -> list[Event]:
+def parse_event(
+    data: dict | None, *, province: str | None, now: datetime, point: tuple[float, float] | None = None
+) -> list[Event]:
     """One event per date of the show that has not passed yet. `province` is Georef's name for where
     the venue is, if known."""
     if not data:
@@ -155,6 +157,7 @@ def parse_event(data: dict | None, *, province: str | None, now: datetime) -> li
                 ticket_links=[TicketLink(vendor=VENDOR, url=url)],
                 source_url=url,
                 **source_image(data.get("imageUrl")),
+                venue_point=point,
                 updated_at=now,
             ))
     return events
@@ -205,6 +208,7 @@ def scrape(
         if len(shows) > MAX_SHOW_PAGES:
             raise ListingTooLongError(f"more than {MAX_SHOW_PAGES} show pages; raise MAX_SHOW_PAGES")
         provinces: dict[str, str | None] = {}
+        points: dict[str, tuple[float, float] | None] = {}
         events: list[Event] = []
         for uid in sorted(shows):
             response = client.get(f"{SITE}/event/{uid}")
@@ -217,7 +221,7 @@ def scrape(
             if key not in provinces:
                 location = _map_redirect(client, venue.get("url"))
                 time.sleep(delay)
-                point = venue_point(location)
+                point = points[key] = venue_point(location)
                 provinces[key] = province_at(client, point) if point else None
-            events += parse_event(data, province=provinces[key], now=now)
+            events += parse_event(data, province=provinces[key], now=now, point=points[key])
     return events if regions is None else [e for e in events if e.region in regions]

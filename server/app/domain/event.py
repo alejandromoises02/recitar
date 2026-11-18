@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, computed_field, field_serializer, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, computed_field, field_serializer, model_validator
 
 from app.domain.local_time import BUENOS_AIRES
 from app.domain.titles import tidy_title
@@ -50,6 +50,9 @@ class Event(BaseModel):
     # First time a scraper read it: when we learned the show was announced. Stored once and never
     # overwritten (see upsert_events). A freshly scraped event leaves it out and takes updated_at.
     first_seen_at: AwareDatetime
+    # (latitude, longitude) of the venue when the ticketer gives them. Carried only from the scraper
+    # to the venues table (see upsert_events): never stored on the event nor published with it.
+    venue_point: tuple[float, float] | None = Field(default=None, exclude=True)
 
     @model_validator(mode="before")
     @classmethod

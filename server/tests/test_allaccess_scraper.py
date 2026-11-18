@@ -205,3 +205,8 @@ def test_too_many_show_pages_stop_the_scrape(no_wait, monkeypatch):
     monkeypatch.setattr(allaccess, "MAX_SHOW_PAGES", 2)
     with pytest.raises(ListingTooLongError):
         scrape(delay=0, transport=httpx.MockTransport(site()))
+
+
+def test_every_event_carries_its_venue_coordinates():
+    found = events("airbag", "airbag")
+    assert found and {e.venue_point for e in found} == {RIVER}

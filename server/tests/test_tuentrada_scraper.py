@@ -277,3 +277,10 @@ def test_a_city_name_in_several_provinces_stays_unknown(monkeypatch):
     assert scrape(delay=0, transport=httpx.MockTransport(site)) == []
     [all_regions] = [scrape(regions=None, delay=0, transport=httpx.MockTransport(site))]
     assert [(e.region, e.city) for e in all_regions] == [(None, "Belén De Escobar")]
+
+
+def test_every_event_carries_its_venue_coordinates_and_none_when_the_page_has_only_the_map_placeholder():
+    found = show("virus", "virus-tgi")
+    assert found and {e.venue_point for e in found} == {(-34.66049613164969, -58.66711872545106)}
+    placeholder = show("placeholder_map", "cgre-escobar")
+    assert placeholder and {e.venue_point for e in placeholder} == {None}

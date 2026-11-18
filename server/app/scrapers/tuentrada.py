@@ -128,6 +128,7 @@ def parse_show(
     if not isinstance(sessions, list):
         return []
     url = f"{SITE}/{slug}"
+    point = coordinates(page)
     events = []
     for session in sessions:
         if not isinstance(session, dict) or session.get("type") != "SESSION" or session.get("status") != "READY":
@@ -155,6 +156,7 @@ def parse_show(
             ticket_links=[TicketLink(vendor=VENDOR, url=url)],
             source_url=url,
             **source_image(image),
+            venue_point=point,
             updated_at=now,
         ))
     return events

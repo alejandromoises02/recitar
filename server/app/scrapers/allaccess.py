@@ -126,6 +126,7 @@ def parse_event(data: dict | None, slug: str, *, province: str | None, now: date
             ticket_links=[TicketLink(vendor=VENDOR, url=url)],
             source_url=url,
             **source_image(data.get("thumbImage") or show.get("image")),
+            venue_point=coordinates(data),
             updated_at=now,
         ))
     return events

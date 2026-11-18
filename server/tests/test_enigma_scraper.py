@@ -260,3 +260,14 @@ def test_a_search_that_never_ends_stops_the_scrape(no_wait):
     fake.search = [page("search")] + [(FIXTURES / "enigma_search_page2.json").read_text(encoding="utf-8").replace("[", "[" + ",".join(["{}"] * 20) + ",", 1)] * 100
     with pytest.raises(ListingTooLongError):
         scrape(delay=0, transport=httpx.MockTransport(fake))
+
+
+def test_every_event_carries_the_pin_of_its_venue_map_link(no_wait):
+    found = scrape(regions=None, delay=0, transport=httpx.MockTransport(site()))
+    assert {e.venue: e.venue_point for e in found} == {
+        "Deseo Club": (-34.5844637, -58.4698464),
+        "Club Ciudad": (-34.5423362, -58.4597883),
+        "Playón Norte Estadio Mario Alberto Kempes": (-31.3685071, -64.2474664),
+        "Argentina": (-34.6036739, -58.3821215),  # a city's pin; the placeholder is never stored (repository)
+        "Teatro Margarita Xirgu": (-34.6182315, -58.3760196),
+    }

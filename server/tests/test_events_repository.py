@@ -428,3 +428,50 @@ def test_saving_events_again_keeps_the_venue_coordinates(db_engine):
             "SELECT address, latitude, longitude, coords_source FROM venues WHERE name = 'Movistar Arena'"
         )).one()
     assert tuple(row) == ("Humboldt 450", -34.59, -58.45, "manual")
+
+
+def _venue_row(conn, name: str):
+    from sqlalchemy import text
+
+    return tuple(conn.execute(text(
+        "SELECT latitude, longitude, coords_source FROM venues WHERE name = :name"
+    ), {"name": name}).one())
+
+
+def test_coordinates_from_a_ticketer_are_stored_on_the_venue(db_engine):
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event(venue_point=(-34.6, -58.4)), event("venti-a-20261120T2100", venue="Niceto Club")])
+        assert _venue_row(conn, "Movistar Arena") == (-34.6, -58.4, "ticketer")
+        assert _venue_row(conn, "Niceto Club") == (None, None, None)
+        upsert_events(conn, [event()])  # an event without coordinates leaves them as they are
+        assert _venue_row(conn, "Movistar Arena") == (-34.6, -58.4, "ticketer")
+
+
+def test_ticketer_coordinates_replace_geocoded_ones_but_never_manual_ones(db_engine):
+    from sqlalchemy import text
+
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event(), event("venti-a-20261120T2100", venue="Niceto Club")])
+        conn.execute(text("UPDATE venues SET latitude = 1, longitude = 2, coords_source = 'osm' WHERE name = 'Movistar Arena'"))
+        conn.execute(text("UPDATE venues SET latitude = 3, longitude = 4, coords_source = 'manual' WHERE name = 'Niceto Club'"))
+        upsert_events(conn, [
+            event(venue_point=(-34.6, -58.4)), event("venti-a-20261120T2100", venue="Niceto Club", venue_point=(-34.5, -58.3)),
+        ])
+        assert _venue_row(conn, "Movistar Arena") == (-34.6, -58.4, "ticketer")
+        assert _venue_row(conn, "Niceto Club") == (3, 4, "manual")
+
+
+def test_a_venue_to_be_confirmed_never_gets_coordinates(db_engine):
+    from app.domain.event import VENUE_TO_BE_CONFIRMED
+
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event(venue=VENUE_TO_BE_CONFIRMED, venue_point=(-34.6, -58.38))])
+        assert _venue_row(conn, VENUE_TO_BE_CONFIRMED) == (None, None, None)
+
+
+def test_venue_coordinates_are_not_part_of_the_stored_or_published_event(db_engine):
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event(venue_point=(-34.6, -58.4))])
+        [stored] = list_events(conn)
+    assert stored.venue_point is None
+    assert "venue_point" not in stored.model_dump()
