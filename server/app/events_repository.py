@@ -122,6 +122,42 @@ def _store_ticketer_points(connection: Connection, items: list[Event]) -> None:
         )
 
 
+@dataclass(frozen=True)
+class VenueToGeocode:
+    name: str
+    city: str | None  # the one most of its events give
+    region: str  # ISO 3166-2, as on its events
+
+
+def venues_to_geocode(connection: Connection) -> list[VenueToGeocode]:
+    """Venues still without coordinates that can be looked up: not manual, not the placeholder, and
+    with a known region (a result is only accepted inside it)."""
+    city = func.mode().within_group(events.c.city)
+    region = func.mode().within_group(events.c.region)
+    rows = connection.execute(
+        select(venues.c.name, city, region)
+        .join(events, events.c.venue == venues.c.name)
+        .where(
+            venues.c.latitude.is_(None),
+            venues.c.coords_source.is_distinct_from("manual"),
+            venues.c.name != VENUE_TO_BE_CONFIRMED,
+        )
+        .group_by(venues.c.name)
+        .having(region.is_not(None))
+        .order_by(venues.c.name)
+    )
+    return [VenueToGeocode(name, city, region) for name, city, region in rows]
+
+
+def store_geocoded(connection: Connection, name: str, latitude: float, longitude: float, address: str | None) -> None:
+    """Saved only while the venue still has no coordinates and was not corrected by hand."""
+    connection.execute(
+        update(venues)
+        .where(venues.c.name == name, venues.c.latitude.is_(None), venues.c.coords_source.is_distinct_from("manual"))
+        .values(latitude=latitude, longitude=longitude, address=address, coords_source="osm", updated_at=func.now())
+    )
+
+
 def record_ticket_click(connection: Connection, click: TicketClick) -> None:
     connection.execute(insert(ticket_clicks).values(
         show_key=click.show_key, event_id=click.event_id, vendor=click.vendor, source=click.source, created_at=click.at,

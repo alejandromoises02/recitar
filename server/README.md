@@ -57,6 +57,22 @@ The mapping lives in `app/scrapers/venues.py`; add new variants there. A source 
 writes a placeholder ("A confirmar", or a whole country: Enigma lists Quilmes Rock 2027 at "Argentina");
 those are stored as "Lugar a confirmar", which `/venues` leaves out and the show page offers no "more at".
 
+## Venue locations
+
+Each venue has one row in `venues` with its address and coordinates; `coords_source` says where
+they came from. All Access, TuEntrada and Enigma give coordinates, stored as `ticketer` on every
+run. For the rest, after `app.run`:
+
+```bash
+python -m app.geocode   # look up venues still without coordinates on OpenStreetMap (Nominatim)
+```
+
+It sends one request per second with `SCRAPER_CONTACT_EMAIL` in the User-Agent, and accepts a
+result only inside the venue's region and only when it is a place (not a street, a bus stop or a
+town). Venues it cannot place stay without coordinates and are asked again next time. To fix one by
+hand, set its coordinates and `coords_source = 'manual'`: neither a scraper nor the geocoder will
+change it again. "Lugar a confirmar" is never placed.
+
 Sources that do not say what kind of event a show is, and the music categories of those that do, go
 through one provisional rule (`app/scrapers/category.py`) until LLM classification replaces it: an
 all-night start (23:59) or a party word in the title is "other", a title naming another act ("tributo",

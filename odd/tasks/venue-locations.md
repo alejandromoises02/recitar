@@ -17,7 +17,7 @@ Branch: feat/venue-locations (from dev). Delivery: ask-on-risk. Tests: `RUN_DB_T
 
 - T1 S1-S3 inline: migration 0007 + repository keeps venue rows. Risk item 1. Status: done, commit 9153cab. RED 4 failing -> GREEN; mutation (venue upsert overwrites) turns test_saving_events_again_keeps_the_venue_coordinates red; full suite 779 passed with RUN_DB_TESTS=1.
 - T2 S4 inline: scrapers pass coordinates through; store rule. Status: done, uncommitted (awaiting user OK). RED 6 -> GREEN; mutations: placeholder guard -> test_a_venue_to_be_confirmed_never_gets_coordinates red, manual guard -> test_ticketer_coordinates_replace_geocoded_ones_but_never_manual_ones red; full suite 786 passed (RUN_DB_TESTS=1).
-- T3 S5 inline: geocode command. Status: pending.
+- T3 S5 inline: geocode command. Status: done, uncommitted (awaiting user OK). RED (module missing) -> GREEN 7; mutations: region check, not-a-place check, manual filter each turn a test red; full suite 793 passed (RUN_DB_TESTS=1). Not yet run against the dev database.
 - T4 S6 inline: API + client types. Status: pending.
 
 Routes: all inline (one writer, units depend on T1; no writer trigger).
@@ -29,3 +29,5 @@ Routes: all inline (one writer, units depend on T1; no writer trigger).
 - L3 T1 done: migrations/versions/0007_venues.py (checks: coords_source in ticketer/osm/manual, both coords or none), events_repository.venues table + upsert_events inserts missing venue names ON CONFLICT DO NOTHING. Independent verifier deferred to feature end (verification timing rule). Next: commit T1 with the user's OK, then T2.
 - L4 (2026-11-18) User: "si az commit" -> T1 committed as 9153cab.
 - L5 T2: Event.venue_point (Field exclude=True: not stored on events, not in OpenAPI) set by All Access (coordinates(data)), TuEntrada (coordinates(page); Obelisco map placeholder already gives None) and Enigma (map pin, cached per venue in scrape). upsert_events -> _store_ticketer_points: first event by id per venue wins; skips VENUE_TO_BE_CONFIRMED (Enigma's "Argentina" pin is a city centre); never overwrites coords_source='manual'. test_openapi_contract now counts only published fields.
+- L6 (2026-11-18) User: "si" -> T2 committed as 71333a1.
+- L7 T3: Nominatim probed live 2026-11-18 (fixtures tests/fixtures/nominatim_*.json, limit=5). "Club Ciudad, Buenos Aires" returns 4 Buenos Aires province clubs before the CABA one; "Hipódromo de Palermo" returns 2 bus stops first. Rules: first result whose ISO3166-2-lvl4 equals the venue's region and whose category is not highway/place/boundary. Query "<name>, <city>, Argentina" (city = mode over its events); venues without a region are skipped. app/geocode.py + repository venues_to_geocode/store_geocoded; README section "Venue locations".
