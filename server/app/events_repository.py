@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
 from app.domain.event import VENUE_TO_BE_CONFIRMED, Event, EventCategory, Show, ShowDate, VenueLocation
+from app.domain.same_show import merge_same_shows
 from app.domain.ticket_redirect import TicketClick
 
 metadata = MetaData()
@@ -87,9 +88,13 @@ _show_key = func.regexp_replace(events.c.id, _DATE_SUFFIX, "")
 
 
 def upsert_events(connection: Connection, items: list[Event]) -> None:
-    """Insert new events and update the ones already stored (same id)."""
+    """Insert new events and update the ones already stored (same id). A performance another source
+    already published is kept once (see domain.same_show): the duplicate row is dropped or deleted."""
     if not items:
         return
+    items, duplicates = merge_same_shows(items, _stored_at_same_slots(connection, items))
+    if duplicates:
+        connection.execute(delete(events).where(events.c.id.in_(duplicates)))
     rows = [item.model_dump(mode="json", exclude=set(Event.model_computed_fields)) for item in items]
     # Every event points to its venue row; one already stored keeps its address and coordinates.
     names = sorted({row["venue"] for row in rows})
@@ -105,6 +110,13 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
         if not c.primary_key and c.name != "first_seen_at"
     }
     connection.execute(statement.on_conflict_do_update(index_elements=[events.c.id], set_=changes))
+
+
+def _stored_at_same_slots(connection: Connection, items: list[Event]) -> list[Event]:
+    """Stored events at the venue and time of any of `items`."""
+    slots = {(item.venue, item.starts_at) for item in items}
+    rows = connection.execute(select(events).where(tuple_(events.c.venue, events.c.starts_at).in_(slots))).mappings()
+    return [Event.model_validate(dict(row)) for row in rows]
 
 
 def _store_ticketer_points(connection: Connection, items: list[Event]) -> None:

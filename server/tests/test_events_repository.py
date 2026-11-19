@@ -515,3 +515,30 @@ def test_ticketer_coordinates_drop_the_address_geocoding_gave_so_pin_and_address
         upsert_events(conn, [event(venue_point=(-34.6, -58.4))])
         row = conn.execute(text("SELECT address, latitude, longitude, coords_source FROM venues WHERE name = 'Movistar Arena'")).one()
     assert tuple(row) == (None, -34.6, -58.4, "ticketer")
+
+
+def test_the_same_performance_from_two_sources_is_stored_once(db_engine):
+    walsh = dict(venue="Teatro Colón", starts_at=NOW + timedelta(days=24))
+    colon = event("colon-walsh-20261202T1500", **walsh, ticket_links=[TicketLink(vendor="Ticketek", url="https://www.ticketek.com.ar/walsh")])
+    ticketek = event("ticketek-walsh-sinfonico-20261202T1500", **walsh, ticket_links=[TicketLink(vendor="Ticketek", url="https://www.ticketek.com.ar/otro")])
+    with db_engine.begin() as conn:
+        upsert_events(conn, [ticketek])  # a ticketer's run stores it first
+        upsert_events(conn, [colon])  # the venue's own source arrives later and replaces it
+    with db_engine.connect() as conn:
+        (stored,) = list_events(conn)
+    assert stored.id == colon.id
+    assert [link.url for link in stored.ticket_links] == ["https://www.ticketek.com.ar/walsh", "https://www.ticketek.com.ar/otro"]
+
+
+def test_a_ticketer_run_adds_its_link_to_the_stored_venue_row(db_engine):
+    walsh = dict(venue="Teatro Colón", starts_at=NOW + timedelta(days=24))
+    colon = event("colon-walsh-20261202T1500", **walsh, ticket_links=[TicketLink(vendor="Ticketek", url="https://www.ticketek.com.ar/walsh")])
+    ticketek = event("ticketek-walsh-sinfonico-20261202T1500", **walsh, ticket_links=[TicketLink(vendor="Ticketek", url="https://www.ticketek.com.ar/otro")])
+    with db_engine.begin() as conn:
+        upsert_events(conn, [colon])
+        upsert_events(conn, [ticketek])
+    with db_engine.connect() as conn:
+        (stored,) = list_events(conn)
+    assert stored.id == colon.id
+    assert [link.url for link in stored.ticket_links] == ["https://www.ticketek.com.ar/walsh", "https://www.ticketek.com.ar/otro"]
+    assert stored.first_seen_at == colon.first_seen_at
