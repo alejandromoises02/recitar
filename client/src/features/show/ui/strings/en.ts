@@ -28,4 +28,6 @@ export const en: ShowStrings = {
   notFoundTitle: "We can't find this show",
   notFoundBody: "It may be over, or the link may be wrong.",
   goToListing: "See all shows",
+  whereTitle: "Getting there",
+  mapOf: (venue) => `Map of ${venue}`,
 };

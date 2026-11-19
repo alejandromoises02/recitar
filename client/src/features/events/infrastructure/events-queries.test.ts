@@ -36,7 +36,7 @@ function fakeApi(pages: EventsPage[], showPages: ShowsPage[] = []) {
       return { kind: "picked" as const, items: [show("f")] };
     },
     async getShow(id) {
-      return id === "known" ? show("known") : null;
+      return id === "known" ? { ...show("known"), venueLocation: null } : null;
     },
   };
   return { api, requests, showRequests, venueRequests, featuredRequests };

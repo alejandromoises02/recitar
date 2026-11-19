@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Show, ShowDateTickets } from "../../events/domain/show";
-import { buttonWhen, dateMode, dateTile, dateTargets, hasVenueToExplore, moreAtVenue, ticketPlan, updatedAgo } from "./show-page";
+import { buttonWhen, dateMode, dateTile, dateTargets, hasVenueToExplore, mapEmbedUrl, moreAtVenue, ticketPlan, updatedAgo, venueMapQuery } from "./show-page";
 
 // Saturday 14 November 2026, noon in Buenos Aires.
 const NOW = new Date("2026-11-14T15:00:00Z");
@@ -138,5 +138,36 @@ describe("hasVenueToExplore", () => {
 
   it("is not a venue still to be confirmed, whose other shows have nothing in common", () => {
     expect(hasVenueToExplore("Lugar a confirmar")).toBe(false);
+  });
+});
+
+describe("venueMapQuery", () => {
+  const where = (venue: string, city: string | null, address: string | null | undefined) => ({
+    venue,
+    city,
+    venueLocation: address === undefined ? null : { address, latitude: -34.59, longitude: -58.44 },
+  });
+
+  it("is the venue, its street address and its city", () => {
+    expect(venueMapQuery(where("Movistar Arena", "Buenos Aires", "Humboldt 450"))).toBe("Movistar Arena, Humboldt 450, Buenos Aires");
+  });
+
+  it("leaves out what is unknown, so a venue without coordinates is still searched by name", () => {
+    expect(venueMapQuery(where("Movistar Arena", "Buenos Aires", null))).toBe("Movistar Arena, Buenos Aires");
+    expect(venueMapQuery(where("XLR Club", "Buenos Aires", undefined))).toBe("XLR Club, Buenos Aires");
+    expect(venueMapQuery(where("XLR Club", null, undefined))).toBe("XLR Club");
+  });
+
+  it("is null while the venue is to be confirmed", () => {
+    expect(venueMapQuery(where("Lugar a confirmar", "Buenos Aires", undefined))).toBeNull();
+  });
+});
+
+describe("mapEmbedUrl", () => {
+  it("is Google's embeddable map for the query, in the app language", () => {
+    expect(mapEmbedUrl("Movistar Arena, Humboldt 450, Buenos Aires", "es")).toBe(
+      "https://maps.google.com/maps?q=Movistar%20Arena%2C%20Humboldt%20450%2C%20Buenos%20Aires&z=16&hl=es&output=embed",
+    );
+    expect(mapEmbedUrl("Niceto Club", "en")).toBe("https://maps.google.com/maps?q=Niceto%20Club&z=16&hl=en&output=embed");
   });
 });

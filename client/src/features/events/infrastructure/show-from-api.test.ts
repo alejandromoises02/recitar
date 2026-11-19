@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { apiShow } from "./api-fixtures";
 import type { ApiFeatured } from "./event-from-api";
-import { featuredFromApi, showFromApi } from "./event-from-api";
+import { featuredFromApi, showDetailFromApi, showFromApi } from "./event-from-api";
 
 describe("showFromApi", () => {
   it("renames every field and reads every date", () => {
@@ -40,5 +40,17 @@ describe("featuredFromApi", () => {
     const featured = featuredFromApi(api);
     expect(featured.kind).toBe("just_announced");
     expect(featured.items.map((s) => s.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("showDetailFromApi", () => {
+  it("is the show plus where its venue is", () => {
+    const api = { ...apiShow("movistar-x"), venue_location: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 } };
+    const detail = showDetailFromApi(api);
+    expect(detail).toEqual({ ...showFromApi(api), venueLocation: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 } });
+  });
+
+  it("keeps a venue without coordinates as null", () => {
+    expect(showDetailFromApi({ ...apiShow("movistar-x"), venue_location: null }).venueLocation).toBeNull();
   });
 });

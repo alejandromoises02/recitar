@@ -27,6 +27,8 @@ export const es = {
   notFoundTitle: "No encontramos este show",
   notFoundBody: "Puede que ya haya pasado o que el link esté mal.",
   goToListing: "Ver toda la cartelera",
+  whereTitle: "Cómo llegar",
+  mapOf: (venue: string) => `Mapa de ${venue}`,
 };
 
 export type ShowStrings = typeof es;

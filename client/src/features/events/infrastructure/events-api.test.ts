@@ -101,6 +101,12 @@ describe("getShow", () => {
     expect(show?.updatedAt).toEqual(new Date("2026-11-13T12:00:00Z"));
   });
 
+  it("reads where the venue is", async () => {
+    const { fetch } = fakeFetch(() => json({ ...apiShow("movistar-x"), venue_location: { address: null, latitude: -34.59, longitude: -58.44 } }));
+    const show = await createEventsApi({ baseUrl: "https://api.example", fetch }).getShow("movistar-x");
+    expect(show?.venueLocation).toEqual({ address: null, latitude: -34.59, longitude: -58.44 });
+  });
+
   it("escapes the id in the path", async () => {
     const { fetch, urls } = fakeFetch(() => json(apiShow("a")));
     await createEventsApi({ baseUrl: "https://api.example", fetch }).getShow("a/b?c");

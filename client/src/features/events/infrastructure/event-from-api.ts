@@ -1,6 +1,6 @@
 import type { components } from "@/api/schema";
 import type { Event, EventDetail } from "../domain/event";
-import type { Featured, Show } from "../domain/show";
+import type { Featured, Show, ShowDetail } from "../domain/show";
 import type { Venue } from "../domain/venue";
 
 /** An event as the API sends it (generated from its OpenAPI schema; see client/README.md). */
@@ -8,6 +8,7 @@ export type ApiEvent = components["schemas"]["Event"];
 export type ApiEventDetail = components["schemas"]["EventDetail"];
 export type ApiVenue = components["schemas"]["VenueCount"];
 export type ApiShow = components["schemas"]["Show"];
+export type ApiShowDetail = components["schemas"]["ShowDetail"];
 export type ApiFeatured = components["schemas"]["Featured"];
 
 /**
@@ -80,4 +81,12 @@ export function showFromApi(api: ApiShow): Show {
 
 export function featuredFromApi(api: ApiFeatured): Featured {
   return { kind: api.kind, items: api.items.map(showFromApi) };
+}
+
+export function showDetailFromApi(api: ApiShowDetail): ShowDetail {
+  const location = api.venue_location;
+  return {
+    ...showFromApi(api),
+    venueLocation: location ? { address: location.address, latitude: location.latitude, longitude: location.longitude } : null,
+  };
 }

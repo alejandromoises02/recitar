@@ -40,3 +40,13 @@ export type Featured = {
   kind: "picked" | "just_announced";
   items: Show[];
 };
+
+/** Where a venue is. `address` is the street and number, when known. */
+export type VenueLocation = {
+  address: string | null;
+  latitude: number;
+  longitude: number;
+};
+
+/** The show page: a show plus where its venue is (null while the venue has no coordinates). */
+export type ShowDetail = Show & { venueLocation: VenueLocation | null };

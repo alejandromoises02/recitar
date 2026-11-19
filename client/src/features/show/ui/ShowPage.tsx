@@ -7,11 +7,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spacing } from "../../../design/tokens";
 import { useLang } from "../../../i18n/lang-context";
 import { tracker } from "../../analytics/tracker";
-import type { Show } from "../../events/domain/show";
+import type { ShowDetail } from "../../events/domain/show";
 import { imageSource } from "../../home/application/show-labels";
 import { domainOf } from "../../home/application/ticket-target";
 import { heading } from "../../home/ui/a11y";
-import { buttonWhen, dateMode, hasVenueToExplore, ticketPlan, updatedAgo } from "../application/show-page";
+import { buttonWhen, dateMode, hasVenueToExplore, mapEmbedUrl, ticketPlan, updatedAgo, venueMapQuery } from "../application/show-page";
 import { DateList } from "./DateList";
 import { DateTiles } from "./DateTiles";
 import { MoreAtVenue } from "./MoreAtVenue";
@@ -24,8 +24,9 @@ import { ShowPoster } from "./ShowPoster";
 import { useShowStrings } from "./strings";
 import { ticketOffer } from "./ticket-offer";
 import { TicketActions } from "./TicketActions";
+import { VenueMap } from "./VenueMap";
 
-type Props = { show: Show; apiBase: string };
+type Props = { show: ShowDetail; apiBase: string };
 
 /** Beside the info the poster reaches at least the bottom of the info column ("Más en" included), and grows past the cap only to do so. */
 const posterBesideInfo = (infoHeight: number) => ({ minHeight: infoHeight, maxHeight: Math.max(POSTER_MAX_HEIGHT_TWO_COLUMNS, infoHeight) });
@@ -52,6 +53,7 @@ export function ShowPage({ show, apiBase }: Props) {
   const offer = ticketOffer(ticketPlan(show.dates, picked, show.sourceUrl), when, strings, apiBase);
   const photo = imageSource(show.imageUrl, apiBase);
   const several = show.dates.length > 1;
+  const mapQuery = venueMapQuery(show);
   const shareUrl = Platform.OS === "web" ? window.location.href : Linking.createURL(`/show/${show.id}`);
 
   return (
@@ -125,6 +127,14 @@ export function ShowPage({ show, apiBase }: Props) {
               <Text style={styles.strong}>{domainOf(show.sourceUrl)}</Text>
               {` · ${updatedAgo(show.updatedAt, now, lang)}`}
             </Text>
+            {mapQuery ? (
+              <View style={styles.block}>
+                <Text style={styles.h2} {...heading(2)}>
+                  {strings.whereTitle}
+                </Text>
+                <VenueMap url={mapEmbedUrl(mapQuery, lang)} label={strings.mapOf(show.venue)} />
+              </View>
+            ) : null}
             {oneColumn || !hasVenueToExplore(show.venue) ? null : <MoreAtVenue show={show} apiBase={apiBase} fillWidth />}
           </View>
         </View>

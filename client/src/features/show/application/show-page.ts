@@ -1,5 +1,5 @@
 import type { Lang } from "../../../i18n/lang";
-import type { Show, ShowDateTickets } from "../../events/domain/show";
+import type { Show, ShowDateTickets, ShowDetail } from "../../events/domain/show";
 import { calendarDay } from "../../home/application/calendar";
 import { DATE_WORDS } from "../../home/application/date-words";
 import { startTime } from "../../home/application/show-labels";
@@ -97,4 +97,16 @@ export const MORE_AT_VENUE = 4;
 /** Up to MORE_AT_VENUE shows at the venue, soonest first as the API sends them, never the page's own show. */
 export function moreAtVenue(shows: Show[], currentId: string): Show[] {
   return shows.filter((show) => show.id !== currentId).slice(0, MORE_AT_VENUE);
+}
+
+/** What the venue map searches for: venue, street address and city, leaving out what is unknown. Searching by
+ * name also places venues we have no coordinates for. null while the venue is to be confirmed. */
+export function venueMapQuery(show: Pick<ShowDetail, "venue" | "city" | "venueLocation">): string | null {
+  if (!hasVenueToExplore(show.venue)) return null;
+  return [show.venue, show.venueLocation?.address, show.city].filter(Boolean).join(", ");
+}
+
+/** Google's embeddable map for a search, in the app language. Keyless: the form Google Maps' own share link uses. */
+export function mapEmbedUrl(query: string, lang: Lang): string {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=16&hl=${lang}&output=embed`;
 }

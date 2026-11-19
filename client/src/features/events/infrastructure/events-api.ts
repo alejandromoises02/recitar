@@ -1,8 +1,8 @@
 import type { components, operations } from "../../../api/schema";
 import type { Event, EventDetail } from "../domain/event";
 import type { Venue } from "../domain/venue";
-import type { Featured, Show } from "../domain/show";
-import { eventDetailFromApi, eventFromApi, featuredFromApi, showFromApi, venueFromApi } from "./event-from-api";
+import type { Featured, Show, ShowDetail } from "../domain/show";
+import { eventDetailFromApi, eventFromApi, featuredFromApi, showDetailFromApi, showFromApi, venueFromApi } from "./event-from-api";
 
 /** Filters and cursor of GET /events, as the API names them (see server/README.md). */
 export type EventsQuery = NonNullable<operations["list_events_events_get"]["parameters"]["query"]>;
@@ -33,7 +33,7 @@ export type EventsApi = {
   /** Each show once, with all of its upcoming dates. */
   listShows(query: ShowsQuery): Promise<ShowsPage>;
   /** One show with all of its upcoming dates; null when it does not exist or has none left. */
-  getShow(id: string): Promise<Show | null>;
+  getShow(id: string): Promise<ShowDetail | null>;
   getFeatured(query?: FeaturedQuery): Promise<Featured>;
 };
 
@@ -121,7 +121,7 @@ export function createEventsApi({ baseUrl, fetch }: { baseUrl: string; fetch: ty
     },
     async getShow(id) {
       try {
-        return showFromApi(await get<components["schemas"]["Show"]>(`/shows/${encodeURIComponent(id)}`));
+        return showDetailFromApi(await get<components["schemas"]["ShowDetail"]>(`/shows/${encodeURIComponent(id)}`));
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) return null;
         throw error;
