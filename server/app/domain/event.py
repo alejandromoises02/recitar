@@ -146,3 +146,19 @@ class Show(BaseModel):
         dates = [ShowDateTickets(id=e.id, starts_at=e.starts_at, time_known=e.time_known, ticket_links=e.ticket_links) for e in upcoming]
         updated_at = max(e.updated_at for e in upcoming)
         return cls(id=show_id, first_seen_at=first_seen_at, updated_at=updated_at, dates=dates, **display)
+
+
+class VenueLocation(BaseModel):
+    """Where a venue is, for the show page's map."""
+
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
+    address: str | None = None  # street and number, when known
+    latitude: float
+    longitude: float
+
+
+class ShowDetail(Show):
+    """The show page: a show plus where its venue is."""
+
+    venue_location: VenueLocation | None  # null while the venue has no coordinates

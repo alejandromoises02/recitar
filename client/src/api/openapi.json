@@ -725,8 +725,8 @@
         "tags": [
           "shows"
         ],
-        "summary": "One show with all of its upcoming dates",
-        "description": "The show page: every upcoming date, soonest first, each with its own event id and ticket\nlinks, plus `updated_at`, the last time a scraper read any of them. `show_id` is the `id` of an\nitem of GET /shows (an event id without its date), compared whole. A show whose dates have all\npassed is not found.",
+        "summary": "One show with all of its upcoming dates and where its venue is",
+        "description": "The show page: every upcoming date, soonest first, each with its own event id and ticket\nlinks, plus `updated_at`, the last time a scraper read any of them. `venue_location` is the venue's\naddress and coordinates for a map, or null while they are unknown. `show_id` is the `id` of an\nitem of GET /shows (an event id without its date), compared whole. A show whose dates have all\npassed is not found.",
         "operationId": "get_show_shows__show_id__get",
         "parameters": [
           {
@@ -745,7 +745,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Show"
+                  "$ref": "#/components/schemas/ShowDetail"
                 }
               }
             }
@@ -2138,6 +2138,196 @@
         "title": "ShowDateTickets",
         "description": "One upcoming date of a show in a listing, with where to buy it."
       },
+      "ShowDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "concert",
+              "tribute",
+              "theatre",
+              "party",
+              "other"
+            ],
+            "title": "Category"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "artist": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artist"
+          },
+          "venue": {
+            "type": "string",
+            "title": "Venue"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "image_origin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "source",
+                  "licensed",
+                  "venue"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Origin"
+          },
+          "image_author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Author"
+          },
+          "image_license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image License"
+          },
+          "image_source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Source Url"
+          },
+          "first_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Seen At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "dates": {
+            "items": {
+              "$ref": "#/components/schemas/ShowDateTickets"
+            },
+            "type": "array",
+            "title": "Dates"
+          },
+          "venue_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VenueLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "title",
+          "name",
+          "artist",
+          "venue",
+          "city",
+          "region",
+          "country",
+          "source_url",
+          "image_url",
+          "image_origin",
+          "image_author",
+          "image_license",
+          "image_source_url",
+          "first_seen_at",
+          "updated_at",
+          "dates",
+          "venue_location"
+        ],
+        "title": "ShowDetail",
+        "description": "The show page: a show plus where its venue is."
+      },
       "ShowPage": {
         "properties": {
           "items": {
@@ -2386,6 +2576,37 @@
           "items"
         ],
         "title": "VenueList"
+      },
+      "VenueLocation": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "latitude",
+          "longitude"
+        ],
+        "title": "VenueLocation",
+        "description": "Where a venue is, for the show page's map."
       }
     },
     "securitySchemes": {

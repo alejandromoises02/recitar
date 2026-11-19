@@ -475,3 +475,43 @@ def test_venue_coordinates_are_not_part_of_the_stored_or_published_event(db_engi
         [stored] = list_events(conn)
     assert stored.venue_point is None
     assert "venue_point" not in stored.model_dump()
+
+
+def test_the_venue_location_is_read_from_the_venues_table(db_engine):
+    from sqlalchemy import text
+
+    from app.domain.event import VenueLocation
+    from app.events_repository import get_venue_location
+
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event(venue_point=(-34.6, -58.4)), event("venti-a-20261120T2100", venue="Niceto Club")])
+        conn.execute(text("UPDATE venues SET address = 'Humboldt 450' WHERE name = 'Movistar Arena'"))
+        assert get_venue_location(conn, "Movistar Arena") == VenueLocation(address="Humboldt 450", latitude=-34.6, longitude=-58.4)
+        assert get_venue_location(conn, "Niceto Club") is None  # no coordinates yet
+        assert get_venue_location(conn, "Nowhere") is None
+
+
+def test_the_show_page_reads_its_venue_location_from_the_database(db_engine, monkeypatch):
+    from app.api import shows
+    from app.domain.event import VenueLocation
+
+    soon = datetime.now(timezone.utc) + timedelta(days=3)
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event("movistar-a-20991120T2100", starts_at=soon, venue_point=(-34.6, -58.4))])
+    monkeypatch.setattr(shows, "engine", lambda: db_engine)
+    found = shows.show_detail_source()("movistar-a")
+    assert found is not None and found.venue_location == VenueLocation(address=None, latitude=-34.6, longitude=-58.4)
+    assert shows.show_detail_source()("movistar-nothing") is None
+
+
+def test_ticketer_coordinates_drop_the_address_geocoding_gave_so_pin_and_address_never_disagree(db_engine):
+    from sqlalchemy import text
+
+    with db_engine.begin() as conn:
+        upsert_events(conn, [event()])
+        conn.execute(text(
+            "UPDATE venues SET address = 'Calle Falsa 123', latitude = 1, longitude = 2, coords_source = 'osm' WHERE name = 'Movistar Arena'"
+        ))
+        upsert_events(conn, [event(venue_point=(-34.6, -58.4))])
+        row = conn.execute(text("SELECT address, latitude, longitude, coords_source FROM venues WHERE name = 'Movistar Arena'")).one()
+    assert tuple(row) == (None, -34.6, -58.4, "ticketer")

@@ -10,13 +10,13 @@ from app.api.problems import NotFoundError
 from app.api.listing import (
     DEFAULT_LIMIT, Category, Cursor, FromDay, Search, ShowsAnnouncedFrom, ShowsLimit, Sort, ToDay, Venue, build_filters, problem,
 )
-from app.domain.event import Show
-from app.events_repository import EventFilters, EventSort, Position, get_upcoming_show, list_upcoming_shows
+from app.domain.event import Show, ShowDetail
+from app.events_repository import EventFilters, EventSort, Position, get_upcoming_show, get_venue_location, list_upcoming_shows
 
 # (how many, after which position, which ones, in which order) -> upcoming shows in that order
 ShowsSource = Callable[[int, Position | None, EventFilters, EventSort], list[Show]]
-# show id -> the show with its upcoming dates, or None
-ShowSource = Callable[[str], Show | None]
+# show id -> the show with its upcoming dates and where its venue is, or None
+ShowSource = Callable[[str], ShowDetail | None]
 
 router = APIRouter(tags=["shows"])
 
@@ -77,22 +77,26 @@ def list_shows(
 
 
 def show_detail_source() -> ShowSource:
-    def read(show_id: str) -> Show | None:
+    def read(show_id: str) -> ShowDetail | None:
         with engine().connect() as connection:
-            return get_upcoming_show(connection, show_id, datetime.now(timezone.utc))
+            show = get_upcoming_show(connection, show_id, datetime.now(timezone.utc))
+            if show is None:
+                return None
+            return ShowDetail(**show.model_dump(), venue_location=get_venue_location(connection, show.venue))
 
     return read
 
 
 @router.get(
     "/shows/{show_id}",
-    response_model=Show,
-    summary="One show with all of its upcoming dates",
+    response_model=ShowDetail,
+    summary="One show with all of its upcoming dates and where its venue is",
     responses={404: problem("There is no show with this id, or it has no upcoming dates")},
 )
-def get_show(show_id: str, source: Annotated[ShowSource, Depends(show_detail_source)]) -> Show:
+def get_show(show_id: str, source: Annotated[ShowSource, Depends(show_detail_source)]) -> ShowDetail:
     """The show page: every upcoming date, soonest first, each with its own event id and ticket
-    links, plus `updated_at`, the last time a scraper read any of them. `show_id` is the `id` of an
+    links, plus `updated_at`, the last time a scraper read any of them. `venue_location` is the venue's
+    address and coordinates for a map, or null while they are unknown. `show_id` is the `id` of an
     item of GET /shows (an event id without its date), compared whole. A show whose dates have all
     passed is not found."""
     found = source(show_id)

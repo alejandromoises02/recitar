@@ -129,6 +129,7 @@ def parse_event(page: str, slug: str, *, province: str | None, now: datetime) ->
             ticket_links=[TicketLink(vendor=VENDOR, url=url)],
             source_url=url,
             **source_image(image[-1] if image else None),
+            venue_point=coordinates(page),
             updated_at=now,
         ))
     return list(events.values())

@@ -85,9 +85,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * One show with all of its upcoming dates
+         * One show with all of its upcoming dates and where its venue is
          * @description The show page: every upcoming date, soonest first, each with its own event id and ticket
-         *     links, plus `updated_at`, the last time a scraper read any of them. `show_id` is the `id` of an
+         *     links, plus `updated_at`, the last time a scraper read any of them. `venue_location` is the venue's
+         *     address and coordinates for a map, or null while they are unknown. `show_id` is the `id` of an
          *     item of GET /shows (an event id without its date), compared whole. A show whose dates have all
          *     passed is not found.
          */
@@ -467,6 +468,58 @@ export interface components {
             /** Ticket Links */
             ticket_links: components["schemas"]["TicketLink"][];
         };
+        /**
+         * ShowDetail
+         * @description The show page: a show plus where its venue is.
+         */
+        ShowDetail: {
+            /** Id */
+            id: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "concert" | "tribute" | "theatre" | "party" | "other";
+            /** Title */
+            title: string;
+            /** Name */
+            name: string;
+            /** Artist */
+            artist: string | null;
+            /** Venue */
+            venue: string;
+            /** City */
+            city: string | null;
+            /** Region */
+            region: string | null;
+            /** Country */
+            country: string | null;
+            /** Source Url */
+            source_url: string;
+            /** Image Url */
+            image_url: string | null;
+            /** Image Origin */
+            image_origin: ("source" | "licensed" | "venue") | null;
+            /** Image Author */
+            image_author: string | null;
+            /** Image License */
+            image_license: string | null;
+            /** Image Source Url */
+            image_source_url: string | null;
+            /**
+             * First Seen At
+             * Format: date-time
+             */
+            first_seen_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Dates */
+            dates: components["schemas"]["ShowDateTickets"][];
+            venue_location: components["schemas"]["VenueLocation"] | null;
+        };
         /** ShowPage */
         ShowPage: {
             /** Items */
@@ -535,6 +588,18 @@ export interface components {
         VenueList: {
             /** Items */
             items: components["schemas"]["VenueCount"][];
+        };
+        /**
+         * VenueLocation
+         * @description Where a venue is, for the show page's map.
+         */
+        VenueLocation: {
+            /** Address */
+            address: string | null;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
         };
     };
     responses: never;
@@ -796,7 +861,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Show"];
+                    "application/json": components["schemas"]["ShowDetail"];
                 };
             };
             /** @description There is no show with this id, or it has no upcoming dates */

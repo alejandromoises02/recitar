@@ -217,3 +217,8 @@ def test_too_many_event_pages_stop_the_scrape(no_wait, monkeypatch):
     home = httpx.Response(200, text='<a href="/evento/a">a</a><a href="/evento/b">b</a>')
     with pytest.raises(ListingTooLongError):
         scrape(delay=0, transport=httpx.MockTransport(FakePulso(home, {})))
+
+
+def test_every_event_carries_the_coordinates_of_the_map_link():
+    found = events(page("popfest_tickets"))
+    assert found and {e.venue_point for e in found} == {(-34.5483276, -58.438253)}

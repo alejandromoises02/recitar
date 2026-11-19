@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.shows import show_detail_source
-from app.domain.event import Event, Show, TicketLink
+from app.domain.event import Event, Show, ShowDetail, TicketLink, VenueLocation
 from app.main import app
 
 NOW = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
@@ -24,6 +24,8 @@ SHOW = Show.from_dates(
     [date("movistar-becerra-20261115T2100", 6, read_hours_ago=5), date("movistar-becerra-20261117T2100", 8, read_hours_ago=2)],
     NOW - timedelta(days=3),
 )
+
+DETAIL = ShowDetail(**SHOW.model_dump(), venue_location=None)
 
 
 class FakeShow:
@@ -47,7 +49,7 @@ def client_with():
 
 
 def test_a_show_comes_with_every_upcoming_date_its_ticket_links_and_when_it_was_read(client_with):
-    client, fake = client_with({SHOW.id: SHOW})
+    client, fake = client_with({DETAIL.id: DETAIL})
     response = client.get("/shows/movistar-becerra")
     assert response.status_code == 200
     body = response.json()
@@ -81,3 +83,26 @@ def test_the_show_endpoint_is_documented_with_its_404():
     schema = TestClient(app).get("/openapi.json").json()
     responses = schema["paths"]["/shows/{show_id}"]["get"]["responses"]
     assert set(responses) >= {"200", "404"}
+
+
+def test_the_show_says_where_its_venue_is(client_with):
+    placed = ShowDetail(**SHOW.model_dump(), venue_location=VenueLocation(
+        address="Humboldt 450", latitude=-34.5937, longitude=-58.4476,
+    ))
+    client, _ = client_with({placed.id: placed})
+    body = client.get("/shows/movistar-becerra").json()
+    assert body["venue_location"] == {"address": "Humboldt 450", "latitude": -34.5937, "longitude": -58.4476}
+
+
+def test_a_venue_without_coordinates_has_a_null_location(client_with):
+    client, _ = client_with({DETAIL.id: DETAIL})
+    body = client.get("/shows/movistar-becerra").json()
+    assert "venue_location" in body and body["venue_location"] is None
+
+
+def test_the_list_does_not_carry_the_venue_location(client_with):
+    from app.api.shows import upcoming_shows_source
+
+    app.dependency_overrides[upcoming_shows_source] = lambda: (lambda limit, after, filters, sort: [SHOW])
+    [item] = TestClient(app).get("/shows").json()["items"]
+    assert "venue_location" not in item

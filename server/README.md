@@ -60,7 +60,7 @@ those are stored as "Lugar a confirmar", which `/venues` leaves out and the show
 ## Venue locations
 
 Each venue has one row in `venues` with its address and coordinates; `coords_source` says where
-they came from. All Access, TuEntrada and Enigma give coordinates, stored as `ticketer` on every
+they came from. All Access, TuEntrada, Enigma and Pulso give coordinates, stored as `ticketer` on every
 run. For the rest, after `app.run`:
 
 ```bash

@@ -10,7 +10,7 @@ from sqlalchemy import (
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
-from app.domain.event import VENUE_TO_BE_CONFIRMED, Event, EventCategory, Show, ShowDate
+from app.domain.event import VENUE_TO_BE_CONFIRMED, Event, EventCategory, Show, ShowDate, VenueLocation
 from app.domain.ticket_redirect import TicketClick
 
 metadata = MetaData()
@@ -109,6 +109,7 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
 
 def _store_ticketer_points(connection: Connection, items: list[Event]) -> None:
     """A ticketer's coordinates replace missing, geocoded or older ticketer ones, never manual ones.
+    Ticketers give no street address, so one geocoding left is dropped: it may be another place.
     A placeholder venue is not a place. Several events of one venue: the first by id wins."""
     points: dict[str, tuple[float, float]] = {}
     for item in sorted(items, key=lambda item: item.id):
@@ -118,7 +119,7 @@ def _store_ticketer_points(connection: Connection, items: list[Event]) -> None:
         connection.execute(
             update(venues)
             .where(venues.c.name == name, venues.c.coords_source.is_distinct_from("manual"))
-            .values(latitude=latitude, longitude=longitude, coords_source="ticketer", updated_at=func.now())
+            .values(latitude=latitude, longitude=longitude, address=None, coords_source="ticketer", updated_at=func.now())
         )
 
 
@@ -156,6 +157,15 @@ def store_geocoded(connection: Connection, name: str, latitude: float, longitude
         .where(venues.c.name == name, venues.c.latitude.is_(None), venues.c.coords_source.is_distinct_from("manual"))
         .values(latitude=latitude, longitude=longitude, address=address, coords_source="osm", updated_at=func.now())
     )
+
+
+def get_venue_location(connection: Connection, name: str) -> VenueLocation | None:
+    """None while the venue has no coordinates (or is not stored)."""
+    row = connection.execute(
+        select(venues.c.address, venues.c.latitude, venues.c.longitude)
+        .where(venues.c.name == name, venues.c.latitude.is_not(None))
+    ).one_or_none()
+    return None if row is None else VenueLocation(address=row.address, latitude=row.latitude, longitude=row.longitude)
 
 
 def record_ticket_click(connection: Connection, click: TicketClick) -> None:
