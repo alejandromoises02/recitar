@@ -16,7 +16,13 @@ from app.scrapers.text import clean_text
 
 BA = ZoneInfo("America/Argentina/Buenos_Aires")
 VENUE = "Teatro Colón"
-TICKET_VENDOR = "Entradas BA"
+# The Colón sells most performances on the city's Entradas BA, but some go through a ticketer;
+# the vendor is read from the link's domain, and an unknown domain is shown as it is.
+TICKET_VENDORS = {
+    "entradasba.buenosaires.gob.ar": "Entradas BA",
+    "tuentrada.com": "TuEntrada",
+    "ticketek.com.ar": "Ticketek",
+}
 CALENDAR_URL = "https://teatrocolon.org.ar/calendario/?a={year}&mes={month}"
 USER_AGENT = "recitAR-research/0.1"
 
@@ -85,7 +91,7 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
                 region="AR-C",
                 country="AR",
                 starts_at=starts_at,
-                ticket_links=[TicketLink(vendor=TICKET_VENDOR, url=buy["href"])] if buy else [],
+                ticket_links=[TicketLink(vendor=ticket_vendor(buy["href"]), url=buy["href"])] if buy else [],
                 source_url=info["href"],
                 **source_image(first_image_url(picture.get("src") if picture else None)),
                 updated_at=now,
@@ -94,6 +100,12 @@ def parse_calendar(html: str, year: int, month: int, now: datetime) -> list[Even
     for label in sorted(unknown):
         _log.warning('Teatro Colón program label not mapped: "%s"', label)
     return events
+
+
+def ticket_vendor(url: str) -> str:
+    """Who sells a ticket link, from its domain."""
+    host = (urlparse(url).hostname or "").removeprefix("www.")
+    return TICKET_VENDORS.get(host, host)
 
 
 def scrape(months: int = 3, delay: float = 2.0) -> list[Event]:

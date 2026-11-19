@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from app.scrapers.colon import parse_calendar
+from app.scrapers.colon import parse_calendar, ticket_vendor
 
 FIXTURES = Path(__file__).parent / "fixtures"
 BA = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -108,3 +108,17 @@ def test_an_unknown_program_label_is_other_and_logged(caplog):
     with caplog.at_level(logging.WARNING):
         assert {e.category for e in relabelled("Ciclo Nuevo")} == {"other"}
     assert [r.getMessage() for r in caplog.records] == ['Teatro Colón program label not mapped: "Ciclo Nuevo"']
+
+
+@pytest.mark.parametrize(
+    "url, vendor",
+    [
+        ("https://entradasba.buenosaires.gob.ar/evento/x", "Entradas BA"),
+        ("https://www.tuentrada.com/grandes-interpretes-teatrocolon", "TuEntrada"),
+        ("http://tuentrada.com/egberto-gismonti-tc", "TuEntrada"),
+        ("https://www.ticketek.com.ar/maria-elena-walsh-sinfonico/teatro-colon", "Ticketek"),
+        ("https://www.otraticketera.com/show", "otraticketera.com"),
+    ],
+)
+def test_ticket_vendor_is_read_from_the_link(url, vendor):
+    assert ticket_vendor(url) == vendor
