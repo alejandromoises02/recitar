@@ -5,7 +5,6 @@ import { MAP_HEIGHT } from "./VenueMap.constants";
 export const styles = StyleSheet.create({
   frame: {
     height: MAP_HEIGHT,
-    maxWidth: 640,
     borderRadius: radius.cardSmall,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.line,

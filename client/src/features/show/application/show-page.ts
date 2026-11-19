@@ -110,3 +110,16 @@ export function venueMapQuery(show: Pick<ShowDetail, "venue" | "city" | "venueLo
 export function mapEmbedUrl(query: string, lang: Lang): string {
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=16&hl=${lang}&output=embed`;
 }
+
+const escapeAttribute = (text: string) =>
+  text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** A page holding only the map, for the app's WebView: Google answers "must be used in an iframe" to a top-level load. */
+export function mapEmbedPage(url: string): string {
+  return (
+    '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head>' +
+    '<body style="margin:0;background:#E9E5DC">' +
+    `<iframe src="${escapeAttribute(url)}" style="border:0;width:100%;height:100vh;display:block"></iframe>` +
+    "</body></html>"
+  );
+}

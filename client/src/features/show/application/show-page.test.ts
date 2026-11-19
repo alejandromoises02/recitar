@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Show, ShowDateTickets } from "../../events/domain/show";
-import { buttonWhen, dateMode, dateTile, dateTargets, hasVenueToExplore, mapEmbedUrl, moreAtVenue, ticketPlan, updatedAgo, venueMapQuery } from "./show-page";
+import { buttonWhen, dateMode, dateTile, dateTargets, hasVenueToExplore, mapEmbedPage, mapEmbedUrl, moreAtVenue, ticketPlan, updatedAgo, venueMapQuery } from "./show-page";
 
 // Saturday 14 November 2026, noon in Buenos Aires.
 const NOW = new Date("2026-11-14T15:00:00Z");
@@ -169,5 +169,18 @@ describe("mapEmbedUrl", () => {
       "https://maps.google.com/maps?q=Movistar%20Arena%2C%20Humboldt%20450%2C%20Buenos%20Aires&z=16&hl=es&output=embed",
     );
     expect(mapEmbedUrl("Niceto Club", "en")).toBe("https://maps.google.com/maps?q=Niceto%20Club&z=16&hl=en&output=embed");
+  });
+});
+
+describe("mapEmbedPage", () => {
+  it("wraps the map in an iframe, because Google serves its embed only inside one", () => {
+    const page = mapEmbedPage("https://maps.google.com/maps?q=Niceto%20Club&z=16&hl=es&output=embed");
+    const frames = page.match(/<iframe [^>]*src="([^"]*)"/g) ?? [];
+    expect(frames).toHaveLength(1);
+    expect(page).toContain('src="https://maps.google.com/maps?q=Niceto%20Club&amp;z=16&amp;hl=es&amp;output=embed"');
+  });
+
+  it("escapes the address so it cannot break out of the attribute", () => {
+    expect(mapEmbedPage('https://x.test/?q="><script>')).toContain('src="https://x.test/?q=&quot;&gt;&lt;script&gt;"');
   });
 });
