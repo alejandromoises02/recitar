@@ -96,6 +96,7 @@ def relabelled(label: str) -> list:
     ("Colón para niños", "theatre"),  # family shows, as in the other sources
     ("CETC", "other"),
     ("Temporada 2026", "other"),  # guided visits
+    ("Cine Documental", "other"),  # documentary films, not concerts
     ("Ópera", "theatre"),
     ("Música de Cámara", "concert"),
 ])

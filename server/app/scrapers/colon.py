@@ -32,7 +32,7 @@ _DAY = re.compile(r"\d{1,2}")
 # The site's own program labels, as seen from November 2026 to January 2027. A label not listed
 # falls back to "other" and is logged, so a new one is noticed. Children's shows are theatre, as
 # family shows are in the other sources; CETC (the experimental centre) and the season's guided
-# visits are "other".
+# visits and documentary screenings are "other".
 _CATEGORIES: dict[str, EventCategory] = {
     "Ópera": "theatre",
     "Ballet": "theatre",
@@ -49,6 +49,7 @@ _CATEGORIES: dict[str, EventCategory] = {
     "Orquesta Académica del Teatro Colón": "concert",
     "CETC": "other",
     "Temporada 2026": "other",
+    "Cine Documental": "other",
 }
 _log = logging.getLogger(__name__)
 
