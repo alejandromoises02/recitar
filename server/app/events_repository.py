@@ -5,12 +5,13 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from sqlalchemy import (
-    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Float, Identity, Integer, MetaData, Row, Table, Text, and_, delete, func, select, tuple_, update,
+    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Float, Identity, Integer, MetaData, Row, Table, Text, and_, delete, or_, func, select, tuple_, update,
 )
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
 
 from app.domain.event import VENUE_TO_BE_CONFIRMED, Event, EventCategory, Show, ShowDate, VenueLocation
+from app.domain.local_time import BUENOS_AIRES, start_of_day
 from app.domain.same_show import merge_same_shows
 from app.domain.ticket_redirect import TicketClick
 
@@ -186,10 +187,17 @@ def record_ticket_click(connection: Connection, click: TicketClick) -> None:
     ))
 
 
+def _upcoming(now: datetime) -> ColumnElement[bool]:
+    """A date has not happened yet at `now`. A date without a time (stored at its day's midnight)
+    lasts its whole Buenos Aires day, so the show is still listed on the day itself."""
+    today = start_of_day(now.astimezone(BUENOS_AIRES).date())
+    return or_(events.c.starts_at >= now, and_(events.c.time_known.is_(False), events.c.starts_at >= today))
+
+
 def count_upcoming_by_source(connection: Connection, now: datetime) -> dict[str, int]:
     """Stored events that have not happened yet, per source (the first part of the id)."""
     source = func.split_part(events.c.id, "-", 1)
-    rows = connection.execute(select(source, func.count()).where(events.c.starts_at >= now).group_by(source))
+    rows = connection.execute(select(source, func.count()).where(_upcoming(now)).group_by(source))
     return {name: count for name, count in rows}
 
 
@@ -230,7 +238,7 @@ def _search(q: str) -> ColumnElement[bool]:
 def _date_matches(filters: EventFilters, now: datetime) -> list[ColumnElement[bool]]:
     """Conditions one stored date (row) must meet: upcoming, plus every filter sent except
     announced_from, which /events checks per row and /shows per show."""
-    conditions: list[ColumnElement[bool]] = [events.c.starts_at >= now]
+    conditions: list[ColumnElement[bool]] = [_upcoming(now)]
     if filters.q:
         conditions.append(_search(filters.q))
     if filters.starts_from is not None:
@@ -283,7 +291,7 @@ def list_show_dates(connection: Connection, show: str, now: datetime) -> list[Sh
     `colon-el-cascanueces` never picks up `colon-el-cascanueces-2`."""
     query = (
         select(events.c.id, events.c.starts_at, events.c.time_known)
-        .where(_show_key == show, events.c.starts_at >= now)
+        .where(_show_key == show, _upcoming(now))
         .order_by(events.c.starts_at, events.c.id)
     )
     return [ShowDate(id=row.id, starts_at=row.starts_at, time_known=row.time_known) for row in connection.execute(query)]
@@ -297,7 +305,7 @@ class VenueCount(BaseModel):
 def list_upcoming_venues(connection: Connection, now: datetime, category: EventCategory | None = None) -> list[VenueCount]:
     """Venues with at least one event from `now` on (of `category`, when given), by name, with how many they have.
     A venue to be confirmed is not a place to filter by."""
-    conditions = [events.c.starts_at >= now, events.c.venue != VENUE_TO_BE_CONFIRMED]
+    conditions = [_upcoming(now), events.c.venue != VENUE_TO_BE_CONFIRMED]
     if category is not None:
         conditions.append(events.c.category == category)
     query = (
@@ -354,7 +362,7 @@ def _per_show(now: datetime):
     return (
         select(
             _show_key.label("key"),
-            func.min(events.c.starts_at).filter(events.c.starts_at >= now).label("next_starts_at"),
+            func.min(events.c.starts_at).filter(_upcoming(now)).label("next_starts_at"),
             func.min(events.c.first_seen_at).label("first_seen_at"),
         )
         .group_by(_show_key)
@@ -367,7 +375,7 @@ def _shows_for(connection: Connection, now: datetime, page: list[Row]) -> list[S
     if not page:
         return []
     dates = select(events, _show_key.label("show_key")).where(
-        _show_key.in_([row.key for row in page]), events.c.starts_at >= now
+        _show_key.in_([row.key for row in page]), _upcoming(now)
     ).order_by(events.c.starts_at, events.c.id)
     upcoming: dict[str, list[Event]] = {row.key: [] for row in page}
     for row in connection.execute(dates).mappings():

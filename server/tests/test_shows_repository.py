@@ -147,3 +147,15 @@ def test_a_show_with_only_past_dates_or_no_dates_is_not_found(db_engine):
     stored = [event("movistar-ayer-20261101T2100", -7)]
     assert one_show(db_engine, stored, "movistar-ayer") is None
     assert one_show(db_engine, [], "movistar-nadie") is None
+
+
+def test_a_show_with_only_a_date_is_still_listed_and_found_on_that_day(db_engine):
+    today_started = datetime(2026, 11, 8, 3, 0, tzinfo=timezone.utc)  # NOW is 09:00 that day in Buenos Aires
+    stored = [
+        event("enigma-hoy-20261108T0000", 0, starts_at=today_started, time_known=False),
+        event("venti-temprano-20261108T0000", 0, starts_at=today_started),  # time known and already gone
+    ]
+    assert [s.id for s in shows(db_engine, stored)] == ["enigma-hoy"]
+    show = one_show(db_engine, [], "enigma-hoy")
+    assert show is not None and [d.id for d in show.dates] == ["enigma-hoy-20261108T0000"]
+    assert one_show(db_engine, [], "venti-temprano") is None

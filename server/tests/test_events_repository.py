@@ -542,3 +542,21 @@ def test_a_ticketer_run_adds_its_link_to_the_stored_venue_row(db_engine):
     assert stored.id == colon.id
     assert [link.url for link in stored.ticket_links] == ["https://www.ticketek.com.ar/walsh", "https://www.ticketek.com.ar/otro"]
     assert stored.first_seen_at == colon.first_seen_at
+
+
+# NOW is 09:00 on 2026-11-08 in Buenos Aires; that day began at 03:00 UTC.
+TODAY_STARTED = datetime(2026, 11, 8, 3, 0, tzinfo=timezone.utc)
+
+
+def test_a_date_only_event_stays_upcoming_until_its_buenos_aires_day_ends(db_engine):
+    today = event("enigma-today-20261108T0000", starts_at=TODAY_STARTED, time_known=False)
+    yesterday = event("enigma-yesterday-20261107T0000", starts_at=TODAY_STARTED - timedelta(days=1), time_known=False)
+    timed_earlier_today = event("venti-early-20261108T0000", starts_at=TODAY_STARTED)  # its time is known and gone
+    with db_engine.begin() as conn:
+        upsert_events(conn, [today, yesterday, timed_earlier_today])
+    with db_engine.connect() as conn:
+        assert [e.id for e in list_upcoming(conn, NOW, limit=10, after=None)] == [today.id]
+        assert [d.id for d in list_show_dates(conn, "enigma-today", NOW)] == [today.id]
+        assert list_show_dates(conn, "enigma-yesterday", NOW) == []
+        assert list_upcoming_venues(conn, NOW) == [VenueCount(name="Movistar Arena", upcoming_events=1)]
+        assert count_upcoming_by_source(conn, NOW) == {"enigma": 1}
