@@ -41,7 +41,7 @@ alembic upgrade head                # create/update the tables in the database o
 
 ```bash
 python -m app.run                    # scrape every source, choose images, store the events
-python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada, allaccess, enigma, coolco, articket, pulso)
+python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada, allaccess, enigma, coolco, articket, pulso, granrivadavia)
 ```
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
