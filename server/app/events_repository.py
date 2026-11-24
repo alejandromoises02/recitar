@@ -54,6 +54,16 @@ venues = Table(
     Column("updated_at", DateTime(timezone=True), nullable=False),
 )
 
+# One row per artist name (as events.artist holds it) looked up on Spotify. spotify_id is null when
+# Spotify had no artist of that name on checked_at.
+artists = Table(
+    "artists",
+    metadata,
+    Column("name", Text, primary_key=True),
+    Column("spotify_id", Text),
+    Column("checked_at", DateTime(timezone=True), nullable=False),
+)
+
 featured_shows = Table(
     "featured_shows",
     metadata,
@@ -179,6 +189,34 @@ def get_venue_location(connection: Connection, name: str) -> VenueLocation | Non
         .where(venues.c.name == name, venues.c.latitude.is_not(None))
     ).one_or_none()
     return None if row is None else VenueLocation(address=row.address, latitude=row.latitude, longitude=row.longitude)
+
+
+def artists_to_look_up(connection: Connection, now: datetime, recheck_after: timedelta) -> list[str]:
+    """Artists of upcoming events never looked up, or not found on Spotify more than `recheck_after` ago."""
+    rows = connection.execute(
+        select(events.c.artist)
+        .outerjoin(artists, artists.c.name == events.c.artist)
+        .where(
+            events.c.artist.is_not(None),
+            _upcoming(now),
+            or_(artists.c.name.is_(None), and_(artists.c.spotify_id.is_(None), artists.c.checked_at < now - recheck_after)),
+        )
+        .distinct()
+        .order_by(events.c.artist)
+    )
+    return list(rows.scalars())
+
+
+def store_spotify_artist(connection: Connection, name: str, spotify_id: str | None, checked_at: datetime) -> None:
+    statement = insert(artists).values(name=name, spotify_id=spotify_id, checked_at=checked_at)
+    connection.execute(statement.on_conflict_do_update(
+        index_elements=[artists.c.name], set_={"spotify_id": statement.excluded.spotify_id, "checked_at": checked_at},
+    ))
+
+
+def get_spotify_artist_id(connection: Connection, name: str) -> str | None:
+    """None when the artist was not looked up yet or Spotify had no artist of that name."""
+    return connection.execute(select(artists.c.spotify_id).where(artists.c.name == name)).scalar_one_or_none()
 
 
 def record_ticket_click(connection: Connection, click: TicketClick) -> None:

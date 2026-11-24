@@ -560,3 +560,35 @@ def test_a_date_only_event_stays_upcoming_until_its_buenos_aires_day_ends(db_eng
         assert list_show_dates(conn, "enigma-yesterday", NOW) == []
         assert list_upcoming_venues(conn, NOW) == [VenueCount(name="Movistar Arena", upcoming_events=1)]
         assert count_upcoming_by_source(conn, NOW) == {"enigma": 1}
+
+
+def test_the_show_page_reads_its_artist_spotify_id_from_the_database(db_engine, monkeypatch):
+    from app.api import shows
+    from app.events_repository import store_spotify_artist
+
+    soon = datetime.now(timezone.utc) + timedelta(days=3)
+    with db_engine.begin() as conn:
+        upsert_events(conn, [
+            event("movistar-a-20991120T2100", starts_at=soon, artist="María Becerra"),
+            event("movistar-b-20991120T2100", starts_at=soon, artist="Banda Inventada"),
+            event("movistar-c-20991120T2100", starts_at=soon, artist=None),
+        ])
+        store_spotify_artist(conn, "María Becerra", "1DxLCyH42yaHKGF4tQvyGF", soon)
+        store_spotify_artist(conn, "Banda Inventada", None, soon)
+    monkeypatch.setattr(shows, "engine", lambda: db_engine)
+    assert shows.show_detail_source()("movistar-a").spotify_artist_id == "1DxLCyH42yaHKGF4tQvyGF"
+    assert shows.show_detail_source()("movistar-b").spotify_artist_id is None
+    assert shows.show_detail_source()("movistar-c").spotify_artist_id is None
+
+
+def test_a_looked_up_artist_is_stored_once_and_a_later_find_replaces_the_miss(db_engine):
+    from sqlalchemy import text
+
+    from app.events_repository import get_spotify_artist_id, store_spotify_artist
+
+    later = NOW + timedelta(days=31)
+    with db_engine.begin() as conn:
+        store_spotify_artist(conn, "Banda Nueva", None, NOW)
+        store_spotify_artist(conn, "Banda Nueva", "abc", later)
+        assert get_spotify_artist_id(conn, "Banda Nueva") == "abc"
+        assert conn.execute(text("SELECT count(*), max(checked_at) FROM artists")).one() == (1, later)

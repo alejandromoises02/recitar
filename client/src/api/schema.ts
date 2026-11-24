@@ -85,10 +85,12 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * One show with all of its upcoming dates and where its venue is
+         * One show with all of its upcoming dates, where its venue is and its artist on Spotify
          * @description The show page: every upcoming date, soonest first, each with its own event id and ticket
          *     links, plus `updated_at`, the last time a scraper read any of them. `venue_location` is the venue's
-         *     address and coordinates for a map, or null while they are unknown. `show_id` is the `id` of an
+         *     address and coordinates for a map, or null while they are unknown. `spotify_artist_id` is the
+         *     Spotify id of the show's artist, for an embedded player, or null when the show has no artist or
+         *     Spotify had none of that name. `show_id` is the `id` of an
          *     item of GET /shows (an event id without its date), compared whole. A show whose dates have all
          *     passed is not found.
          */
@@ -470,7 +472,7 @@ export interface components {
         };
         /**
          * ShowDetail
-         * @description The show page: a show plus where its venue is.
+         * @description The show page: a show plus where its venue is and its artist on Spotify.
          */
         ShowDetail: {
             /** Id */
@@ -519,6 +521,8 @@ export interface components {
             /** Dates */
             dates: components["schemas"]["ShowDateTickets"][];
             venue_location: components["schemas"]["VenueLocation"] | null;
+            /** Spotify Artist Id */
+            spotify_artist_id: string | null;
         };
         /** ShowPage */
         ShowPage: {

@@ -45,12 +45,12 @@ describe("featuredFromApi", () => {
 
 describe("showDetailFromApi", () => {
   it("is the show plus where its venue is", () => {
-    const api = { ...apiShow("movistar-x"), venue_location: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 } };
+    const api = { ...apiShow("movistar-x"), venue_location: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 }, spotify_artist_id: null };
     const detail = showDetailFromApi(api);
     expect(detail).toEqual({ ...showFromApi(api), venueLocation: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 } });
   });
 
   it("keeps a venue without coordinates as null", () => {
-    expect(showDetailFromApi({ ...apiShow("movistar-x"), venue_location: null }).venueLocation).toBeNull();
+    expect(showDetailFromApi({ ...apiShow("movistar-x"), venue_location: null, spotify_artist_id: null }).venueLocation).toBeNull();
   });
 });

@@ -73,6 +73,21 @@ town). Venues it cannot place stay without coordinates and are asked again next 
 hand, set its coordinates and `coords_source = 'manual'`: neither a scraper nor the geocoder will
 change it again. "Lugar a confirmar" is never placed.
 
+## Artists on Spotify
+
+Each artist read from a title gets one row in `artists` with its Spotify id, for the player on the
+show page. After `app.run`:
+
+```bash
+python -m app.spotify   # look up artists of upcoming shows on the Spotify Web API
+```
+
+It needs `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` in `server/.env`, from an app in the
+Spotify developer dashboard (owned by a Premium account, or the app stops working; only "Web API"
+is needed). The secret stays on the server: the client only gets the artist id. An artist is taken
+only when Spotify has one with exactly that name (case and accents aside); one it does not have is
+stored without an id and asked again after 30 days, and one whose request fails is asked next time.
+
 Sources that do not say what kind of event a show is, and the music categories of those that do, go
 through one provisional rule (`app/scrapers/category.py`) until LLM classification replaces it: an
 all-night start (23:59) or a party word in the title is "other", a title naming another act ("tributo",

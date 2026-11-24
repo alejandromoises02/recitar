@@ -106,3 +106,24 @@ def test_the_list_does_not_carry_the_venue_location(client_with):
     app.dependency_overrides[upcoming_shows_source] = lambda: (lambda limit, after, filters, sort: [SHOW])
     [item] = TestClient(app).get("/shows").json()["items"]
     assert "venue_location" not in item
+
+
+def test_the_show_carries_its_artist_spotify_id(client_with):
+    found = ShowDetail(**SHOW.model_dump(), venue_location=None, spotify_artist_id="67oZkRi3cta1wNxN3KoFt5")
+    client, _ = client_with({found.id: found})
+    body = client.get("/shows/movistar-becerra").json()
+    assert body["spotify_artist_id"] == "67oZkRi3cta1wNxN3KoFt5"
+
+
+def test_an_artist_not_found_on_spotify_has_a_null_id(client_with):
+    client, _ = client_with({DETAIL.id: DETAIL})
+    body = client.get("/shows/movistar-becerra").json()
+    assert "spotify_artist_id" in body and body["spotify_artist_id"] is None
+
+
+def test_the_list_does_not_carry_the_spotify_id(client_with):
+    from app.api.shows import upcoming_shows_source
+
+    app.dependency_overrides[upcoming_shows_source] = lambda: (lambda limit, after, filters, sort: [SHOW])
+    [item] = TestClient(app).get("/shows").json()["items"]
+    assert "spotify_artist_id" not in item

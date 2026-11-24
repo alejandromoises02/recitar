@@ -1,0 +1,266 @@
+{
+ "artists": {
+  "href": "https://api.spotify.com/v1/search?offset=0&limit=10&query=Valen%20Vargas&type=artist",
+  "limit": 10,
+  "next": "https://api.spotify.com/v1/search?offset=10&limit=10&query=Valen%20Vargas&type=artist",
+  "offset": 0,
+  "previous": null,
+  "total": 109,
+  "items": [
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/4OpKA1Qx8VYnSmrhKQ4zJz"
+    },
+    "href": "https://api.spotify.com/v1/artists/4OpKA1Qx8VYnSmrhKQ4zJz",
+    "id": "4OpKA1Qx8VYnSmrhKQ4zJz",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab6761610000e5ebfa0dd237b3aa9c1b9dc36afd",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab67616100005174fa0dd237b3aa9c1b9dc36afd",
+      "height": 320,
+      "width": 320
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000f178fa0dd237b3aa9c1b9dc36afd",
+      "height": 160,
+      "width": 160
+     }
+    ],
+    "name": "Valen",
+    "type": "artist",
+    "uri": "spotify:artist:4OpKA1Qx8VYnSmrhKQ4zJz"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/7i3bAOrxjMPncmyUHRvMvN"
+    },
+    "href": "https://api.spotify.com/v1/artists/7i3bAOrxjMPncmyUHRvMvN",
+    "id": "7i3bAOrxjMPncmyUHRvMvN",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab6761610000e5eb0031ec8fdc1e6b62bb88d4ca",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab676161000051740031ec8fdc1e6b62bb88d4ca",
+      "height": 320,
+      "width": 320
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000f1780031ec8fdc1e6b62bb88d4ca",
+      "height": 160,
+      "width": 160
+     }
+    ],
+    "name": "La Juntada De Los Artistas",
+    "type": "artist",
+    "uri": "spotify:artist:7i3bAOrxjMPncmyUHRvMvN"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/55ru5B05MMBunM1tvH7Di6"
+    },
+    "href": "https://api.spotify.com/v1/artists/55ru5B05MMBunM1tvH7Di6",
+    "id": "55ru5B05MMBunM1tvH7Di6",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab6761610000e5eb8fb30125d3ec55e579d9ec8d",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab676161000051748fb30125d3ec55e579d9ec8d",
+      "height": 320,
+      "width": 320
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000f1788fb30125d3ec55e579d9ec8d",
+      "height": 160,
+      "width": 160
+     }
+    ],
+    "name": "Valentino Merlo",
+    "type": "artist",
+    "uri": "spotify:artist:55ru5B05MMBunM1tvH7Di6"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/3O5RpnQurugPG3Btl8UBPC"
+    },
+    "href": "https://api.spotify.com/v1/artists/3O5RpnQurugPG3Btl8UBPC",
+    "id": "3O5RpnQurugPG3Btl8UBPC",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab6761610000e5ebf2a8e5506b22ee732a19e340",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab67616100005174f2a8e5506b22ee732a19e340",
+      "height": 320,
+      "width": 320
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000f178f2a8e5506b22ee732a19e340",
+      "height": 160,
+      "width": 160
+     }
+    ],
+    "name": "Valentina Marquez",
+    "type": "artist",
+    "uri": "spotify:artist:3O5RpnQurugPG3Btl8UBPC"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/65fxKyBt1Tx8P0nAItFTwG"
+    },
+    "href": "https://api.spotify.com/v1/artists/65fxKyBt1Tx8P0nAItFTwG",
+    "id": "65fxKyBt1Tx8P0nAItFTwG",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab6761610000e5eb1d137440682d33ae21f37fcc",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab676161000051741d137440682d33ae21f37fcc",
+      "height": 320,
+      "width": 320
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000f1781d137440682d33ae21f37fcc",
+      "height": 160,
+      "width": 160
+     }
+    ],
+    "name": "NHAY",
+    "type": "artist",
+    "uri": "spotify:artist:65fxKyBt1Tx8P0nAItFTwG"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/67oZkRi3cta1wNxN3KoFt5"
+    },
+    "href": "https://api.spotify.com/v1/artists/67oZkRi3cta1wNxN3KoFt5",
+    "id": "67oZkRi3cta1wNxN3KoFt5",
+    "images": [],
+    "name": "Valen Vargas",
+    "type": "artist",
+    "uri": "spotify:artist:67oZkRi3cta1wNxN3KoFt5"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/6zzpwx9TapXTfl2eUP7xdh"
+    },
+    "href": "https://api.spotify.com/v1/artists/6zzpwx9TapXTfl2eUP7xdh",
+    "id": "6zzpwx9TapXTfl2eUP7xdh",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab6761610000e5eb0873777ad896125545d3ee07",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab676161000051740873777ad896125545d3ee07",
+      "height": 320,
+      "width": 320
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000f1780873777ad896125545d3ee07",
+      "height": 160,
+      "width": 160
+     }
+    ],
+    "name": "Val Vargas",
+    "type": "artist",
+    "uri": "spotify:artist:6zzpwx9TapXTfl2eUP7xdh"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/4QdyvdoNVEXU0wejrtd75H"
+    },
+    "href": "https://api.spotify.com/v1/artists/4QdyvdoNVEXU0wejrtd75H",
+    "id": "4QdyvdoNVEXU0wejrtd75H",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab67616d0000b2737008dc35f0e8b49841b7bf62",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab67616d00001e027008dc35f0e8b49841b7bf62",
+      "height": 300,
+      "width": 300
+     },
+     {
+      "url": "https://i.scdn.co/image/ab67616d000048517008dc35f0e8b49841b7bf62",
+      "height": 64,
+      "width": 64
+     }
+    ],
+    "name": "TN Vargas",
+    "type": "artist",
+    "uri": "spotify:artist:4QdyvdoNVEXU0wejrtd75H"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/13uC2IQusLXat3zO0Dfurv"
+    },
+    "href": "https://api.spotify.com/v1/artists/13uC2IQusLXat3zO0Dfurv",
+    "id": "13uC2IQusLXat3zO0Dfurv",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab67616d0000b273f4b4c0d6daac760284481b6e",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab67616d00001e02f4b4c0d6daac760284481b6e",
+      "height": 300,
+      "width": 300
+     },
+     {
+      "url": "https://i.scdn.co/image/ab67616d00004851f4b4c0d6daac760284481b6e",
+      "height": 64,
+      "width": 64
+     }
+    ],
+    "name": "Valentina Vargas",
+    "type": "artist",
+    "uri": "spotify:artist:13uC2IQusLXat3zO0Dfurv"
+   },
+   {
+    "external_urls": {
+     "spotify": "https://open.spotify.com/artist/4bFcNlqngm7XibeU7HW3IR"
+    },
+    "href": "https://api.spotify.com/v1/artists/4bFcNlqngm7XibeU7HW3IR",
+    "id": "4bFcNlqngm7XibeU7HW3IR",
+    "images": [
+     {
+      "url": "https://i.scdn.co/image/ab6761610000e5eb51552e21534c20b6edd61c91",
+      "height": 640,
+      "width": 640
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000517451552e21534c20b6edd61c91",
+      "height": 320,
+      "width": 320
+     },
+     {
+      "url": "https://i.scdn.co/image/ab6761610000f17851552e21534c20b6edd61c91",
+      "height": 160,
+      "width": 160
+     }
+    ],
+    "name": "Valentina Olguin",
+    "type": "artist",
+    "uri": "spotify:artist:4bFcNlqngm7XibeU7HW3IR"
+   }
+  ]
+ }
+}

@@ -159,6 +159,7 @@ class VenueLocation(BaseModel):
 
 
 class ShowDetail(Show):
-    """The show page: a show plus where its venue is."""
+    """The show page: a show plus where its venue is and its artist on Spotify."""
 
     venue_location: VenueLocation | None  # null while the venue has no coordinates
+    spotify_artist_id: str | None = None  # null while the artist was not found on Spotify
