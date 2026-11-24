@@ -130,3 +130,23 @@ def test_the_artists_migration_can_be_undone_without_losing_events(unmigrated_db
     assert "artists" not in inspect(unmigrated_db_engine).get_table_names()
     with unmigrated_db_engine.connect() as conn:
         assert conn.execute(text("SELECT id FROM events")).scalar_one() == "venti-a-20261120T2100"
+
+
+def test_events_already_stored_start_listed_and_the_unlisted_migration_can_be_undone(unmigrated_db_engine):
+    from sqlalchemy import inspect
+
+    migrate(unmigrated_db_engine, "0008")
+    with unmigrated_db_engine.begin() as conn:
+        conn.execute(text("INSERT INTO venues (name, updated_at) VALUES ('Niceto Club', now())"))
+        _insert_event(conn, "venti-a-20261120T2100", "Niceto Club")
+    migrate(unmigrated_db_engine)
+    with unmigrated_db_engine.connect() as conn:
+        assert conn.execute(text("SELECT unlisted_at FROM events")).scalar_one() is None
+    config = Config(str(SERVER_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(SERVER_DIR / "migrations"))
+    with unmigrated_db_engine.begin() as connection:
+        config.attributes["connection"] = connection
+        command.downgrade(config, "0008")
+    assert "unlisted_at" not in {c["name"] for c in inspect(unmigrated_db_engine).get_columns("events")}
+    with unmigrated_db_engine.connect() as conn:
+        assert conn.execute(text("SELECT id FROM events")).scalar_one() == "venti-a-20261120T2100"

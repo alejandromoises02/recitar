@@ -4,7 +4,8 @@
     python -m app.run --only colon,venti
 
 A source that fails is reported and skipped; the others still run. Events already stored are
-updated, not duplicated. Events that a site stops listing are not removed (yet). The first time a
+updated, not duplicated. Upcoming events that a site stops listing (a cancelled show) are hidden after
+a run of that site that went fine, never deleted: listed again, they come back. The first time a
 source is read, its shows were already on sale: they are stored as seen before we started watching,
 so they do not flood "just announced".
 """
@@ -17,7 +18,7 @@ from typing import Callable, Collection, Mapping
 
 from app.db import make_engine, migrate
 from app.domain.event import Event
-from app.events_repository import count_upcoming_by_source, stored_sources, upsert_events
+from app.events_repository import count_upcoming_by_source, mark_unlisted, stored_sources, upsert_events
 from app.images.copy import IMAGES_DIR, LocalImageStore
 from app.images.wikimedia import MissingContactError, user_agent
 from app.pipeline import add_artists, enrich_images
@@ -56,6 +57,7 @@ class Report:
     counts: dict[str, int] = field(default_factory=dict)  # events scraped per source
     errors: dict[str, str] = field(default_factory=dict)  # source -> what went wrong
     warnings: dict[str, str] = field(default_factory=dict)  # source -> suspiciously few events
+    unlisted: dict[str, int] = field(default_factory=dict)  # source -> upcoming events it stopped listing
     saved: int = 0
 
 
@@ -66,15 +68,19 @@ SEEN_BEFORE_WATCHING = datetime(2000, 1, 1, tzinfo=timezone.utc)
 def run(
     scrapers: dict[str, Callable[[], list[Event]]],
     enrich: Callable[[list[Event]], list[Event]],
-    save: Callable[[list[Event]], None],
+    save: Callable[[list[Event]], list[str] | None],
     only: list[str] | None = None,
     log: Callable[[str], None] = lambda _: None,
     known: dict[str, int] | None = None,
     new_sources: Collection[str] = (),
+    unlist: Callable[[str, set[str]], int] | None = None,
 ) -> Report:
     """`known` is how many upcoming events of each source are already stored: a source that now
     returns far fewer is flagged, because Movistar Arena has been seen loading only part of its listing.
-    `new_sources` have nothing stored yet: what they list now is not news (see SEEN_BEFORE_WATCHING)."""
+    `new_sources` have nothing stored yet: what they list now is not news (see SEEN_BEFORE_WATCHING).
+    `save` returns the ids of the rows it wrote. After it, `unlist(source, listed)` hides the upcoming
+    events of each source that ran fine (no error, no warning) and listed none of them; the rows this
+    run wrote are among `listed`, since a row another source kept can carry this source's links."""
     check_sources(only, scrapers)
     report = Report()
     scraped: dict[str, Event] = {}
@@ -107,8 +113,17 @@ def run(
     log("choosing images...")
     events = enrich(list(scraped.values()))
     log(f"saving {len(events)} events...")
-    save(events)
+    written = save(events) or []
     report.saved = len(events)
+    if unlist is not None:
+        listed = set(scraped) | set(written)
+        for name in report.counts:
+            if name in report.warnings:
+                continue
+            hidden = unlist(name, listed)
+            if hidden:
+                report.unlisted[name] = hidden
+                log(f"[{name}] {hidden} upcoming events no longer listed: hidden")
     return report
 
 
@@ -135,15 +150,24 @@ def main(argv: list[str] | None = None) -> int:
         new_sources = set(SCRAPERS) - stored_sources(connection)
     store = LocalImageStore(IMAGES_DIR)
 
-    def save(events: list[Event]) -> None:
+    def save(events: list[Event]) -> list[str]:
         with engine.begin() as connection:
-            upsert_events(connection, events)
+            return upsert_events(connection, events)
+
+    def unlist(source: str, listed: set[str]) -> int:
+        with engine.begin() as connection:
+            return mark_unlisted(connection, source, listed, datetime.now(timezone.utc))
 
     try:
-        report = run(SCRAPERS, lambda events: enrich_images(add_artists(events), store), save, only, log=print, known=known, new_sources=new_sources)
+        report = run(
+            SCRAPERS, lambda events: enrich_images(add_artists(events), store), save, only,
+            log=print, known=known, new_sources=new_sources, unlist=unlist,
+        )
     finally:
         engine.dispose()
     print(f"\nsaved {report.saved} events; scraped per source: {report.counts or 'none'}")
+    if report.unlisted:
+        print(f"no longer listed, hidden: {report.unlisted}")
     for name, problem in report.warnings.items():
         print(f"WARNING {name}: {problem}", file=sys.stderr)
     for name, problem in report.errors.items():

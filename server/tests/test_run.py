@@ -21,6 +21,7 @@ class Recorder:
     def __init__(self):
         self.enriched: list[Event] | None = None
         self.saved: list[Event] | None = None
+        self.unlisted: dict[str, set[str]] = {}
 
     def enrich(self, events):
         self.enriched = list(events)
@@ -28,6 +29,11 @@ class Recorder:
 
     def save(self, events):
         self.saved = list(events)
+        return [e.id for e in self.saved] + ["kept-by-merge"]  # a stored row that gained this run's links
+
+    def unlist(self, source, listed):
+        self.unlisted[source] = set(listed)
+        return 2
 
 
 def broken():
@@ -135,3 +141,26 @@ def test_venue_names_are_made_canonical_with_their_city():
     city = event("a-2").model_copy(update={"venue": "Vorterix", "city": "Buenos Aires"})
     run({"a": lambda: [mdp, city]}, rec.enrich, rec.save)
     assert {e.id: e.venue for e in rec.saved} == {"a-1": "Teatro Vorterix (Mar del Plata)", "a-2": "Teatro Vorterix"}
+
+
+def test_a_healthy_source_unlists_what_it_no_longer_lists_but_keeps_what_this_run_saved():
+    rec = Recorder()
+    report = run({"a": lambda: [event("a-1")], "b": lambda: [event("b-1")]}, rec.enrich, rec.save, unlist=rec.unlist)
+    assert rec.unlisted == {"a": {"a-1", "b-1", "kept-by-merge"}, "b": {"a-1", "b-1", "kept-by-merge"}}
+    assert report.unlisted == {"a": 2, "b": 2}
+
+
+def test_a_source_that_failed_or_looks_partial_unlists_nothing():
+    rec = Recorder()
+    report = run(
+        {"a": broken, "b": lambda: many("b", 4), "c": lambda: [event("c-1")]}, rec.enrich, rec.save,
+        known={"b": 10}, unlist=rec.unlist,
+    )
+    assert set(rec.unlisted) == {"c"}
+    assert report.unlisted == {"c": 2}
+
+
+def test_a_run_that_scraped_nothing_unlists_nothing():
+    rec = Recorder()
+    run({"a": lambda: [], "b": broken}, rec.enrich, rec.save, unlist=rec.unlist)
+    assert rec.unlisted == {}

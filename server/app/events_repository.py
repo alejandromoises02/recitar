@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from sqlalchemy import (
-    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Float, Identity, Integer, MetaData, Row, Table, Text, and_, delete, or_, func, select, tuple_, update,
+    BigInteger, Boolean, Column, ColumnElement, Connection, DateTime, Float, Identity, Integer, MetaData, Row, Table, Text, and_, delete, or_, func, select, true, tuple_, update,
 )
 from pydantic import BaseModel
 from sqlalchemy.dialects.postgresql import JSONB, insert
@@ -39,6 +39,9 @@ events = Table(
     Column("image_source_url", Text),
     Column("updated_at", DateTime(timezone=True), nullable=False),
     Column("first_seen_at", DateTime(timezone=True), nullable=False),
+    # When the event's source last ran fine without listing it (cancelled, or taken down); null while listed.
+    # Saving the event again clears it: rows written by upsert_events never carry it.
+    Column("unlisted_at", DateTime(timezone=True)),
 )
 
 # One row per venue (its canonical name), with where it is. events.venue points here.
@@ -98,11 +101,12 @@ _DATE_SUFFIX = r"-\d{8}T\d{4}$"
 _show_key = func.regexp_replace(events.c.id, _DATE_SUFFIX, "")
 
 
-def upsert_events(connection: Connection, items: list[Event]) -> None:
-    """Insert new events and update the ones already stored (same id). A performance another source
-    already published is kept once (see domain.same_show): the duplicate row is dropped or deleted."""
+def upsert_events(connection: Connection, items: list[Event]) -> list[str]:
+    """Insert new events and update the ones already stored (same id), listed again if they had been
+    unlisted. A performance another source already published is kept once (see domain.same_show): the
+    duplicate row is dropped or deleted. Returns the ids of the rows written."""
     if not items:
-        return
+        return []
     items, duplicates = merge_same_shows(items, _stored_at_same_slots(connection, items))
     if duplicates:
         connection.execute(delete(events).where(events.c.id.in_(duplicates)))
@@ -121,6 +125,22 @@ def upsert_events(connection: Connection, items: list[Event]) -> None:
         if not c.primary_key and c.name != "first_seen_at"
     }
     connection.execute(statement.on_conflict_do_update(index_elements=[events.c.id], set_=changes))
+    return [item.id for item in items]
+
+
+def mark_unlisted(connection: Connection, source: str, listed: set[str], now: datetime) -> int:
+    """Mark the upcoming events of `source` that are not in `listed` as unlisted at `now`, after a run
+    of that source that went fine: they leave every listing but stay stored. Returns how many."""
+    result = connection.execute(
+        update(events)
+        .where(
+            func.split_part(events.c.id, "-", 1) == source,
+            events.c.id.not_in(listed) if listed else true(),
+            _upcoming(now),
+        )
+        .values(unlisted_at=now)
+    )
+    return result.rowcount
 
 
 def _stored_at_same_slots(connection: Connection, items: list[Event]) -> list[Event]:
@@ -226,10 +246,13 @@ def record_ticket_click(connection: Connection, click: TicketClick) -> None:
 
 
 def _upcoming(now: datetime) -> ColumnElement[bool]:
-    """A date has not happened yet at `now`. A date without a time (stored at its day's midnight)
+    """A listed date has not happened yet at `now`. A date without a time (stored at its day's midnight)
     lasts its whole Buenos Aires day, so the show is still listed on the day itself."""
     today = start_of_day(now.astimezone(BUENOS_AIRES).date())
-    return or_(events.c.starts_at >= now, and_(events.c.time_known.is_(False), events.c.starts_at >= today))
+    return and_(
+        events.c.unlisted_at.is_(None),
+        or_(events.c.starts_at >= now, and_(events.c.time_known.is_(False), events.c.starts_at >= today)),
+    )
 
 
 def count_upcoming_by_source(connection: Connection, now: datetime) -> dict[str, int]:

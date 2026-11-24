@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 from app.domain.event import Event, TicketLink
 from app.events_repository import (
@@ -12,6 +12,7 @@ from app.events_repository import (
     VenueCount,
     list_upcoming,
     list_upcoming_venues,
+    mark_unlisted,
     stored_sources,
     upsert_events,
 )
@@ -592,3 +593,47 @@ def test_a_looked_up_artist_is_stored_once_and_a_later_find_replaces_the_miss(db
         store_spotify_artist(conn, "Banda Nueva", "abc", later)
         assert get_spotify_artist_id(conn, "Banda Nueva") == "abc"
         assert conn.execute(text("SELECT count(*), max(checked_at) FROM artists")).one() == (1, later)
+
+
+def test_a_source_marks_its_upcoming_events_it_no_longer_lists_and_they_leave_the_listings(db_engine):
+    gone, kept = event("movistar-gone-20261120T2100"), event("movistar-kept-20261120T2200")
+    other = event("venti-x-20261120T2100", venue="Niceto Club")
+    past = event("movistar-past-20261101T2100", starts_at=NOW - timedelta(days=7))
+    with db_engine.begin() as conn:
+        upsert_events(conn, [gone, kept, other, past])
+        assert mark_unlisted(conn, "movistar", {kept.id}, NOW) == 1
+    with db_engine.connect() as conn:
+        page = list_upcoming(conn, NOW, 10, None)
+        counts = count_upcoming_by_source(conn, NOW)
+        stored = {e.id for e in list_events(conn)}
+    assert [e.id for e in page] == [kept.id, other.id]  # same time: by id
+    assert counts == {"movistar": 1, "venti": 1}
+    assert stored == {gone.id, kept.id, other.id, past.id}  # marked, never deleted
+
+
+def test_marking_again_keeps_the_first_time_it_was_missed(db_engine):
+    gone = event("movistar-gone-20261120T2100")
+    with db_engine.begin() as conn:
+        upsert_events(conn, [gone])
+        mark_unlisted(conn, "movistar", set(), NOW)
+        assert mark_unlisted(conn, "movistar", set(), NOW + timedelta(days=1)) == 0
+        missed = conn.execute(text("select unlisted_at from events")).scalar_one()
+    assert missed == NOW
+
+
+def test_an_unlisted_event_that_is_listed_again_comes_back(db_engine):
+    gone = event("movistar-gone-20261120T2100")
+    with db_engine.begin() as conn:
+        upsert_events(conn, [gone])
+        mark_unlisted(conn, "movistar", set(), NOW)
+        upsert_events(conn, [gone.model_copy(update={"updated_at": NOW + timedelta(days=1)})])
+    with db_engine.connect() as conn:
+        assert [e.id for e in list_upcoming(conn, NOW, 10, None)] == [gone.id]
+
+
+def test_upserting_returns_the_rows_it_wrote_after_joining_the_same_performance(db_engine):
+    colon = event("colon-tosca-20261120T2100", venue="Teatro Colón")
+    ticketek = event("ticketek-tosca-20261120T2100", venue="Teatro Colón")
+    with db_engine.begin() as conn:
+        assert upsert_events(conn, [colon]) == [colon.id]
+        assert upsert_events(conn, [ticketek]) == [colon.id]  # the Colón's own row kept, with Ticketek's link
