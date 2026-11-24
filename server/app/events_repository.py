@@ -432,7 +432,8 @@ def _per_show(now: datetime):
 
 
 def _shows_for(connection: Connection, now: datetime, page: list[Row]) -> list[Show]:
-    """Builds the shows of `page` (rows with key and first_seen_at, in order) with their upcoming dates."""
+    """Builds the shows of `page` (rows with key and first_seen_at, in order) with their upcoming dates
+    and their artist's Spotify id, when found."""
     if not page:
         return []
     dates = select(events, _show_key.label("show_key")).where(
@@ -443,7 +444,12 @@ def _shows_for(connection: Connection, now: datetime, page: list[Row]) -> list[S
         fields = dict(row)
         upcoming[fields.pop("show_key")].append(Event.model_validate(fields))
     # A show whose rows vanished between the two queries is skipped rather than failing the page.
-    return [Show.from_dates(row.key, upcoming[row.key], row.first_seen_at) for row in page if upcoming[row.key]]
+    shows = [Show.from_dates(row.key, upcoming[row.key], row.first_seen_at) for row in page if upcoming[row.key]]
+    names = {show.artist for show in shows if show.artist}
+    on_spotify = dict(connection.execute(
+        select(artists.c.name, artists.c.spotify_id).where(artists.c.name.in_(names), artists.c.spotify_id.is_not(None))
+    ).all()) if names else {}
+    return [show.model_copy(update={"spotify_artist_id": on_spotify[show.artist]}) if show.artist in on_spotify else show for show in shows]
 
 
 JUST_ANNOUNCED_DAYS = 14

@@ -4,6 +4,7 @@ import type { ApiShow } from "./event-from-api";
 export const apiShow = (id: string, dates = ["2026-11-14T22:00:00-03:00"]): ApiShow => ({
   id,
   category: "concert",
+  spotify_artist_id: null,
   title: `${id.toUpperCase()} en Niceto Bar`,
   name: `Show ${id}`,
   artist: "Artista",

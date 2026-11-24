@@ -159,3 +159,22 @@ def test_a_show_with_only_a_date_is_still_listed_and_found_on_that_day(db_engine
     show = one_show(db_engine, [], "enigma-hoy")
     assert show is not None and [d.id for d in show.dates] == ["enigma-hoy-20261108T0000"]
     assert one_show(db_engine, [], "venti-temprano") is None
+
+
+def test_a_show_carries_its_artist_on_spotify_when_found(db_engine):
+    from app.events_repository import store_spotify_artist
+
+    with db_engine.begin() as conn:
+        store_spotify_artist(conn, "Divididos", "6FbpFKLWNzMzL3LGu5qHLH", NOW)
+        store_spotify_artist(conn, "Banda Inventada", None, NOW)
+    stored = [
+        event("movistar-divididos-20261120T2100", 12, artist="Divididos"),
+        event("movistar-inventada-20261121T2100", 13, title="Banda Inventada", artist="Banda Inventada"),
+        event("movistar-fiesta-20261122T2100", 14, title="Fiesta"),  # no artist
+    ]
+    found = {show.id: show.spotify_artist_id for show in shows(db_engine, stored)}
+    assert found == {
+        "movistar-divididos": "6FbpFKLWNzMzL3LGu5qHLH",
+        "movistar-inventada": None,
+        "movistar-fiesta": None,
+    }

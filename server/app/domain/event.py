@@ -130,6 +130,7 @@ class Show(BaseModel):
     first_seen_at: AwareDatetime  # the earliest first_seen_at of any of its dates, past ones included
     updated_at: AwareDatetime  # the last time a scraper read any of its upcoming dates ("updated X ago")
     dates: list[ShowDateTickets]  # upcoming only, soonest first; never empty
+    spotify_artist_id: str | None = None  # the artist on Spotify, for a sample of their music; null when not found
 
     @model_validator(mode="after")
     def _has_dates_and_matching_image(self) -> "Show":
@@ -159,7 +160,6 @@ class VenueLocation(BaseModel):
 
 
 class ShowDetail(Show):
-    """The show page: a show plus where its venue is and its artist on Spotify."""
+    """The show page: a show plus where its venue is."""
 
     venue_location: VenueLocation | None  # null while the venue has no coordinates
-    spotify_artist_id: str | None = None  # null while the artist was not found on Spotify

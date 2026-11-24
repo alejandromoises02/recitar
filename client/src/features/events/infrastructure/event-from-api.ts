@@ -76,6 +76,7 @@ export function showFromApi(api: ApiShow): Show {
       timeKnown: date.time_known,
       ticketLinks: date.ticket_links.map(({ vendor, url }) => ({ vendor, url })),
     })),
+    spotifyArtistId: api.spotify_artist_id,
   };
 }
 

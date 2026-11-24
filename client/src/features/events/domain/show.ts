@@ -33,6 +33,8 @@ export type Show = {
   /** Last time a scraper read any of its upcoming dates ("actualizado hace X"). */
   updatedAt: Date;
   dates: ShowDateTickets[];
+  /** The artist on Spotify, for a sample of their music; null when not found. */
+  spotifyArtistId: string | null;
 };
 
 /** What the home's record fan shows: hand-picked shows, or just-announced ones with an image. */

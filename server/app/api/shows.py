@@ -11,7 +11,7 @@ from app.api.listing import (
     DEFAULT_LIMIT, Category, Cursor, FromDay, Search, ShowsAnnouncedFrom, ShowsLimit, Sort, ToDay, Venue, build_filters, problem,
 )
 from app.domain.event import Show, ShowDetail
-from app.events_repository import EventFilters, EventSort, Position, get_spotify_artist_id, get_upcoming_show, get_venue_location, list_upcoming_shows
+from app.events_repository import EventFilters, EventSort, Position, get_upcoming_show, get_venue_location, list_upcoming_shows
 
 # (how many, after which position, which ones, in which order) -> upcoming shows in that order
 ShowsSource = Callable[[int, Position | None, EventFilters, EventSort], list[Show]]
@@ -85,7 +85,6 @@ def show_detail_source() -> ShowSource:
             return ShowDetail(
                 **show.model_dump(),
                 venue_location=get_venue_location(connection, show.venue),
-                spotify_artist_id=get_spotify_artist_id(connection, show.artist) if show.artist else None,
             )
 
     return read

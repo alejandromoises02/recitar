@@ -2052,6 +2052,17 @@
             },
             "type": "array",
             "title": "Dates"
+          },
+          "spotify_artist_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spotify Artist Id"
           }
         },
         "type": "object",
@@ -2073,7 +2084,8 @@
           "image_source_url",
           "first_seen_at",
           "updated_at",
-          "dates"
+          "dates",
+          "spotify_artist_id"
         ],
         "title": "Show",
         "description": "A show once, with all of its upcoming dates. Display fields come from its next date."
@@ -2292,16 +2304,6 @@
             "type": "array",
             "title": "Dates"
           },
-          "venue_location": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VenueLocation"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "spotify_artist_id": {
             "anyOf": [
               {
@@ -2312,6 +2314,16 @@
               }
             ],
             "title": "Spotify Artist Id"
+          },
+          "venue_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VenueLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -2334,11 +2346,11 @@
           "first_seen_at",
           "updated_at",
           "dates",
-          "venue_location",
-          "spotify_artist_id"
+          "spotify_artist_id",
+          "venue_location"
         ],
         "title": "ShowDetail",
-        "description": "The show page: a show plus where its venue is and its artist on Spotify."
+        "description": "The show page: a show plus where its venue is."
       },
       "ShowPage": {
         "properties": {

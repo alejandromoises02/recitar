@@ -109,7 +109,7 @@ def test_the_list_does_not_carry_the_venue_location(client_with):
 
 
 def test_the_show_carries_its_artist_spotify_id(client_with):
-    found = ShowDetail(**SHOW.model_dump(), venue_location=None, spotify_artist_id="67oZkRi3cta1wNxN3KoFt5")
+    found = ShowDetail(**{**SHOW.model_dump(), "spotify_artist_id": "67oZkRi3cta1wNxN3KoFt5"}, venue_location=None)
     client, _ = client_with({found.id: found})
     body = client.get("/shows/movistar-becerra").json()
     assert body["spotify_artist_id"] == "67oZkRi3cta1wNxN3KoFt5"
@@ -121,9 +121,10 @@ def test_an_artist_not_found_on_spotify_has_a_null_id(client_with):
     assert "spotify_artist_id" in body and body["spotify_artist_id"] is None
 
 
-def test_the_list_does_not_carry_the_spotify_id(client_with):
+def test_the_list_carries_the_spotify_id_too_for_the_featured_record_player(client_with):
     from app.api.shows import upcoming_shows_source
 
-    app.dependency_overrides[upcoming_shows_source] = lambda: (lambda limit, after, filters, sort: [SHOW])
-    [item] = TestClient(app).get("/shows").json()["items"]
-    assert "spotify_artist_id" not in item
+    on_spotify = SHOW.model_copy(update={"spotify_artist_id": "67oZkRi3cta1wNxN3KoFt5"})
+    app.dependency_overrides[upcoming_shows_source] = lambda: (lambda limit, after, filters, sort: [on_spotify, SHOW])
+    items = TestClient(app).get("/shows").json()["items"]
+    assert [item["spotify_artist_id"] for item in items] == ["67oZkRi3cta1wNxN3KoFt5", None]

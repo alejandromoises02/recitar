@@ -7,6 +7,7 @@ describe("showFromApi", () => {
   it("renames every field and reads every date", () => {
     const api = apiShow("venti-mila", ["2026-11-14T22:00:00-03:00", "2026-11-21T22:00:00-03:00"]);
     api.dates[1].time_known = false;
+    api.spotify_artist_id = "67oZkRi3cta1wNxN3KoFt5";
     const show = showFromApi(api);
     expect(show).toEqual({
       id: "venti-mila",
@@ -30,6 +31,7 @@ describe("showFromApi", () => {
         { id: "venti-mila-0", startsAt: new Date("2026-11-15T01:00:00Z"), timeKnown: true, ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/0" }] },
         { id: "venti-mila-1", startsAt: new Date("2026-11-22T01:00:00Z"), timeKnown: false, ticketLinks: [{ vendor: "Venti", url: "https://venti.live/venti-mila/1" }] },
       ],
+      spotifyArtistId: "67oZkRi3cta1wNxN3KoFt5",
     });
   });
 });
@@ -45,12 +47,20 @@ describe("featuredFromApi", () => {
 
 describe("showDetailFromApi", () => {
   it("is the show plus where its venue is", () => {
-    const api = { ...apiShow("movistar-x"), venue_location: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 }, spotify_artist_id: null };
+    const api = { ...apiShow("movistar-x"), venue_location: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 }, spotify_artist_id: "67oZkRi3cta1wNxN3KoFt5" };
     const detail = showDetailFromApi(api);
-    expect(detail).toEqual({ ...showFromApi(api), venueLocation: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 } });
+    expect(detail).toEqual({
+      ...showFromApi(api),
+      venueLocation: { address: "Humboldt 450", latitude: -34.59, longitude: -58.44 },
+      spotifyArtistId: "67oZkRi3cta1wNxN3KoFt5",
+    });
   });
 
   it("keeps a venue without coordinates as null", () => {
     expect(showDetailFromApi({ ...apiShow("movistar-x"), venue_location: null, spotify_artist_id: null }).venueLocation).toBeNull();
+  });
+
+  it("keeps an artist not found on Spotify as null", () => {
+    expect(showDetailFromApi({ ...apiShow("movistar-x"), venue_location: null, spotify_artist_id: null }).spotifyArtistId).toBeNull();
   });
 });

@@ -9,6 +9,7 @@ const at = (iso: string) => new Date(iso);
 const show = (id: string, starts: string[]): Show => ({
   id,
   category: "concert",
+  spotifyArtistId: null,
   title: id,
   name: id,
   artist: null,

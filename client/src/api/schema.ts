@@ -431,6 +431,8 @@ export interface components {
             updated_at: string;
             /** Dates */
             dates: components["schemas"]["ShowDateTickets"][];
+            /** Spotify Artist Id */
+            spotify_artist_id: string | null;
         };
         /**
          * ShowDate
@@ -472,7 +474,7 @@ export interface components {
         };
         /**
          * ShowDetail
-         * @description The show page: a show plus where its venue is and its artist on Spotify.
+         * @description The show page: a show plus where its venue is.
          */
         ShowDetail: {
             /** Id */
@@ -520,9 +522,9 @@ export interface components {
             updated_at: string;
             /** Dates */
             dates: components["schemas"]["ShowDateTickets"][];
-            venue_location: components["schemas"]["VenueLocation"] | null;
             /** Spotify Artist Id */
             spotify_artist_id: string | null;
+            venue_location: components["schemas"]["VenueLocation"] | null;
         };
         /** ShowPage */
         ShowPage: {

@@ -5,6 +5,7 @@ import { ticketTarget, trackedTicketUrl } from "./ticket-target";
 const show = (ticketLinks: { vendor: string; url: string }[], sourceUrl = "https://www.nicetoclub.com/show/1"): Show => ({
   id: "s",
   category: "concert",
+  spotifyArtistId: null,
   title: "T",
   name: "T",
   artist: null,
