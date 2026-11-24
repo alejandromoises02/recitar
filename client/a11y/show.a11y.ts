@@ -78,3 +78,31 @@ test("more at the venue is left out when the show is the only one there", async 
   await expect(page.getByRole("heading", { name: /^Más en/ })).toHaveCount(0);
 });
 
+
+test("a show with its artist on Spotify offers the player, named, with no violations", async ({ page }) => {
+  await page.goto("/show/s1");
+  await expect(page.getByRole("heading", { level: 2, name: "Escuchalo" })).toBeVisible();
+  const player = page.locator('iframe[title="Reproductor de Spotify de Jazz Quartet"]');
+  await expect(player).toHaveAttribute("src", "https://open.spotify.com/embed/artist/0jazzquartet00000000000");
+  expect(await violations(page)).toEqual([]);
+});
+
+test("a show without a Spotify match has no player section", async ({ page }) => {
+  await page.goto("/show/s4");
+  await expect(page.getByRole("heading", { level: 1, name: "Die Walküre" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Escuchalo" })).toHaveCount(0);
+});
+
+test("a wide banner goes under the show name on desktop, with no violations", async ({ page }, info) => {
+  await page.goto("/show/s6");
+  const name = page.getByRole("heading", { level: 1, name: "Giant Rooks" });
+  await expect(name).toBeVisible();
+  const banner = page.locator('img[src$="/media/banner.svg"]').last();
+  await expect(banner).toBeVisible();
+  if (info.project.name === "desktop") {
+    // Under the name: its top is below the name's bottom (the poster column would put it beside).
+    const [nameBox, bannerBox] = [await name.boundingBox(), await banner.boundingBox()];
+    expect(bannerBox!.y).toBeGreaterThan(nameBox!.y + nameBox!.height);
+  }
+  expect(await violations(page)).toEqual([]);
+});

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
-import { AccessibilityInfo, View, useWindowDimensions } from "react-native";
+import { useWindowSize } from "../../../../design/hydration";
+import { AccessibilityInfo, View } from "react-native";
 import { GestureDetector, useExclusiveGestures, usePanGesture, useTapGesture } from "react-native-gesture-handler";
 import {
   cancelAnimation,
@@ -48,7 +49,7 @@ const mod = (value: number, count: number) => ((value % count) + count) % count;
 export function FeaturedFan() {
   const lang = useLang();
   const strings = useStrings();
-  const { width: screen } = useWindowDimensions();
+  const { width: screen } = useWindowSize();
   const stacked = screen <= breakpoints.stacked;
   const card = fanCardSize(screen, stacked);
   const [apiBase] = useState(configuredApiBase);

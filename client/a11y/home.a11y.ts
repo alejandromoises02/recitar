@@ -89,3 +89,9 @@ test("phone filter sheet has no violations", async ({ page }, info) => {
   await expect(page.getByRole("dialog")).toBeVisible();
   expect(await violations(page, "[role=dialog]")).toEqual([]);
 });
+
+test("the spotlight's Spotify sample is a named frame and the card has no violations", async ({ page }) => {
+  const frame = page.locator('iframe[title="Spotify Embed"]').first();
+  await expect(frame).toBeAttached();
+  expect(await violations(page)).toEqual([]);
+});

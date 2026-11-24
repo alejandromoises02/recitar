@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useRefetchOnAppFocus } from "@/api/app-focus";
 import { createQueryClient } from "@/api/query-client";
@@ -21,7 +22,10 @@ export default function RootLayout() {
   useRefetchOnAppFocus();
   useEffect(() => tracker().visitStarted(), []);
 
-  const ready = fontsLoaded || fontError !== null; // a font that fails falls back to the system one
+  // A font that fails falls back to the system one. The web build's pre-rendered HTML already declares
+  // every font (@font-face) and renders the whole page: waiting here would make the browser's first
+  // render empty, unlike that HTML, and React would throw the page away and paint it again.
+  const ready = Platform.OS === "web" || fontsLoaded || fontError !== null;
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);

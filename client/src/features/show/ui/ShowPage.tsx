@@ -2,7 +2,8 @@ import { Image } from "expo-image";
 import * as Linking from "expo-linking";
 import Head from "expo-router/head";
 import { useEffect, useState } from "react";
-import { Platform, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Platform, ScrollView, Text, View } from "react-native";
+import { useWindowSize } from "../../../design/hydration";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spacing } from "../../../design/tokens";
 import { useLang } from "../../../i18n/lang-context";
@@ -39,7 +40,7 @@ const posterBesideInfo = (infoHeight: number) => ({ minHeight: infoHeight, maxHe
 export function ShowPage({ show, apiBase }: Props) {
   const strings = useShowStrings();
   const lang = useLang();
-  const { width } = useWindowDimensions();
+  const { width } = useWindowSize();
   const insets = useSafeAreaInsets();
   const [now] = useState(() => new Date());
   const [picked, setPicked] = useState(0);

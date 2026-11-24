@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent } from "react-native";
-import { FlatList, Platform, View, useWindowDimensions } from "react-native";
+import { useWindowSize } from "../../../../design/hydration";
+import { FlatList, Platform, View } from "react-native";
 import { breakpoints } from "../../../../design/tokens";
 import type { Show } from "../../../events/domain/show";
 import { configuredApiBase } from "../../../events/infrastructure/events-api";
@@ -17,7 +18,7 @@ import { ShowCard } from "./ShowCard";
 
 export function NextUpStrip() {
   const strings = useStrings();
-  const { width: screen } = useWindowDimensions();
+  const { width: screen } = useWindowSize();
   const wide = screen > breakpoints.stacked;
   const [filters] = useState({ limit: NEXT_UP_COUNT });
   const [now] = useState(() => new Date());

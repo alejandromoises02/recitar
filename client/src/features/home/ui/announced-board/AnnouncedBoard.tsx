@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, useWindowDimensions } from "react-native";
+import { View } from "react-native";
+import { useWindowSize } from "../../../../design/hydration";
 import { fluid } from "../../../../design/fluid";
 import { breakpoints, typography } from "../../../../design/tokens";
 import { announcedFrom } from "../../../events/application/announced-from";
@@ -18,7 +19,7 @@ import { BoardSkeletonRow } from "./BoardSkeletonRow";
 
 export function AnnouncedBoard() {
   const strings = useStrings();
-  const { width: screen } = useWindowDimensions();
+  const { width: screen } = useWindowSize();
   const [filters] = useState(() => ({ sort: "announced" as const, announced_from: announcedFrom(new Date()), limit: ANNOUNCED_COUNT }));
   const [apiBase] = useState(configuredApiBase);
   const [now] = useState(() => new Date());

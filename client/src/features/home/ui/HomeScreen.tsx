@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { Platform, Text, View, useWindowDimensions } from "react-native";
+import { Platform, Text, View } from "react-native";
+import { useWindowSize } from "../../../design/hydration";
 import Animated, { Easing, FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fluid } from "../../../design/fluid";
@@ -30,7 +31,7 @@ import { heading } from "./a11y";
  */
 export function HomeScreen() {
   const strings = useStrings();
-  const { width } = useWindowDimensions();
+  const { width } = useWindowSize();
   const insets = useSafeAreaInsets();
   const layout = homeLayout(width);
   const gutter = width < PHONE_WIDTH ? spacing.md : spacing.xl;

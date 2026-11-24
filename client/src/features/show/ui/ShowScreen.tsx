@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import Head from "expo-router/head";
 import { useState } from "react";
-import { ScrollView, View, useWindowDimensions } from "react-native";
+import { ScrollView, View } from "react-native";
+import { useWindowSize } from "../../../design/hydration";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spacing } from "../../../design/tokens";
 import { configuredApiBase } from "../../events/infrastructure/events-api";
@@ -18,7 +19,7 @@ import { useShowStrings } from "./strings";
 export function ShowScreen({ id }: { id: string }) {
   const strings = useShowStrings();
   const [apiBase] = useState(configuredApiBase);
-  const { width } = useWindowDimensions();
+  const { width } = useWindowSize();
   const insets = useSafeAreaInsets();
   const query = useShow(id);
   if (query.data) return <ShowPage show={query.data} apiBase={apiBase} />;
