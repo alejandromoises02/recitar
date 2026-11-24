@@ -111,6 +111,47 @@ export function mapEmbedUrl(query: string, lang: Lang): string {
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=16&hl=${lang}&output=embed`;
 }
 
+/** Spotify's embeddable artist player: it plays the artist's top tracks; Spotify decides when a listener gets only a preview. */
+export function spotifyEmbedUrl(artistId: string): string {
+  return `https://open.spotify.com/embed/artist/${encodeURIComponent(artistId)}`;
+}
+
+/** Spotify's iFrame API: the embed with play and pause the page can call (developer.spotify.com/documentation/embeds). */
+export const SPOTIFY_IFRAME_API = "https://open.spotify.com/embed/iframe-api/v1";
+
+export function spotifyArtistUri(artistId: string): string {
+  return `spotify:artist:${artistId}`;
+}
+
+/** A JSON string literal that is also safe inside an inline <script> ("</script>" cannot close it). */
+const scriptString = (text: string) => JSON.stringify(text).replace(/</g, "\\u003c");
+
+/**
+ * The app's page for a Spotify sample: the iFrame API's player for `uri`, `height` tall. It posts
+ * `{"playing": boolean}` to the app on every playback change; the app toggles it by running
+ * `window.player.togglePlay()`.
+ */
+export function spotifySamplePage(uri: string, height: number): string {
+  return (
+    '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head>' +
+    '<body style="margin:0;background:transparent"><div id="embed"></div><script>' +
+    "window.onSpotifyIframeApiReady = function (api) {" +
+    `api.createController(document.getElementById("embed"), { uri: ${scriptString(uri)}, width: "100%", height: ${Number(height)} }, function (player) {` +
+    "window.player = player;" +
+    'player.addListener("playback_update", function (event) { window.ReactNativeWebView.postMessage(JSON.stringify({ playing: !event.data.isPaused })); });' +
+    "});};" +
+    `</script><script src="${SPOTIFY_IFRAME_API}" async></script></body></html>`
+  );
+}
+
+/** A photo at least this many times wider than tall is a banner (a venue's 900x300), not a poster. */
+export const WIDE_BANNER_RATIO = 2;
+
+/** A banner shown in the poster's frame beside the info would be a thin strip; it goes under the title instead. */
+export function isWideBanner(ratio: number | null): boolean {
+  return ratio !== null && ratio >= WIDE_BANNER_RATIO;
+}
+
 const escapeAttribute = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 

@@ -9,17 +9,31 @@ import { styles } from "./ShowPoster.styles";
 import { useShowStrings } from "./strings";
 
 /** The show's photo, whole, in a frame shaped like it; the credit when the photo is licensed. */
-type Props = { show: Show; apiBase: string; minRatio?: number; style?: StyleProp<ViewStyle> };
+/** `knownRatio`: the photo's shape when already measured; `onRatio` reports it once the photo loads. */
+type Props = {
+  show: Show;
+  apiBase: string;
+  minRatio?: number;
+  maxRatio?: number;
+  knownRatio?: number | null;
+  onRatio?: (ratio: number) => void;
+  style?: StyleProp<ViewStyle>;
+};
 
-export function ShowPoster({ show, apiBase, minRatio = POSTER_RATIO.min, style }: Props) {
+export function ShowPoster({ show, apiBase, minRatio = POSTER_RATIO.min, maxRatio = POSTER_RATIO.max, knownRatio, onRatio, style }: Props) {
   const strings = useShowStrings();
-  const [ratio, setRatio] = useState<number>(POSTER_RATIO.fallback);
+  const [ratio, setRatio] = useState<number>(knownRatio ?? POSTER_RATIO.fallback);
   const photo = imageSource(show.imageUrl, apiBase);
   const licensed = show.imageOrigin === "licensed" && show.imageAuthor;
   return (
-    <View style={[styles.frame, { aspectRatio: Math.min(POSTER_RATIO.max, Math.max(minRatio, photo ? ratio : POSTER_RATIO.fallback)) }, style]}>
+    <View style={[styles.frame, { aspectRatio: Math.min(maxRatio, Math.max(minRatio, photo ? ratio : POSTER_RATIO.fallback)) }, style]}>
       {photo ? (
-        <FittedImage uri={photo} style={styles.fill} onLoad={({ source }) => source.height > 0 && setRatio(source.width / source.height)} />
+        <FittedImage uri={photo} style={styles.fill} onLoad={({ source }) => {
+            if (source.height > 0) {
+              setRatio(source.width / source.height);
+              onRatio?.(source.width / source.height);
+            }
+          }} />
       ) : (
         <View style={[styles.fill, styles.fallback]} aria-hidden>
           <Text style={styles.initials}>{initials(show.name)}</Text>

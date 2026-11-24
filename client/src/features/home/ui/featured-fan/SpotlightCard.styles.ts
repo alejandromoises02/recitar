@@ -35,6 +35,8 @@ export const styles = StyleSheet.create({
   },
   meta: { fontFamily: fontFamily.body, fontSize: typography.body.size.min, color: colors.textMuted, marginTop: 6, marginBottom: spacing.md },
   more: { fontFamily: fontFamily.bodyStrong, color: colors.accent },
+  // The same space under the player as under the venue line, before the ticket button.
+  sample: { marginBottom: spacing.md },
   actions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", columnGap: 18, rowGap: 10 },
   source: { ...mutedSmallText, fontSize: 12.5 },
   sourceDomain: { fontFamily: fontFamily.bodyStrong, color: colors.text },

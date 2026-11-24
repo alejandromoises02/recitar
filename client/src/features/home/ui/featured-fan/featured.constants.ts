@@ -23,3 +23,8 @@ export const RECORD_GROOVES = [0.62, 0.8];
 
 export const SLEEVE_TITLE_SHARE = 0.085;
 export const SLEEVE_VENUE_SHARE = 0.045;
+
+/** One turn of the record while its sample plays: 33⅓ rpm. */
+export const RECORD_TURN_MS = 1800;
+/** The play badge on the record's label, as a share of the record size. */
+export const RECORD_BADGE_SHARE = 0.2;

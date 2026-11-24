@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fanCardSize, fanLanding, fanOffset, fanPose, fanShift, fanSpread, tappedStep } from "./fan";
+import { fanCardSize, fanLanding, fanOffset, fanPose, fanShift, fanSpread, tappedStep, tapsRecord } from "./fan";
 
 describe("fanOffset", () => {
   it("is how many steps a sleeve sits from the centre", () => {
@@ -118,5 +118,18 @@ describe("tappedStep", () => {
   it("is how many sleeves left or right of the centre the tap was", () => {
     expect(tappedStep(290, 200, 100)).toBe(1);
     expect(tappedStep(20, 200, 100)).toBe(-2);
+  });
+});
+
+describe("tapsRecord", () => {
+  // A record of 100 px whose centre is at (300, 200).
+  it("is a tap inside the record's circle", () => {
+    expect(tapsRecord(300, 200, 300, 200, 100)).toBe(true);
+    expect(tapsRecord(340, 225, 300, 200, 100)).toBe(true);
+  });
+
+  it("is not a tap outside it, even inside its square corners", () => {
+    expect(tapsRecord(351, 200, 300, 200, 100)).toBe(false);
+    expect(tapsRecord(345, 245, 300, 200, 100)).toBe(false);
   });
 });

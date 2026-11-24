@@ -21,6 +21,7 @@ export const styles = StyleSheet.create({
   oneColumn: { flexDirection: "column", gap: spacing.lg, flexGrow: 1 },
   posterColumn: { flex: 5 },
   posterOneColumn: { width: "100%" },
+  banner: { marginTop: spacing.lg },
   info: { flex: 7 },
   infoOneColumn: { flex: 0, flexGrow: 1, flexShrink: 0, alignSelf: "stretch" },
   // At least this much space above the trust note when it is pushed down.

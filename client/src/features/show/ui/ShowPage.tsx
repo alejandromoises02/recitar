@@ -11,7 +11,7 @@ import type { ShowDetail } from "../../events/domain/show";
 import { imageSource } from "../../home/application/show-labels";
 import { domainOf } from "../../home/application/ticket-target";
 import { heading } from "../../home/ui/a11y";
-import { buttonWhen, dateMode, hasVenueToExplore, mapEmbedUrl, ticketPlan, updatedAgo, venueMapQuery } from "../application/show-page";
+import { buttonWhen, dateMode, hasVenueToExplore, isWideBanner, mapEmbedUrl, spotifyEmbedUrl, ticketPlan, updatedAgo, venueMapQuery } from "../application/show-page";
 import { DateList } from "./DateList";
 import { DateTiles } from "./DateTiles";
 import { MoreAtVenue } from "./MoreAtVenue";
@@ -21,6 +21,7 @@ import { ONE_COLUMN_WIDTH, PINNED_BAR_HEIGHT, POSTER_MAX_HEIGHT_TWO_COLUMNS, POS
 import { ShowHeader } from "./ShowHeader";
 import { nameSizing, styles } from "./ShowPage.styles";
 import { ShowPoster } from "./ShowPoster";
+import { SpotifyPlayer } from "./SpotifyPlayer";
 import { useShowStrings } from "./strings";
 import { ticketOffer } from "./ticket-offer";
 import { TicketActions } from "./TicketActions";
@@ -44,8 +45,10 @@ export function ShowPage({ show, apiBase }: Props) {
   const [picked, setPicked] = useState(0);
   useEffect(() => tracker().showOpened(show.id, show.name, show.venue), [show.id, show.name, show.venue]);
   const [infoHeight, setInfoHeight] = useState(0);
+  const [photoRatio, setPhotoRatio] = useState<number | null>(null);
 
   const oneColumn = width <= ONE_COLUMN_WIDTH;
+  const bannerUnderTitle = !oneColumn && isWideBanner(photoRatio);
   const gutter = width < 600 ? spacing.md : spacing.xl;
   const date = show.dates[Math.min(picked, show.dates.length - 1)];
   const mode = dateMode(show.dates);
@@ -75,14 +78,17 @@ export function ShowPage({ show, apiBase }: Props) {
       >
         <ShowHeader compact={oneColumn} />
         <View role="main" style={[styles.layout, oneColumn && styles.oneColumn]}>
-          <View style={oneColumn ? styles.posterOneColumn : styles.posterColumn}>
-            <ShowPoster
-              show={show}
-              apiBase={apiBase}
-              minRatio={oneColumn ? POSTER_MIN_RATIO_ONE_COLUMN : undefined}
-              style={oneColumn ? undefined : posterBesideInfo(infoHeight)}
-            />
-          </View>
+          {bannerUnderTitle ? null : (
+            <View style={oneColumn ? styles.posterOneColumn : styles.posterColumn}>
+              <ShowPoster
+                show={show}
+                apiBase={apiBase}
+                minRatio={oneColumn ? POSTER_MIN_RATIO_ONE_COLUMN : undefined}
+                onRatio={setPhotoRatio}
+                style={oneColumn ? undefined : posterBesideInfo(infoHeight)}
+              />
+            </View>
+          )}
           <View style={[styles.info, oneColumn && styles.infoOneColumn]} onLayout={(event) => setInfoHeight(event.nativeEvent.layout.height)}>
             <View style={styles.titleRow}>
               <Text style={[styles.name, nameSizing(width)]} {...heading(1)}>
@@ -96,6 +102,9 @@ export function ShowPage({ show, apiBase }: Props) {
               <Text style={several ? styles.count : undefined}>{strings.dates(show.dates.length)}</Text>
               {` · ${strings.categories[show.category] ?? strings.categories.other}`}
             </Text>
+            {bannerUnderTitle ? (
+              <ShowPoster show={show} apiBase={apiBase} knownRatio={photoRatio} maxRatio={Infinity} style={styles.banner} />
+            ) : null}
 
             {mode === "pick" ? (
               <View style={styles.block}>
@@ -127,6 +136,14 @@ export function ShowPage({ show, apiBase }: Props) {
               <Text style={styles.strong}>{domainOf(show.sourceUrl)}</Text>
               {` · ${updatedAgo(show.updatedAt, now, lang)}`}
             </Text>
+            {show.spotifyArtistId ? (
+              <View style={styles.block}>
+                <Text style={styles.h2} {...heading(2)}>
+                  {strings.listenTitle}
+                </Text>
+                <SpotifyPlayer url={spotifyEmbedUrl(show.spotifyArtistId)} label={strings.playerOf(show.artist ?? show.name)} />
+              </View>
+            ) : null}
             {mapQuery ? (
               <View style={styles.block}>
                 <Text style={styles.h2} {...heading(2)}>

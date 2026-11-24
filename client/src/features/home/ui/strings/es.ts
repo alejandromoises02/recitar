@@ -73,6 +73,7 @@ export const es = {
     previous: "Show anterior",
     next: "Show siguiente",
     opensNewTab: "Se abre en otra pestaña.",
+    sampleOf: (artist: string) => `Reproductor de Spotify de ${artist}`,
   },
 };
 

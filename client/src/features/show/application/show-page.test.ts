@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Show, ShowDateTickets } from "../../events/domain/show";
-import { buttonWhen, dateMode, dateTile, dateTargets, hasVenueToExplore, mapEmbedPage, mapEmbedUrl, moreAtVenue, ticketPlan, updatedAgo, venueMapQuery } from "./show-page";
+import { buttonWhen, dateMode, dateTile, dateTargets, hasVenueToExplore, isWideBanner, mapEmbedPage, mapEmbedUrl, moreAtVenue, spotifyArtistUri, spotifyEmbedUrl, spotifySamplePage, ticketPlan, updatedAgo, venueMapQuery } from "./show-page";
 
 // Saturday 14 November 2026, noon in Buenos Aires.
 const NOW = new Date("2026-11-14T15:00:00Z");
@@ -146,6 +146,7 @@ describe("venueMapQuery", () => {
     venue,
     city,
     venueLocation: address === undefined ? null : { address, latitude: -34.59, longitude: -58.44 },
+    spotifyArtistId: null,
   });
 
   it("is the venue, its street address and its city", () => {
@@ -182,5 +183,51 @@ describe("mapEmbedPage", () => {
 
   it("escapes the address so it cannot break out of the attribute", () => {
     expect(mapEmbedPage('https://x.test/?q="><script>')).toContain('src="https://x.test/?q=&quot;&gt;&lt;script&gt;"');
+  });
+});
+
+describe("spotifyEmbedUrl", () => {
+  it("is Spotify's compact artist player, which plays the artist's top tracks", () => {
+    expect(spotifyEmbedUrl("67oZkRi3cta1wNxN3KoFt5")).toBe("https://open.spotify.com/embed/artist/67oZkRi3cta1wNxN3KoFt5");
+  });
+
+  it("keeps an id with unexpected characters inside the path", () => {
+    expect(spotifyEmbedUrl("a/../b?x")).toBe("https://open.spotify.com/embed/artist/a%2F..%2Fb%3Fx");
+  });
+});
+
+describe("isWideBanner", () => {
+  it("is a photo at least twice as wide as tall, like a venue's 900x300 banner", () => {
+    expect(isWideBanner(900 / 300)).toBe(true);
+    expect(isWideBanner(2)).toBe(true);
+  });
+
+  it("is not a poster, a square or a landscape photo, nor a photo not measured yet", () => {
+    expect(isWideBanner(3 / 4)).toBe(false);
+    expect(isWideBanner(1.08)).toBe(false);
+    expect(isWideBanner(4 / 3)).toBe(false);
+    expect(isWideBanner(1.99)).toBe(false);
+    expect(isWideBanner(null)).toBe(false);
+  });
+});
+
+describe("spotifyArtistUri", () => {
+  it("is the artist's Spotify URI, which the iFrame API loads", () => {
+    expect(spotifyArtistUri("67oZkRi3cta1wNxN3KoFt5")).toBe("spotify:artist:67oZkRi3cta1wNxN3KoFt5");
+  });
+});
+
+describe("spotifySamplePage", () => {
+  it("loads Spotify's iFrame API and creates the player for the URI, reporting playback to the app", () => {
+    const page = spotifySamplePage("spotify:artist:67oZkRi3cta1wNxN3KoFt5", 152);
+    expect(page).toContain('<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>');
+    expect(page).toContain('uri: "spotify:artist:67oZkRi3cta1wNxN3KoFt5"');
+    expect(page).toContain("height: 152");
+    expect(page).toContain("ReactNativeWebView.postMessage");
+  });
+
+  it("keeps an unexpected URI a plain string, never code", () => {
+    const page = spotifySamplePage('x"</script><script>alert(1)</script>', 152);
+    expect(page).not.toContain("<script>alert(1)");
   });
 });

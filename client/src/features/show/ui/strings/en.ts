@@ -30,4 +30,6 @@ export const en: ShowStrings = {
   goToListing: "See all shows",
   whereTitle: "Getting there",
   mapOf: (venue) => `Map of ${venue}`,
+  listenTitle: "Listen",
+  playerOf: (artist) => `Spotify player for ${artist}`,
 };

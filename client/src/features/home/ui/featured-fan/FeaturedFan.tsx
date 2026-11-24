@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { AccessibilityInfo, View, useWindowDimensions } from "react-native";
 import { GestureDetector, useExclusiveGestures, usePanGesture, useTapGesture } from "react-native-gesture-handler";
@@ -18,6 +18,7 @@ import {
   fanShift,
   fanSpread,
   tappedStep,
+  tapsRecord,
 } from "../../application/fan";
 import { imageSource, spokenDate } from "../../application/show-labels";
 import { SectionError } from "../section/SectionError";
@@ -38,6 +39,7 @@ import { styles } from "./FeaturedFan.styles";
 import { Record } from "./Record";
 import { Sleeve } from "./Sleeve";
 import { SpotlightCard } from "./SpotlightCard";
+import type { SampleHandle } from "./SpotifySample.types";
 import { useFanAutoplay } from "./use-fan-autoplay";
 import { useLang } from "../../../../i18n/lang-context";
 
@@ -64,6 +66,10 @@ export function FeaturedFan() {
   const recordShown = useSharedValue(0);
   const centreX = useSharedValue(0);
   const recordOut = recordOutFor === current;
+  // Where the record is in the fan, for taps: x and y of its centre, its size, and whether it plays a sample.
+  const recordHit = useSharedValue({ x: 0, y: 0, size: 0, playable: false });
+  const sample = useRef<SampleHandle>(null);
+  const [playing, setPlaying] = useState(false);
 
   const advance = useCallback(() => setCurrent((c) => c + 1), []);
   const { progress, active, stop, toggle } = useFanAutoplay(
@@ -87,6 +93,20 @@ export function FeaturedFan() {
       reduced ? target : withTiming(target, recordOut ? RECORD_OUT : RECORD_IN),
     );
   }, [recordOut, recordShown, reduced]);
+
+  // The carousel stops for good while a sample plays, as when the visitor touches it.
+  const onPlaying = useCallback(
+    (now: boolean) => {
+      setPlaying(now);
+      if (now) stop();
+    },
+    [stop],
+  );
+
+  const toggleSample = useCallback(() => {
+    stop();
+    sample.current?.toggle();
+  }, [stop]);
 
   const userMove = useCallback(
     (target: number) => {
@@ -146,6 +166,11 @@ export function FeaturedFan() {
     maxDistance: DRAG_ACTIVATION,
     onActivate: (event) => {
       "worklet";
+      const record = recordHit.get();
+      if (record.playable && recordShown.get() > 0.5 && tapsRecord(event.x, event.y, record.x, record.y, record.size)) {
+        scheduleOnRN(toggleSample);
+        return;
+      }
       const step = tappedStep(event.x, centreX.get(), spread.get());
       if (step !== 0) scheduleOnRN(selectStep, step);
     },
@@ -165,8 +190,14 @@ export function FeaturedFan() {
   const shift = fanWidth > 0 ? fanShift(fanWidth, travel, recordSize) : 0;
   useEffect(() => centreX.set(fanWidth / 2 - shift), [centreX, fanWidth, shift]);
 
-  if (!isPending && !isError && count === 0) return null;
   const centre = count > 0 ? shows[mod(current, count)] : undefined;
+  const playable = Boolean(centre?.spotifyArtistId);
+  useEffect(
+    () => recordHit.set({ x: fanWidth / 2 - shift + travel, y: (card * FAN_HEIGHT_SHARE) / 2, size: recordSize, playable }),
+    [recordHit, fanWidth, shift, travel, card, recordSize, playable],
+  );
+
+  if (!isPending && !isError && count === 0) return null;
 
   return (
     <View
@@ -212,6 +243,8 @@ export function FeaturedFan() {
                     travel={travel}
                     shown={recordShown}
                     photo={imageSource(centre.imageUrl, apiBase)}
+                    playable={playable}
+                    playing={playing}
                   />
                 ) : null}
               </View>
@@ -241,6 +274,8 @@ export function FeaturedFan() {
               progress={progress}
               showProgress={active}
               apiBase={apiBase}
+              sampleRef={sample}
+              onPlaying={onPlaying}
             />
           ) : null}
         </>

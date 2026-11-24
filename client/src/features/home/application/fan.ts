@@ -85,3 +85,9 @@ export function tappedStep(x: number, centreX: number, spread: number): number {
   "worklet";
   return Math.round((x - centreX) / spread);
 }
+
+/** Whether a tap at (`x`, `y`) fell on the record of `size` centred at (`recordX`, `recordY`): it is round. */
+export function tapsRecord(x: number, y: number, recordX: number, recordY: number, size: number): boolean {
+  "worklet";
+  return Math.hypot(x - recordX, y - recordY) <= size / 2;
+}

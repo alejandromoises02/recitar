@@ -8,10 +8,11 @@ Status: confirmed 2026-11-15 (impeccable shape). Reference mock: `.impeccable/mo
 
 ## Content
 - Photo, whole (never cropped), on a blurred copy of itself; the poster takes the photo's shape between portrait 3:4 and landscape 4:3. Credit badge on the photo when licensed: "Foto: <author> · <license>" with links. Typographic fallback when there is no photo.
+- A banner (a photo at least twice as wide as tall, like Teatro Gran Rivadavia's 900x300) would be a thin strip in the poster column: on desktop the page drops the poster column and the banner goes whole under the name and venue line, above the dates (decided 2026-11-24; every other photo keeps the poster column, reaching the bottom of the info).
 - Show name (Unbounded display; shrinks to fit a long single word on phones, never breaks a word), then venue · "N fechas" (yellow) · type.
 - Dates and tickets: see Selected direction.
 - "Entradas en <ticket domain>" under the button.
-- "Escuchá antes de ir": the official Spotify compact embed (api14). The section is absent when the show has no Spotify match.
+- "Escuchalo": the official Spotify compact embed (api14), between the trust line and "Cómo llegar". The section is absent when the show has no Spotify match. Web plays full tracks; in the app's WebView Spotify plays short previews and shows its own "get Spotify" banner now and then (accepted 2026-11-24). The player is removed when the page leaves view or the app goes to the background, so the audio stops.
 - Trust line: "recitAR no vende entradas: te lleva a la página oficial de cada show." plus "Datos de <source domain> · actualizado hace X".
 - Share button (44 px circle beside the name): native share sheet on iOS / Android, copy link on web.
 - "Más en <venue>": up to 4 other shows at the same venue as show cards (same card as explore), never the current show; a sideways scroll row on phones.

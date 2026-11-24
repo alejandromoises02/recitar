@@ -12,6 +12,9 @@ import { useLang } from "../../../../i18n/lang-context";
 import { heading } from "../a11y";
 import { TicketLink } from "../controls/TicketLink";
 import { ShowLink } from "../controls/ShowLink";
+import type { Ref } from "react";
+import { SpotifySample } from "./SpotifySample";
+import type { SampleHandle } from "./SpotifySample.types";
 
 type Props = {
   show: Show;
@@ -20,9 +23,11 @@ type Props = {
   progress: SharedValue<number>;
   showProgress: boolean;
   apiBase: string;
+  sampleRef: Ref<SampleHandle>;
+  onPlaying: (playing: boolean) => void;
 };
 
-export function SpotlightCard({ show, kind, width, progress, showProgress, apiBase }: Props) {
+export function SpotlightCard({ show, kind, width, progress, showProgress, apiBase, sampleRef, onPlaying }: Props) {
   const { featured } = useStrings();
   const lang = useLang();
   const more = moreDatesLabel(show.dates.length, lang);
@@ -52,6 +57,11 @@ export function SpotlightCard({ show, kind, width, progress, showProgress, apiBa
           ) : null}
         </Text>
       </Animated.View>
+      {show.spotifyArtistId ? (
+        <View style={styles.sample}>
+          <SpotifySample key={`sample-${show.id}`} ref={sampleRef} artistId={show.spotifyArtistId} label={featured.sampleOf(show.artist ?? show.name)} onPlaying={onPlaying} />
+        </View>
+      ) : null}
       <View style={styles.actions}>
         <TicketLink url={trackedTicketUrl(apiBase, tickets.eventId, tickets.vendor, "spotlight")} label={featured.cta} webHint={`${tickets.domain}. ${featured.opensNewTab}`} />
         <Text style={styles.source}>

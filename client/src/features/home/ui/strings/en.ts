@@ -74,5 +74,6 @@ export const en: HomeStrings = {
     previous: "Previous show",
     next: "Next show",
     opensNewTab: "Opens in a new tab.",
+    sampleOf: (artist: string) => `Spotify player for ${artist}`,
   },
 };

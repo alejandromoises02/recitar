@@ -29,6 +29,8 @@ export const es = {
   goToListing: "Ver toda la cartelera",
   whereTitle: "Cómo llegar",
   mapOf: (venue: string) => `Mapa de ${venue}`,
+  listenTitle: "Escuchalo",
+  playerOf: (artist: string) => `Reproductor de Spotify de ${artist}`,
 };
 
 export type ShowStrings = typeof es;
