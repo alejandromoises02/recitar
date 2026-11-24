@@ -118,7 +118,7 @@ def test_announced_from_looks_at_the_show_not_at_its_newest_date(db_engine):
 
 def test_a_show_carries_the_readable_name_of_its_next_date(db_engine):
     (show,) = shows(db_engine, [event("livepass-tb-20261120T2100", 12, title="TAN BIONICA en Estadio Uno")])
-    assert (show.title, show.name) == ("TAN BIONICA en Estadio Uno", "Tan Bionica")
+    assert (show.title, show.name) == ("TAN BIONICA en Estadio Uno", "Tan Bionica en Estadio Uno")
 
 
 def one_show(db_engine, stored: list[Event], key: str):

@@ -104,9 +104,9 @@ def test_first_seen_must_carry_a_time_zone():
         make_event(first_seen_at=datetime(2026, 10, 1))
 
 
-def test_the_name_is_the_tidy_title_for_its_source():
+def test_the_name_is_the_title_tidied_in_looks():
     shouted = make_event(id="livepass-tan-bionica-20261120T2100", title="TAN BIONICA en Estadio Uno")
-    assert shouted.name == "Tan Bionica"
+    assert shouted.name == "Tan Bionica en Estadio Uno"  # every word kept, only the shouting tidied
     assert shouted.title == "TAN BIONICA en Estadio Uno"  # the source's words stay as they were
 
 

@@ -280,8 +280,8 @@ export interface components {
             first_seen_at: string;
             /**
              * Name
-             * @description The title made readable (see domain/titles.py): what the client shows. Computed on every
-             *     read, not stored, so a better rule applies at once without scraping again.
+             * @description The title tidied in looks only (see domain/titles.py): what the client shows. Computed on
+             *     every read, not stored, so a better rule applies at once without scraping again.
              */
             readonly name: string;
         };
@@ -344,8 +344,8 @@ export interface components {
             other_dates: components["schemas"]["ShowDate"][];
             /**
              * Name
-             * @description The title made readable (see domain/titles.py): what the client shows. Computed on every
-             *     read, not stored, so a better rule applies at once without scraping again.
+             * @description The title tidied in looks only (see domain/titles.py): what the client shows. Computed on
+             *     every read, not stored, so a better rule applies at once without scraping again.
              */
             readonly name: string;
         };

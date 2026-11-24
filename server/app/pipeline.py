@@ -46,6 +46,6 @@ def add_artists(events: list[Event]) -> list[Event]:
     so search and the image lookup can use it."""
     return [
         event if event.artist is not None
-        else event.model_copy(update={"artist": tidy_title(event.title, event.id.split("-", 1)[0]).artist})
+        else event.model_copy(update={"artist": tidy_title(event.title, event.id.split("-", 1)[0], event.venue, event.city).artist})
         for event in events
     ]

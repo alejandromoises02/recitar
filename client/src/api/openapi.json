@@ -1582,7 +1582,7 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "The title made readable (see domain/titles.py): what the client shows. Computed on every\nread, not stored, so a better rule applies at once without scraping again.",
+            "description": "The title tidied in looks only (see domain/titles.py): what the client shows. Computed on\nevery read, not stored, so a better rule applies at once without scraping again.",
             "readOnly": true
           }
         },
@@ -1782,7 +1782,7 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "The title made readable (see domain/titles.py): what the client shows. Computed on every\nread, not stored, so a better rule applies at once without scraping again.",
+            "description": "The title tidied in looks only (see domain/titles.py): what the client shows. Computed on\nevery read, not stored, so a better rule applies at once without scraping again.",
             "readOnly": true
           }
         },

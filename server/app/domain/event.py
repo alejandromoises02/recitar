@@ -64,9 +64,9 @@ class Event(BaseModel):
     @computed_field
     @property
     def name(self) -> str:
-        """The title made readable (see domain/titles.py): what the client shows. Computed on every
-        read, not stored, so a better rule applies at once without scraping again."""
-        return tidy_title(self.title, self.id.split("-", 1)[0]).name
+        """The title tidied in looks only (see domain/titles.py): what the client shows. Computed on
+        every read, not stored, so a better rule applies at once without scraping again."""
+        return tidy_title(self.title, self.id.split("-", 1)[0], self.venue, self.city).display
 
     @field_serializer("starts_at")
     def _in_buenos_aires_time(self, value: datetime) -> datetime:
