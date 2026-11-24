@@ -53,6 +53,20 @@ def test_past_performances_are_dropped():
     assert e.id.endswith("20261211T2100")
 
 
+def test_a_show_announced_before_its_sale_opens_takes_the_date_the_page_announces():
+    # On 2026-11-24 LP's page had no sessions yet (presale on 2026-11-26) but announced its date.
+    [e] = parse_show(page("lp"), "lp-obr-2027", now=NOW)
+    assert e.id == "coolco-lp-obr-2027-20270226T2100"
+    assert (e.title, e.category) == ("LP - All Is Not Lost 2027", "concert")
+    assert e.starts_at.isoformat() == "2027-02-26T21:00:00-03:00" and e.time_known
+    assert (e.venue, e.city, e.region) == ("Estadio Obras Sanitarias", "Buenos Aires", "AR-C")
+    assert e.source_url == SHOW_URL + "lp-obr-2027"
+
+
+def test_an_announced_date_that_has_passed_is_dropped():
+    assert parse_show(page("lp"), "lp-obr-2027", now=datetime(2027, 2, 27, 12, 0, tzinfo=BA)) == []
+
+
 def test_a_page_without_a_show_gives_nothing():
     assert parse_show(page("no_show"), "no-show", now=NOW) == []
     assert parse_show("", "empty", now=NOW) == []

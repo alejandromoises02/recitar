@@ -9,7 +9,9 @@ What 2026-11-17 showed:
 - a show's page holds its performances in the JSON of `event_sessions_list_widget_Sessions_...`
   (lists of sessions, each with `fechaCelebracion` with its offset and `litEvento`, the title without
   the venue the page's <title> appends), and its venue in `dataLayerP4` (name, city "CABA", state).
-  A sold-out session has no tickets left (aforo minus sold, reserved and blocked) and is kept;
+  A sold-out session has no tickets left (aforo minus sold, reserved and blocked) and is kept.
+  A show whose sale has not opened has no sessions (LP on 2026-11-24, presale two days later): its
+  page still announces its title and first date in `event_sessions_list_widget_event_...`, used then;
 - an unknown slug redirects to main. Cloudflare answered 200, with no challenge, to our User-Agent.
   robots.txt allows everything to `*` with `Content-Signal: search=yes, ai-train=no`: a listing that
   links to the official page is search.
@@ -41,6 +43,7 @@ MAX_SHOW_PAGES = 100  # 9 shows on 2026-11-17
 _CARD = re.compile(r"""window\.location\.href='(?:https?://[^/']+)?/tickets-ar/(?:es|en)/([a-z0-9-]+)'""")
 _SESSIONS = re.compile(r"event_sessions_list_widget_Sessions_\$\{\w+\}`\]\s*=\s*")
 _DATA_LAYER = re.compile(r"var dataLayerP4\s*=\s*")
+_ANNOUNCED = re.compile(r"event_sessions_list_widget_event_\$\{\w+\}`\]\.(title|startDate) = `([^`]*)`")
 _OG_IMAGE = re.compile(r'<meta property="og:image" content="([^"]+)"')
 
 
@@ -70,6 +73,19 @@ def _sessions(page: str) -> list[dict]:
     return [s for s in flat if isinstance(s, dict)]
 
 
+def _announced(page: str) -> list[dict]:
+    """A show whose sale has not opened has no sessions yet, but its page announces its title and first
+    date (local time, as LP's on 2026-11-24): taken as one session in the shape of the real ones."""
+    fields = dict(_ANNOUNCED.findall(page))
+    if not fields.get("title") or not fields.get("startDate"):
+        return []
+    try:
+        starts_at = datetime.fromisoformat(fields["startDate"]).replace(tzinfo=BA)
+    except ValueError:
+        return []
+    return [{"litEvento": fields["title"], "fechaCelebracion": starts_at.isoformat()}]
+
+
 def region_of(city: str, state: str) -> str | None:
     """Palco4 writes the city as "CABA" with state "Buenos Aires", which region_code reads as the province."""
     if plain(city) in {"caba", "capital federal"}:
@@ -89,7 +105,7 @@ def parse_show(page: str, slug: str, *, now: datetime) -> list[Event]:
     image = _OG_IMAGE.search(page)
     url = f"{SITE}{SHOW}{slug}"
     events = []
-    for session in _sessions(page):
+    for session in _sessions(page) or _announced(page):
         title = clean_text(session.get("litEvento") or "")
         when = session.get("fechaCelebracion")
         if not title or not isinstance(when, str):
