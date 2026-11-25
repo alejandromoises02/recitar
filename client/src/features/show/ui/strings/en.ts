@@ -21,6 +21,7 @@ export const en: ShowStrings = {
   dataFrom: "Data from",
   photo: "Photo",
   share: "Share this show",
+  shareMessage: (name: string, venue: string, day: string) => `Check out this show! 🎶 ${name} at ${venue}, ${day}.`,
   linkCopied: "Link copied",
   loading: "Loading the show…",
   loadFailed: "We couldn't load this show.",

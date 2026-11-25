@@ -20,6 +20,8 @@ export const es = {
   dataFrom: "Datos de",
   photo: "Foto",
   share: "Compartir este show",
+  shareMessage: (name: string, venue: string, day: string) =>
+    `¡Mirá este show! 🎶 ${name} en ${venue}, el ${day.charAt(0).toLowerCase()}${day.slice(1)}.`,
   linkCopied: "Link copiado",
   loading: "Cargando el show…",
   loadFailed: "No pudimos cargar este show.",

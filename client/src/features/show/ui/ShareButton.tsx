@@ -3,24 +3,32 @@ import { Platform, Pressable, Share, Text, View } from "react-native";
 import { ShareIcon } from "./ShareIcon";
 import { styles } from "./ShareButton.styles";
 import { useShowStrings } from "./strings";
+import { useShareImage } from "./use-share-image";
 
-type Props = { title: string; url: string; onShare?: () => void };
+type Props = { title: string; message: string; url: string; imageUrl?: string | null; onShare?: () => void };
 
-/** The native share sheet on phones; on web the browser's share, else the link copied to the clipboard. */
-export function ShareButton({ title, url, onShare }: Props) {
+/**
+ * The native share sheet on phones; on web the browser's share, with the show's image when the
+ * browser can share files, else the message and link copied to the clipboard.
+ */
+export function ShareButton({ title, message, url, imageUrl, onShare }: Props) {
   const strings = useShowStrings();
   const [copied, setCopied] = useState(false);
+  const image = useShareImage(imageUrl);
+  const withLink = `${message} ${url}`;
   const share = async () => {
     onShare?.();
     if (Platform.OS !== "web") {
-      await Share.share({ title, message: `${title} ${url}`, url });
+      await Share.share({ title, message: withLink, url });
       return;
     }
     if (typeof navigator.share === "function") {
-      await navigator.share({ title, url }).catch(() => undefined);
+      // With a file, some apps drop the url field, so the link travels inside the text.
+      const data = image ? { title, text: withLink, files: [image] } : { title, text: message, url };
+      await navigator.share(data).catch(() => undefined);
       return;
     }
-    await navigator.clipboard?.writeText(url);
+    await navigator.clipboard?.writeText(withLink);
     setCopied(true);
   };
   return (

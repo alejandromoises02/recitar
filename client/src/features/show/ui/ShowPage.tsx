@@ -9,7 +9,7 @@ import { spacing } from "../../../design/tokens";
 import { useLang } from "../../../i18n/lang-context";
 import { tracker } from "../../analytics/tracker";
 import type { ShowDetail } from "../../events/domain/show";
-import { imageSource } from "../../home/application/show-labels";
+import { imageSource, spokenDate } from "../../home/application/show-labels";
 import { domainOf } from "../../home/application/ticket-target";
 import { heading } from "../../home/ui/a11y";
 import { buttonWhen, dateMode, hasVenueToExplore, isWideBanner, mapEmbedUrl, spotifyEmbedUrl, ticketPlan, updatedAgo, venueMapQuery } from "../application/show-page";
@@ -95,7 +95,12 @@ export function ShowPage({ show, apiBase }: Props) {
               <Text style={[styles.name, nameSizing(width)]} {...heading(1)}>
                 {show.name}
               </Text>
-              <ShareButton title={show.name} url={shareUrl} onShare={() => tracker().showShared(show.id, show.name, show.venue)} />
+              <ShareButton
+                title={show.name}
+                message={strings.shareMessage(show.name, show.venue, spokenDate(date.startsAt, now, lang))}
+                url={shareUrl}
+                imageUrl={photo}
+                onShare={() => tracker().showShared(show.id, show.name, show.venue)} />
             </View>
             <Text style={styles.meta}>
               <Text style={styles.venue}>{show.venue}</Text>
