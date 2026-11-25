@@ -12,6 +12,7 @@ from app.images.copy import LocalImageStore
 from app.images.wikimedia import (
     MissingContactError,
     add_wikimedia_images,
+    commons_thumb_url,
     find_artist_image,
     user_agent,
 )
@@ -185,3 +186,36 @@ def test_every_date_of_one_show_is_looked_up_once(tmp_path):
 def test_a_reply_that_is_not_json_means_no_photo_not_a_crash():
     client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(200, content=b"<html>busy</html>")))
     assert lookup("Divididos", client) is None
+
+
+DIVIDIDOS_PAGE = "https://commons.wikimedia.org/wiki/File:Divididos.JPG"
+DIVIDIDOS_THUMB = (
+    "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Divididos.JPG/960px-Divididos.JPG"
+    "?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+)
+
+
+def test_a_stored_commons_page_resolves_to_its_current_thumbnail():
+    requests: list[httpx.Request] = []
+    url = commons_thumb_url(DIVIDIDOS_PAGE, api(requests=requests), delay=0, sleep=lambda _: None)
+    assert url == DIVIDIDOS_THUMB
+    [request] = requests
+    assert (request.url.params["action"], request.url.params["titles"]) == ("query", "File:Divididos.JPG")
+
+
+def test_an_encoded_page_name_is_decoded_for_the_query():
+    requests: list[httpx.Request] = []
+    page = "https://commons.wikimedia.org/wiki/File:Mar%C3%ADa_Becerra_(cropped).jpg"
+    commons_thumb_url(page, api(requests=requests), delay=0, sleep=lambda _: None)
+    assert requests[0].url.params["titles"] == "File:María_Becerra_(cropped).jpg"
+
+
+def test_a_page_that_is_not_a_commons_file_is_not_looked_up():
+    requests: list[httpx.Request] = []
+    assert commons_thumb_url("https://example.com/x.jpg", api(requests=requests), delay=0, sleep=lambda _: None) is None
+    assert requests == []
+
+
+def test_a_commons_file_whose_licence_is_no_longer_free_gives_none():
+    client = api(info=with_license("CC BY-NC 4.0"))
+    assert commons_thumb_url(DIVIDIDOS_PAGE, client, delay=0, sleep=lambda _: None) is None

@@ -21,9 +21,12 @@ The demo is public: anyone with the link sees it. It is not the launch.
 3. It asks for the secrets marked `sync: false`. Copy them from `server/.env`:
    - `DATABASE_URL` and `DATABASE_URL_POOLED`: the Neon `dev` branch URLs.
    - `CORS_ORIGINS`: leave it empty for now; step 3 fills it.
+   - `SCRAPER_CONTACT_EMAIL`: the recitAR contact address from `server/.env`. Wikimedia asks for a
+     contact, and the build needs it to rebuild the licensed artist photos (Movistar Arena shows).
 4. Create it. The build installs the dependencies and runs `python -m app.images.restore`, which
    downloads the image copies again (the host's disk starts empty and `server/data/` is not in git).
-   The build log ends with `image copies: N present, M failed`.
+   The build log ends with `image copies: N present, M failed` and `licensed photos: N present, M
+   failed` (or `skipped` when `SCRAPER_CONTACT_EMAIL` is missing).
 5. Open `https://<service>.onrender.com/health`: it answers `{"status": "ok"}`.
 
 ## 2. Web on Cloudflare Pages
@@ -32,7 +35,8 @@ The demo is public: anyone with the link sees it. It is not the launch.
    repository and the `dev` branch.
 2. Build settings:
    - Root directory: `client`
-   - Build command: `npx expo export --platform web`
+   - Build command: `npm run build:web` (the Expo export, then `scripts/flatten-web-assets.mjs`: Pages
+     never uploads folders named `node_modules`, where Expo puts the font files)
    - Build output directory: `dist`
 3. Environment variables:
    - `EXPO_PUBLIC_API_URL` = `https://<service>.onrender.com` (from step 1)

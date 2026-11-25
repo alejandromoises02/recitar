@@ -46,6 +46,13 @@ class LocalImageStore:
         (self.root / self._name(source_url)).write_bytes(webp)
         return self.url_for(source_url)
 
+    def file_for(self, public_url: str) -> Path | None:
+        """The file behind one of our public URLs, or None if the URL is not one of ours."""
+        name = public_url.removeprefix(self.public_prefix)
+        if not public_url.startswith(self.public_prefix) or not name or "/" in name or name.startswith("."):
+            return None
+        return self.root / name
+
 
 def _to_webp(data: bytes) -> bytes | None:
     """Decode (which also proves it is an image), apply EXIF rotation, shrink to MAX_WIDTH, encode."""
@@ -73,12 +80,17 @@ def _download(client: httpx.Client, url: str) -> bytes | None:
     return response.content
 
 
+def fetch_webp(client: httpx.Client, url: str) -> bytes | None:
+    """Download an image and shrink it to WebP, or None if either step fails."""
+    data = _download(client, url)
+    return _to_webp(data) if data else None
+
+
 def store_remote_image(client: httpx.Client, store: LocalImageStore, source_url: str) -> str | None:
     """Download one image, shrink it to WebP and store it. Returns our public URL, or None if it fails."""
     if store.has(source_url):
         return store.url_for(source_url)
-    data = _download(client, source_url)
-    webp = _to_webp(data) if data else None
+    webp = fetch_webp(client, source_url)
     return store.save(source_url, webp) if webp else None
 
 

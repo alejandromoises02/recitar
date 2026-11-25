@@ -11,6 +11,7 @@ import re
 import time
 import unicodedata
 from typing import Any, Callable, Mapping
+from urllib.parse import unquote
 
 import httpx
 from bs4 import BeautifulSoup
@@ -21,6 +22,8 @@ from app.images.copy import LocalImageStore, store_remote_image
 
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
+COMMONS_PAGE_PREFIX = "https://commons.wikimedia.org/wiki/"
+COMMONS_FILE_PAGE = COMMONS_PAGE_PREFIX + "File:"
 CONTACT_VARIABLE = "SCRAPER_CONTACT_EMAIL"
 USER_AGENT_NAME = "recitAR-research/0.1"
 THUMB_WIDTH = 800
@@ -137,15 +140,34 @@ def find_artist_image(
     filename = _commons_file(claims)
     if filename is None:
         return None
+    return _commons_image(f"File:{filename}", client, delay, sleep)
+
+
+def _commons_image(title: str, client: httpx.Client, delay: float, sleep: Callable[[float], None]) -> LicensedImage | None:
+    """A Commons file's thumbnail, author and licence, if its licence is free."""
     info = _get_json(
         client, COMMONS_API,
         {
-            "action": "query", "titles": f"File:{filename}", "prop": "imageinfo",
+            "action": "query", "titles": title, "prop": "imageinfo",
             "iiprop": "url|size|mime|extmetadata", "iiurlwidth": str(THUMB_WIDTH),
         },
         delay, sleep,
     )
     return _licensed_image(info)
+
+
+def commons_thumb_url(
+    page_url: str,
+    client: httpx.Client,
+    delay: float = 1.0,
+    sleep: Callable[[float], None] = time.sleep,
+) -> str | None:
+    """The current thumbnail of the Commons file whose page we stored (image_source_url), if it is
+    still under a free licence. Anything that is not a Commons file page gives None, unasked."""
+    if not page_url.startswith(COMMONS_FILE_PAGE):
+        return None
+    image = _commons_image(unquote(page_url.removeprefix(COMMONS_PAGE_PREFIX)), client, delay, sleep)
+    return image.file_url if image else None
 
 
 def add_wikimedia_images(

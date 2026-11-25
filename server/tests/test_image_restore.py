@@ -9,7 +9,7 @@ import httpx
 from PIL import Image
 
 from app.images.copy import LocalImageStore
-from app.images.restore import copied_sources, restore
+from app.images.restore import copied_sources, licensed_targets, restore, restore_licensed
 
 POSTER = "https://img.example.com/poster.png"
 BANNER = "https://img.example.com/banner.png"
@@ -62,3 +62,57 @@ def test_a_copy_already_on_disk_is_not_downloaded_again(tmp_path: Path):
 
     with httpx.Client(transport=httpx.MockTransport(answer)) as client:
         assert restore([POSTER], client, store, delay=0, sleep=lambda _s: None) == (1, 0)
+
+
+PAGE = "https://commons.wikimedia.org/wiki/File:Band.jpg"
+THUMB = "https://thumb.wikimedia.org/band-800px.jpg?utm_content=thumbnail"
+
+
+def test_licensed_rows_are_rebuilt_from_their_commons_page_once_per_stored_file():
+    rows = [
+        ("/media/aaaa.webp", PAGE, "licensed"),
+        ("/media/aaaa.webp", PAGE, "licensed"),  # every date of a show
+        ("/media/bbbb.webp", POSTER, "source"),  # a copy of the source: restore() handles it
+        ("/media/cccc.webp", "https://example.com/not-commons", "licensed"),
+        (None, PAGE, "licensed"),
+    ]
+    assert licensed_targets(rows) == [(PAGE, "/media/aaaa.webp")]
+
+
+def test_a_licensed_copy_is_saved_under_the_name_already_stored_whatever_its_url_hashes_to(tmp_path: Path):
+    store = LocalImageStore(tmp_path)
+    resolved: list[str] = []
+
+    def resolve(page: str) -> str | None:
+        resolved.append(page)
+        return THUMB if page == PAGE else None
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=png()) if str(request.url) == THUMB else httpx.Response(404)
+
+    missing = "https://commons.wikimedia.org/wiki/File:Gone.jpg"
+    with httpx.Client(transport=httpx.MockTransport(answer)) as client:
+        counts = restore_licensed(
+            [(PAGE, "/media/aaaa.webp"), (missing, "/media/dddd.webp")], client, store, resolve, delay=0, sleep=lambda _s: None,
+        )
+    assert counts == (1, 1)
+    assert (tmp_path / "aaaa.webp").read_bytes()[:4] == b"RIFF"  # WebP
+    assert not (tmp_path / "dddd.webp").exists()
+    assert resolved == [PAGE, missing]
+
+
+def test_a_licensed_copy_already_on_disk_is_not_looked_up_again(tmp_path: Path):
+    (tmp_path / "aaaa.webp").write_bytes(b"already here")
+
+    def resolve(page: str) -> str | None:
+        raise AssertionError("unexpected lookup")
+
+    with httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(404))) as client:
+        assert restore_licensed([(PAGE, "/media/aaaa.webp")], client, LocalImageStore(tmp_path), resolve, delay=0) == (1, 0)
+
+
+def test_only_a_plain_file_name_under_our_prefix_maps_to_a_file(tmp_path: Path):
+    store = LocalImageStore(tmp_path)
+    assert store.file_for("/media/aaaa.webp") == tmp_path / "aaaa.webp"
+    for not_ours in ("/media/../secret.webp", "/media/sub/a.webp", "/media/", "/media/.hidden", "https://x.com/a.webp"):
+        assert store.file_for(not_ours) is None
