@@ -8,7 +8,9 @@ import { styles } from "./ExploreFiltersPanel.styles";
 export function ExploreFiltersPanel({ onLayout }: { onLayout?: (event: LayoutChangeEvent) => void }) {
   return (
     <View style={styles.backing} onLayout={onLayout} nativeID={EXPLORE_ANCHOR} tabIndex={-1}>
-      <BoundExploreFilters />
+      <View style={styles.underlay}>
+        <BoundExploreFilters />
+      </View>
     </View>
   );
 }

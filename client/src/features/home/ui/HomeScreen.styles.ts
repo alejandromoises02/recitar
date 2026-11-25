@@ -10,8 +10,8 @@ export const headlineSizing = (size: number) => ({
 });
 
 export const styles = StyleSheet.create({
-  root: { flex: 1 },
-  screen: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1 },
   content: { paddingBottom: spacing.xxxl },
   header: { gap: spacing.lg },
   topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },

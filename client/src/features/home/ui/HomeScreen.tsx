@@ -17,6 +17,8 @@ import { ExploreRowView } from "./explore/ExploreRowView";
 import { FiltersSheet } from "./explore/FiltersSheet";
 import { useCompactBar } from "./explore/use-compact-bar";
 import { useExplore } from "./explore/use-explore";
+import { PageTint } from "./page-tint/PageTint";
+import { PageTintProvider } from "./page-tint/page-tint-context";
 import { HomeSection } from "./HomeSection";
 import { LangSwitch } from "./LangSwitch";
 import { SkipLink } from "./skip-link/SkipLink";
@@ -103,38 +105,41 @@ export function HomeScreen() {
   );
 
   return (
-    <ExploreProvider value={explore}>
-      <View style={styles.root} role="main">
-        <Animated.FlatList
-          style={styles.screen}
-          contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingTop }]}
-          data={rows}
-          keyExtractor={keyOf}
-          renderItem={renderItem}
-          ItemSeparatorComponent={cards ? CardRowGap : RowGap}
-          ListHeaderComponent={header}
-          // Wide screens pin the filters while the listing scrolls (index 1: the header counts as 0).
-          stickyHeaderIndices={cards ? STICKY_FILTERS : undefined}
-          ListFooterComponent={<ExploreFooter />}
-          onEndReached={explore.fetchMore}
-          onEndReachedThreshold={END_REACHED_THRESHOLD}
-          keyboardShouldPersistTaps="handled"
-          itemLayoutAnimation={ROW_SHIFT}
-          onScroll={compactBar.onScroll}
-        />
-        {compactBar.visible ? (
-          <Animated.View
-            entering={FadeIn.duration(motion.duration.fast)}
-            exiting={FadeOut.duration(motion.duration.quick)}
-            style={[styles.compactBar, { top: insets.top, paddingHorizontal: gutter }]}
-          >
-            <CompactFilterBar onOpenFilters={openSheet} />
-          </Animated.View>
-        ) : null}
-      </View>
-      <FiltersSheet visible={sheetOpen} onClose={closeSheet} />
-    </ExploreProvider>
+    <PageTintProvider>
+      <ExploreProvider value={explore}>
+        <View style={styles.root} role="main">
+          <PageTint />
+          <Animated.FlatList
+            style={styles.screen}
+            contentInsetAdjustmentBehavior="automatic"
+            contentContainerStyle={[styles.content, { paddingHorizontal: gutter, paddingTop }]}
+            data={rows}
+            keyExtractor={keyOf}
+            renderItem={renderItem}
+            ItemSeparatorComponent={cards ? CardRowGap : RowGap}
+            ListHeaderComponent={header}
+            // Wide screens pin the filters while the listing scrolls (index 1: the header counts as 0).
+            stickyHeaderIndices={cards ? STICKY_FILTERS : undefined}
+            ListFooterComponent={<ExploreFooter />}
+            onEndReached={explore.fetchMore}
+            onEndReachedThreshold={END_REACHED_THRESHOLD}
+            keyboardShouldPersistTaps="handled"
+            itemLayoutAnimation={ROW_SHIFT}
+            onScroll={compactBar.onScroll}
+          />
+          {compactBar.visible ? (
+            <Animated.View
+              entering={FadeIn.duration(motion.duration.fast)}
+              exiting={FadeOut.duration(motion.duration.quick)}
+              style={[styles.compactBar, { top: insets.top, paddingHorizontal: gutter }]}
+            >
+              <CompactFilterBar onOpenFilters={openSheet} />
+            </Animated.View>
+          ) : null}
+        </View>
+        <FiltersSheet visible={sheetOpen} onClose={closeSheet} />
+      </ExploreProvider>
+    </PageTintProvider>
   );
 }
 

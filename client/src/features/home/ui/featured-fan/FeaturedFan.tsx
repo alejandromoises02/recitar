@@ -42,6 +42,8 @@ import { Sleeve } from "./Sleeve";
 import { SpotlightCard } from "./SpotlightCard";
 import type { SampleHandle } from "./SpotifySample.types";
 import { useFanAutoplay } from "./use-fan-autoplay";
+import { edgeMask } from "./edge-mask";
+import { useSetPageTint } from "../page-tint/page-tint-context";
 import { useLang } from "../../../../i18n/lang-context";
 
 const mod = (value: number, count: number) => ((value % count) + count) % count;
@@ -193,6 +195,10 @@ export function FeaturedFan() {
 
   const centre = count > 0 ? shows[mod(current, count)] : undefined;
   const playable = Boolean(centre?.spotifyArtistId);
+  const centrePhoto = centre ? imageSource(centre.imageUrl, apiBase) : null;
+  const setTint = useSetPageTint();
+  useEffect(() => setTint(centrePhoto), [setTint, centrePhoto]);
+  useEffect(() => () => setTint(null), [setTint]);
   useEffect(
     () => recordHit.set({ x: fanWidth / 2 - shift + travel, y: (card * FAN_HEIGHT_SHARE) / 2, size: recordSize, playable }),
     [recordHit, fanWidth, shift, travel, card, recordSize, playable],
@@ -217,7 +223,7 @@ export function FeaturedFan() {
         <>
           <GestureDetector gesture={fanGesture}>
             <View
-              style={[styles.fan, { height: card * FAN_HEIGHT_SHARE }]}
+              style={[styles.fan, edgeMask, { height: card * FAN_HEIGHT_SHARE }]}
               onLayout={onFanLayout}
             >
               {/* Screen readers get the centre show from the spotlight card and move with the controls;
@@ -243,20 +249,12 @@ export function FeaturedFan() {
                     size={recordSize}
                     travel={travel}
                     shown={recordShown}
-                    photo={imageSource(centre.imageUrl, apiBase)}
+                    photo={centrePhoto}
                     playable={playable}
                     playing={playing}
                   />
                 ) : null}
               </View>
-              <View
-                style={[styles.edge, styles.edgeLeft]}
-                pointerEvents="none"
-              />
-              <View
-                style={[styles.edge, styles.edgeRight]}
-                pointerEvents="none"
-              />
             </View>
           </GestureDetector>
           {count > 1 ? (

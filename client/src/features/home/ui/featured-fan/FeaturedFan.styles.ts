@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
 import { colors, radius, spacing } from "../../../../design/tokens";
-import { EDGE_FADE_SHARE } from "./featured.constants";
 
 export const styles = StyleSheet.create({
   section: { gap: spacing.md },
@@ -8,7 +7,4 @@ export const styles = StyleSheet.create({
   pending: { alignItems: "center", justifyContent: "center" },
   sleeveSkeleton: { borderRadius: radius.sleeve, backgroundColor: colors.surface },
   stage: StyleSheet.absoluteFill,
-  edge: { position: "absolute", top: 0, bottom: 0, width: EDGE_FADE_SHARE, zIndex: 100 },
-  edgeLeft: { left: 0, backgroundImage: `linear-gradient(90deg, ${colors.background}, transparent)` },
-  edgeRight: { right: 0, backgroundImage: `linear-gradient(270deg, ${colors.background}, transparent)` },
 });
