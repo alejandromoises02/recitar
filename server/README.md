@@ -10,6 +10,7 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 playwright install chromium   # only needed to run the Movistar Arena scraper, not the tests
+brew install tesseract        # OCR for Palermo Groove's flyers (apt: tesseract-ocr); its OCR tests skip without it
 ```
 
 ## Run
@@ -41,7 +42,7 @@ alembic upgrade head                # create/update the tables in the database o
 
 ```bash
 python -m app.run                    # scrape every source, choose images, store the events
-python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada, allaccess, enigma, coolco, articket, pulso, granrivadavia)
+python -m app.run --only colon,venti # only some sources (colon, livepass, venti, movistar, ticketek, tuentrada, allaccess, enigma, coolco, articket, pulso, granrivadavia, palermogroove)
 ```
 
 It applies the migrations first. A source that fails is reported and skipped; the others still
@@ -52,8 +53,10 @@ show, as Greeicy's at TuEntrada on 2026-11-24) are marked `unlisted_at` and leav
 show page; the run prints how many per source. They are never deleted: when the source lists one
 again, saving it clears the mark. The
 first run of a source stores its shows as seen before we started watching (2000-01-01), since they
-were already on sale: otherwise all of them would show as "just announced" for 14 days. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, and Chromium for Movistar
-Arena (`playwright install chromium`). Image copies go to `server/data/images` (ignored by git).
+were already on sale: otherwise all of them would show as "just announced" for 14 days. Needs `DATABASE_URL` and `SCRAPER_CONTACT_EMAIL` in `server/.env`, Chromium for Movistar
+Arena (`playwright install chromium`) and Tesseract for Palermo Groove: shows whose listing text has
+no date get it from their flyer by OCR, only when several passes agree; without Tesseract they are
+left out. Image copies go to `server/data/images` (ignored by git).
 
 Venue names are normalized before saving, so one place has one name whatever the source calls
 it (for example Venti's "Niceto Bar" and "Humboldt | Niceto Club" are stored as "Niceto Club").

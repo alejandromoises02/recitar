@@ -21,6 +21,8 @@ CANONICAL_NAMES: dict[str, list[str]] = {
     "Teatro Vorterix (Mar del Plata)": ["Teatro Vorterix Mar del Plata", "Teatro Vorterix (Mar del Plata)"],
     # Niceto's rooms (club, bar and the Humboldt street side) are one venue for users.
     "Niceto Club": ["Niceto Club", "Niceto Bar", "Humboldt | Niceto Club"],
+    # Ticketek, which also sells there, writes it "Groove (Palermo)".
+    "Palermo Groove": ["Palermo Groove", "Groove (Palermo)"],
 }
 
 # A name that stands for different venues depending on the city: (name, city) -> canonical name.
