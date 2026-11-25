@@ -58,7 +58,8 @@ export function ShowPage({ show, apiBase }: Props) {
   const photo = imageSource(show.imageUrl, apiBase);
   const several = show.dates.length > 1;
   const mapQuery = venueMapQuery(show);
-  const shareUrl = Platform.OS === "web" ? window.location.href : Linking.createURL(`/show/${show.id}`);
+  // From the id, not window.location: opened from the home, the address bar changes only after this page renders.
+  const shareUrl = Platform.OS === "web" ? `${window.location.origin}/show/${show.id}` : Linking.createURL(`/show/${show.id}`);
 
   return (
     <View style={styles.screen}>
@@ -99,7 +100,6 @@ export function ShowPage({ show, apiBase }: Props) {
                 title={show.name}
                 message={strings.shareMessage(show.name, show.venue, spokenDate(date.startsAt, now, lang))}
                 url={shareUrl}
-                imageUrl={photo}
                 onShare={() => tracker().showShared(show.id, show.name, show.venue)} />
             </View>
             <Text style={styles.meta}>

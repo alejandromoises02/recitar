@@ -3,18 +3,16 @@ import { Platform, Pressable, Share, Text, View } from "react-native";
 import { ShareIcon } from "./ShareIcon";
 import { styles } from "./ShareButton.styles";
 import { useShowStrings } from "./strings";
-import { useShareImage } from "./use-share-image";
 
-type Props = { title: string; message: string; url: string; imageUrl?: string | null; onShare?: () => void };
+type Props = { title: string; message: string; url: string; onShare?: () => void };
 
 /**
- * The native share sheet on phones; on web the browser's share, with the show's image when the
- * browser can share files, else the message and link copied to the clipboard.
+ * The native share sheet on phones; on web the browser's share, else the message and link copied to
+ * the clipboard. Text only: WhatsApp drops the text and link of a share that carries a file.
  */
-export function ShareButton({ title, message, url, imageUrl, onShare }: Props) {
+export function ShareButton({ title, message, url, onShare }: Props) {
   const strings = useShowStrings();
   const [copied, setCopied] = useState(false);
-  const image = useShareImage(imageUrl);
   const withLink = `${message} ${url}`;
   const share = async () => {
     onShare?.();
@@ -23,9 +21,7 @@ export function ShareButton({ title, message, url, imageUrl, onShare }: Props) {
       return;
     }
     if (typeof navigator.share === "function") {
-      // With a file, some apps drop the url field, so the link travels inside the text.
-      const data = image ? { title, text: withLink, files: [image] } : { title, text: message, url };
-      await navigator.share(data).catch(() => undefined);
+      await navigator.share({ title, text: message, url }).catch(() => undefined);
       return;
     }
     await navigator.clipboard?.writeText(withLink);
