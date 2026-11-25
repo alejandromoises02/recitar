@@ -4,6 +4,8 @@ import { motion } from "../../../../design/tokens";
 export const FAN_HEIGHT_SHARE = 1.4;
 export const EDGE_FADE_SHARE = "9%";
 export const DRAG_ACTIVATION = 10;
+/** Web only: the page keeps vertical swipes over the fan (scroll); the fan takes the horizontal ones. */
+export const FAN_TOUCH_ACTION = "pan-y";
 export const SPOT_WIDTH_SHARE = 1.9;
 
 export const SLEEVE_MOVE = { duration: motion.signature.sleeveMove, easing: Easing.bezier(...motion.easing.swap) };

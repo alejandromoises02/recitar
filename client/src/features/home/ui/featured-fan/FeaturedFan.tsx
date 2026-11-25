@@ -28,6 +28,7 @@ import { useStrings } from "../strings";
 import {
   DRAG_ACTIVATION,
   FAN_HEIGHT_SHARE,
+  FAN_TOUCH_ACTION,
   RECORD_IN,
   RECORD_OUT,
   RECORD_OUT_DELAY,
@@ -221,7 +222,7 @@ export function FeaturedFan() {
         </View>
       ) : (
         <>
-          <GestureDetector gesture={fanGesture}>
+          <GestureDetector gesture={fanGesture} touchAction={FAN_TOUCH_ACTION}>
             <View
               style={[styles.fan, edgeMask, { height: card * FAN_HEIGHT_SHARE }]}
               onLayout={onFanLayout}
