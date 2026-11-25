@@ -1,0 +1,24 @@
+# Free demo API on Render (blueprint). Not production: that goes to Azure (board card dep01).
+# The free plan needs no card, so it can never bill; it sleeps after 15 minutes idle and takes
+# about a minute to wake. Secrets (sync: false) are typed in Render's dashboard, never here.
+services:
+  - type: web
+    name: recitar-api-demo
+    runtime: python
+    plan: free
+    rootDir: server
+    branch: dev
+    buildCommand: pip install -r requirements.txt && python -m app.images.restore
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: APP_ENV
+        value: test
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_POOLED
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

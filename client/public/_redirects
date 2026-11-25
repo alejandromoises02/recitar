@@ -1,0 +1,2 @@
+# Expo exports one page for every show, show/[id].html; it reads the id from the address.
+/show/*  /show/[id]  200

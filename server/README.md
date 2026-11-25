@@ -64,6 +64,12 @@ The mapping lives in `app/scrapers/venues.py`; add new variants there. A source 
 writes a placeholder ("A confirmar", or a whole country: Enigma lists Quilmes Rock 2027 at "Argentina");
 those are stored as "Lugar a confirmar", which `/venues` leaves out and the show page offers no "more at".
 
+## Free demo deploy
+
+The public demo runs this API on Render's free plan (`render.yaml` at the repository root). Its disk
+starts empty, so the build runs `python -m app.images.restore`: it reads which events point to an
+image copy and downloads each original again to the same `/media/` path. Steps: `docs/DEMO.md`.
+
 ## Venue locations
 
 Each venue has one row in `venues` with its address and coordinates; `coords_source` says where
