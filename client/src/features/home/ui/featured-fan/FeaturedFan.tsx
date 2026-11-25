@@ -144,6 +144,8 @@ export function FeaturedFan() {
   );
 
   const pan = usePanGesture({
+    // @ts-expect-error The config accepts touchAction at runtime (allowedNativeProps) but its type omits it; see FAN_TOUCH_ACTION.
+    touchAction: FAN_TOUCH_ACTION,
     activeOffsetX: [-DRAG_ACTIVATION, DRAG_ACTIVATION],
     failOffsetY: [-DRAG_ACTIVATION, DRAG_ACTIVATION],
     onActivate: () => {
@@ -167,6 +169,8 @@ export function FeaturedFan() {
   });
 
   const tap = useTapGesture({
+    // @ts-expect-error The config accepts touchAction at runtime (allowedNativeProps) but its type omits it; see FAN_TOUCH_ACTION.
+    touchAction: FAN_TOUCH_ACTION,
     maxDistance: DRAG_ACTIVATION,
     onActivate: (event) => {
       "worklet";
